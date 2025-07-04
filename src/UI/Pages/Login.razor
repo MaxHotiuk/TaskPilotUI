@@ -1,0 +1,233 @@
+@page "/login"
+@using UI.Services
+@using UI.Models
+@using AntDesign
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<div class="login-container">
+    <div class="login-content">
+        <Card class="login-card" Title="Sign in to TaskPilot">
+            <div class="login-header">
+                <Avatar Size=@AvatarSize.Large Icon="user" style="margin-bottom: 16px;" />
+                <Title Level="3">Welcome to TaskPilot</Title>
+                <Text Type=@TextElementType.Secondary>
+                    Sign in with your Microsoft account to access your boards and tasks
+                </Text>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="login-loading">
+                    <Spin Size=@SpinSize.Large Tip="Signing you in...">
+                        <div style="height: 100px;"></div>
+                    </Spin>
+                </div>
+            }
+            else if (_error != null)
+            {
+                <Alert
+                    Type="@AlertType.Error"
+                    Message="Authentication Error"
+                    Description="@_error"
+                    ShowIcon="true"
+                    Closable="true"
+                    OnClose="() => _error = null"
+                    Style="margin-bottom: 24px;" />
+            }
+
+            <div class="login-actions">
+                <Button
+                    Type="@ButtonType.Primary"
+                    Size="@ButtonSize.Large"
+                    Icon="microsoft"
+                    Loading="_isLoading"
+                    OnClick="HandleLogin"
+                    Block="true"
+                    Style="height: 48px; font-size: 16px;">
+                    Sign in with Microsoft
+                </Button>
+            </div>
+
+            <Divider>
+                <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
+                    Secure authentication powered by Azure AD
+                </Text>
+            </Divider>
+
+            <div class="login-info">
+                <div class="info-items">
+                    <div class="info-item">
+                        <Icon Type="check-circle" />
+                        <Text Type=@TextElementType.Secondary>Secure single sign-on</Text>
+                    </div>
+                    <div class="info-item">
+                        <Icon Type="shield" />
+                        <Text Type=@TextElementType.Secondary>Enterprise-grade security</Text>
+                    </div>
+                    <div class="info-item">
+                        <Icon Type="team" />
+                        <Text Type=@TextElementType.Secondary>Team collaboration ready</Text>
+                    </div>
+                </div>
+            </div>
+        </Card>
+    </div>
+</div>
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+    }
+
+    .login-content {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .login-card {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .login-loading {
+        text-align: center;
+        margin: 40px 0;
+    }
+
+    .login-actions {
+        margin-bottom: 24px;
+    }
+
+    .login-info {
+        background: #fafafa;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+
+    .info-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-item .anticon {
+        color: #1890ff;
+    }
+</style>
+
+
+
+@code {
+    private bool _isLoading = false;
+    private string? _error = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if user is already authenticated using cached state first
+        if (AuthService.AuthState.IsAuthenticated && AuthService.GetCachedUser() != null)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+        
+        // Only check with API if we don't have cached authentication state
+        if (await AuthService.IsAuthenticatedAsync())
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        // Check for callback parameters
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var code = query["code"];
+        var state = query["state"];
+        var error = query["error"];
+
+        if (!string.IsNullOrEmpty(error))
+        {
+            _error = $"Authentication failed: {error}";
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(state))
+        {
+            await HandleCallback(code, state);
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            _isLoading = true;
+            _error = null;
+            StateHasChanged();
+
+            var loginUrl = await AuthService.GetLoginUrlAsync();
+            await JSRuntime.InvokeVoidAsync("authHelpers.navigateToUrl", loginUrl);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to initiate login: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleCallback(string code, string state)
+    {
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            Console.WriteLine($"Handling callback with code: {code?.Substring(0, Math.Min(20, code?.Length ?? 0))}... and state: {state}");
+
+            var success = await AuthService.HandleCallbackAsync(code!, state);
+            if (success)
+            {
+                Console.WriteLine("Authentication successful, navigating to home");
+                Navigation.NavigateTo("/", true);
+            }
+            else
+            {
+                _error = "Authentication failed. Please check console for details.";
+                Console.WriteLine("Authentication failed in HandleCallbackAsync");
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Authentication error: {ex.Message}";
+            Console.WriteLine($"Exception in HandleCallback: {ex}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+}
