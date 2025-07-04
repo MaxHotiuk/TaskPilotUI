@@ -109,13 +109,11 @@
         {
             if (await AuthService.IsAuthenticatedAsync())
             {
-                // Use cached user data to avoid unnecessary API calls
                 _currentUser = AuthService.GetCachedUser();
             }
         }
         catch (Exception ex)
         {
-            // Handle error silently or log it
             Console.WriteLine($"Error loading user: {ex.Message}");
         }
         finally

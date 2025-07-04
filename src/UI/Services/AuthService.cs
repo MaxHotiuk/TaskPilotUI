@@ -44,7 +44,6 @@ public class AuthService : IAuthService
 
     public async Task<bool> IsAuthenticatedAsync()
     {
-        // Return cached state if already authenticated
         if (_authState.IsAuthenticated && _authState.User != null)
             return true;
 
@@ -52,7 +51,6 @@ public class AuthService : IAuthService
         if (string.IsNullOrEmpty(token))
             return false;
 
-        // Only make API call if we don't have cached user data
         if (_authState.User == null)
         {
             var user = await GetCurrentUserAsync();
@@ -67,7 +65,6 @@ public class AuthService : IAuthService
             return false;
         }
 
-        // We have token and cached user, mark as authenticated
         _authState.IsAuthenticated = true;
         _authState.AccessToken = token;
         return true;
@@ -80,7 +77,6 @@ public class AuthService : IAuthService
 
     public async Task<UserDto?> GetCurrentUserAsync(bool forceRefresh = false)
     {
-        // Return cached user if available and not forced to refresh
         if (!forceRefresh && _authState.User != null)
             return _authState.User;
 
@@ -128,7 +124,6 @@ public class AuthService : IAuthService
                 _logger.LogWarning("API call failed with status: {StatusCode}", response.StatusCode);
                 _logger.LogDebug("Response: {ResponseContent}", responseContent);
                 
-                // Try to create user from token using Microsoft Graph as fallback
                 _logger.LogInformation("Attempting to create user from Microsoft Graph");
                 var graphUser = await CreateUserFromTokenAsync(token);
                 if (graphUser != null)
@@ -162,14 +157,10 @@ public class AuthService : IAuthService
 
     public async Task InitializeAsync()
     {
-        // Initialize auth state on app startup by checking if we have a valid token
-        // This avoids multiple API calls by setting up the initial state properly
         var token = await GetStoredTokenAsync();
         if (!string.IsNullOrEmpty(token))
         {
             _authState.AccessToken = token;
-            // Note: We don't call GetCurrentUserAsync here to avoid API call on startup
-            // The user will be fetched on first IsAuthenticatedAsync call when needed
         }
     }
 
@@ -178,7 +169,6 @@ public class AuthService : IAuthService
         var config = GetAuthConfig();
         var state = Guid.NewGuid().ToString();
         
-        // Generate PKCE parameters
         var codeVerifier = GenerateCodeVerifier();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
         
@@ -217,7 +207,6 @@ public class AuthService : IAuthService
             _logger.LogDebug("Auth config - ClientId: {ClientId}, TenantId: {TenantId}, RedirectUri: {RedirectUri}", 
                 config.ClientId, config.TenantId, config.RedirectUri);
             
-            // Get the code verifier for PKCE
             var codeVerifier = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "code_verifier");
             if (string.IsNullOrEmpty(codeVerifier))
             {
@@ -233,10 +222,6 @@ public class AuthService : IAuthService
                 {"redirect_uri", config.RedirectUri},
                 {"code_verifier", codeVerifier}
             };
-
-            // Note: For public clients (SPA), client_secret is not required
-            // If this is a confidential client, you'll need to add:
-            // {"client_secret", config.ClientSecret}
 
             var tokenUrl = $"https://login.microsoftonline.com/{config.TenantId}/oauth2/v2.0/token";
             _logger.LogDebug("Token URL: {TokenUrl}", tokenUrl);
@@ -258,7 +243,6 @@ public class AuthService : IAuthService
                     
                     await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "access_token", accessToken);
                     
-                    // Try to get user info and register if needed
                     _logger.LogDebug("Attempting to get current user");
                     var user = await GetCurrentUserAsync();
                     if (user != null)
@@ -271,7 +255,6 @@ public class AuthService : IAuthService
                     else
                     {
                         _logger.LogWarning("Failed to get current user from API, using mock user for testing");
-                        // Since API is not available, create a mock user for testing
                         user = CreateMockUser();
                         _authState.User = user;
                         _authState.IsAuthenticated = true;
@@ -332,7 +315,6 @@ public class AuthService : IAuthService
 
     private AuthConfiguration GetAuthConfig()
     {
-        // Get the current URL base for dynamic redirect URI
         var baseUrl = _configuration["App:BaseUrl"] ?? "https://localhost:5001";
         
         return new AuthConfiguration
@@ -354,7 +336,6 @@ public class AuthService : IAuthService
     {
         try
         {
-            // If API is not available, we can still get user info from Microsoft Graph
             var request = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
@@ -370,7 +351,7 @@ public class AuthService : IAuthService
                 
                 var user = new UserDto
                 {
-                    Id = Guid.NewGuid().ToString(), // Temporary ID
+                    Id = Guid.NewGuid().ToString(),
                     EntraId = graphData.TryGetProperty("id", out var id) ? id.GetString() ?? "" : "",
                     Username = graphData.TryGetProperty("displayName", out var name) ? name.GetString() ?? "" : "",
                     Email = graphData.TryGetProperty("mail", out var mail) ? mail.GetString() ?? "" : 
@@ -392,7 +373,6 @@ public class AuthService : IAuthService
         return null;
     }
 
-    // Temporary method for testing - creates a mock user when API is not available
     private UserDto CreateMockUser()
     {
         return new UserDto

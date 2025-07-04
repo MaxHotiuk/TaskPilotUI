@@ -143,21 +143,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Check if user is already authenticated using cached state first
         if (AuthService.AuthState.IsAuthenticated && AuthService.GetCachedUser() != null)
         {
             Navigation.NavigateTo("/");
             return;
         }
         
-        // Only check with API if we don't have cached authentication state
         if (await AuthService.IsAuthenticatedAsync())
         {
             Navigation.NavigateTo("/");
             return;
         }
 
-        // Check for callback parameters
         var uri = new Uri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         var code = query["code"];
