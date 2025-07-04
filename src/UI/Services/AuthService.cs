@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using UI.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace UI.Services;
 
@@ -27,16 +28,18 @@ public class AuthService : IAuthService
     private readonly HttpClient _httpClient;
     private readonly IJSRuntime _jsRuntime;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
     private AuthState _authState = new();
 
     public AuthState AuthState => _authState;
     public event Action? OnAuthStateChanged;
 
-    public AuthService(HttpClient httpClient, IJSRuntime jsRuntime, IConfiguration configuration)
+    public AuthService(HttpClient httpClient, IJSRuntime jsRuntime, IConfiguration configuration, ILogger<AuthService> logger)
     {
         _httpClient = httpClient;
         _jsRuntime = jsRuntime;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<bool> IsAuthenticatedAsync()
@@ -84,14 +87,14 @@ public class AuthService : IAuthService
         var token = await GetStoredTokenAsync();
         if (string.IsNullOrEmpty(token))
         {
-            Console.WriteLine("No token found in storage");
+            _logger.LogDebug("No token found in storage");
             return null;
         }
 
         try
         {
             var apiUrl = $"{GetApiBaseUrl()}/api/users/me";
-            Console.WriteLine($"Making API call to: {apiUrl}");
+            _logger.LogDebug("Making API call to: {ApiUrl}", apiUrl);
             
             var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -99,8 +102,8 @@ public class AuthService : IAuthService
             var response = await _httpClient.SendAsync(request);
             var responseContent = await response.Content.ReadAsStringAsync();
             
-            Console.WriteLine($"API response status: {response.StatusCode}");
-            Console.WriteLine($"API response content: {responseContent}");
+            _logger.LogDebug("API response status: {StatusCode}", response.StatusCode);
+            _logger.LogTrace("API response content: {ResponseContent}", responseContent);
             
             if (response.IsSuccessStatusCode)
             {
@@ -111,7 +114,7 @@ public class AuthService : IAuthService
                 
                 if (user != null)
                 {
-                    Console.WriteLine($"Successfully parsed user: {user.Email}");
+                    _logger.LogInformation("Successfully authenticated user: {Email}", user.Email);
                     _authState.User = user;
                     _authState.IsAuthenticated = true;
                     _authState.AccessToken = token;
@@ -122,13 +125,26 @@ public class AuthService : IAuthService
             }
             else
             {
-                Console.WriteLine($"API call failed with status: {response.StatusCode}");
-                Console.WriteLine($"Response: {responseContent}");
+                _logger.LogWarning("API call failed with status: {StatusCode}", response.StatusCode);
+                _logger.LogDebug("Response: {ResponseContent}", responseContent);
+                
+                // Try to create user from token using Microsoft Graph as fallback
+                _logger.LogInformation("Attempting to create user from Microsoft Graph");
+                var graphUser = await CreateUserFromTokenAsync(token);
+                if (graphUser != null)
+                {
+                    _logger.LogInformation("Successfully created user from Microsoft Graph: {Email}", graphUser.Email);
+                    _authState.User = graphUser;
+                    _authState.IsAuthenticated = true;
+                    _authState.AccessToken = token;
+                    OnAuthStateChanged?.Invoke();
+                    return graphUser;
+                }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting current user: {ex}");
+            _logger.LogError(ex, "Error getting current user");
         }
 
         return null;
@@ -186,25 +202,26 @@ public class AuthService : IAuthService
     {
         try
         {
-            Console.WriteLine($"Starting HandleCallbackAsync with state: {state}");
+            _logger.LogDebug("Starting HandleCallbackAsync with state: {State}", state);
             
             var storedState = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "auth_state");
-            Console.WriteLine($"Stored state: {storedState}");
+            _logger.LogDebug("Stored state: {StoredState}", storedState);
             
             if (storedState != state)
             {
-                Console.WriteLine("Invalid state parameter");
+                _logger.LogWarning("Invalid state parameter. Expected: {StoredState}, Received: {State}", storedState, state);
                 return false;
             }
 
             var config = GetAuthConfig();
-            Console.WriteLine($"Auth config - ClientId: {config.ClientId}, TenantId: {config.TenantId}, RedirectUri: {config.RedirectUri}");
+            _logger.LogDebug("Auth config - ClientId: {ClientId}, TenantId: {TenantId}, RedirectUri: {RedirectUri}", 
+                config.ClientId, config.TenantId, config.RedirectUri);
             
             // Get the code verifier for PKCE
             var codeVerifier = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "code_verifier");
             if (string.IsNullOrEmpty(codeVerifier))
             {
-                Console.WriteLine("No code verifier found");
+                _logger.LogWarning("No code verifier found in storage");
                 return false;
             }
             
@@ -222,13 +239,13 @@ public class AuthService : IAuthService
             // {"client_secret", config.ClientSecret}
 
             var tokenUrl = $"https://login.microsoftonline.com/{config.TenantId}/oauth2/v2.0/token";
-            Console.WriteLine($"Token URL: {tokenUrl}");
+            _logger.LogDebug("Token URL: {TokenUrl}", tokenUrl);
 
             var tokenResponse = await _httpClient.PostAsync(tokenUrl, new FormUrlEncodedContent(tokenRequest));
 
             var responseContent = await tokenResponse.Content.ReadAsStringAsync();
-            Console.WriteLine($"Token response status: {tokenResponse.StatusCode}");
-            Console.WriteLine($"Token response content: {responseContent}");
+            _logger.LogDebug("Token response status: {StatusCode}", tokenResponse.StatusCode);
+            _logger.LogTrace("Token response content: {ResponseContent}", responseContent);
 
             if (tokenResponse.IsSuccessStatusCode)
             {
@@ -237,23 +254,23 @@ public class AuthService : IAuthService
                 if (tokenData.TryGetProperty("access_token", out var accessTokenElement))
                 {
                     var accessToken = accessTokenElement.GetString();
-                    Console.WriteLine($"Got access token: {accessToken?.Substring(0, Math.Min(20, accessToken?.Length ?? 0))}...");
+                    _logger.LogDebug("Successfully received access token (length: {TokenLength})", accessToken?.Length ?? 0);
                     
                     await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "access_token", accessToken);
                     
                     // Try to get user info and register if needed
-                    Console.WriteLine("Attempting to get current user");
+                    _logger.LogDebug("Attempting to get current user");
                     var user = await GetCurrentUserAsync();
                     if (user != null)
                     {
-                        Console.WriteLine($"Got user: {user.Email}");
+                        _logger.LogInformation("Successfully authenticated user: {Email}", user.Email);
                         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state");
                         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "code_verifier");
                         return true;
                     }
                     else
                     {
-                        Console.WriteLine("Failed to get current user from API, using mock user for testing");
+                        _logger.LogWarning("Failed to get current user from API, using mock user for testing");
                         // Since API is not available, create a mock user for testing
                         user = CreateMockUser();
                         _authState.User = user;
@@ -267,17 +284,17 @@ public class AuthService : IAuthService
                 }
                 else
                 {
-                    Console.WriteLine("No access_token in response");
+                    _logger.LogWarning("No access_token found in token response");
                 }
             }
             else
             {
-                Console.WriteLine($"Token request failed: {tokenResponse.StatusCode} - {responseContent}");
+                _logger.LogWarning("Token request failed: {StatusCode} - {ResponseContent}", tokenResponse.StatusCode, responseContent);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error handling callback: {ex}");
+            _logger.LogError(ex, "Error handling authentication callback");
         }
 
         return false;
@@ -344,8 +361,8 @@ public class AuthService : IAuthService
             var response = await _httpClient.SendAsync(request);
             var responseContent = await response.Content.ReadAsStringAsync();
             
-            Console.WriteLine($"Microsoft Graph response status: {response.StatusCode}");
-            Console.WriteLine($"Microsoft Graph response: {responseContent}");
+            _logger.LogDebug("Microsoft Graph response status: {StatusCode}", response.StatusCode);
+            _logger.LogTrace("Microsoft Graph response: {ResponseContent}", responseContent);
 
             if (response.IsSuccessStatusCode)
             {
@@ -363,13 +380,13 @@ public class AuthService : IAuthService
                     UpdatedAt = DateTime.UtcNow.ToString("O")
                 };
 
-                Console.WriteLine($"Created user from Graph: {user.Email}");
+                _logger.LogInformation("Created user from Microsoft Graph: {Email}", user.Email);
                 return user;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting user from Microsoft Graph: {ex}");
+            _logger.LogError(ex, "Error getting user from Microsoft Graph");
         }
 
         return null;
