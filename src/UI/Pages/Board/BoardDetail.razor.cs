@@ -271,36 +271,6 @@ public partial class BoardDetail : ComponentBase
     {
         await RemoveMember(member);
     }
-
-    private List<TaskItemDto> GetTasksForState(int stateId)
-    {
-        return _boardDetail?.Tasks.Where(t => t.StateId == stateId).ToList() ?? new List<TaskItemDto>();
-    }
-
-    private int GetTaskCountForState(int stateId)
-    {
-        return _boardDetail?.Tasks.Count(t => t.StateId == stateId) ?? 0;
-    }
-
-    private string GetAssigneeName(string assigneeId)
-    {
-        var member = _boardDetail?.Members.FirstOrDefault(m => m.UserId == assigneeId);
-        return member != null ? "User" : "Unknown";
-    }
-
-    private string TruncateDescription(string description)
-    {
-        return description.Length > 100 ? $"{description[..100]}..." : description;
-    }
-
-    private string FormatDueDate(string dueDate)
-    {
-        if (DateTime.TryParse(dueDate, out var date))
-        {
-            return date.ToString("MMM dd");
-        }
-        return dueDate;
-    }
     private bool CanManageStates()
     {
         if (_boardDetail == null || _currentUser == null)
