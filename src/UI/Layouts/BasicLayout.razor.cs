@@ -8,11 +8,37 @@ namespace UI.Layouts
 {
     public partial class BasicLayout : LayoutComponentBase, IDisposable
     {
-        private MenuDataItem[] _menuData;
+        private MenuDataItem[] _menuData = Array.Empty<MenuDataItem>();
+        private bool collapsed;
 
-        [Inject] private ReuseTabsService TabService { get; set; }
+        [Inject] private ReuseTabsService TabService { get; set; } = default!;
 
-        protected override async Task OnInitializedAsync()
+        public LinkItem[] Links => new[]
+        {
+            new LinkItem
+            {
+                Key = "Ant Design Blazor",
+                Title = "Ant Design Blazor",
+                Href = "https://antblazor.com",
+                BlankTarget = true,
+            },
+            new LinkItem
+            {
+                Key = "github",
+                Title = "GitHub",
+                Href = "https://github.com/ant-design-blazor/ant-design-pro-blazor",
+                BlankTarget = true,
+            },
+            new LinkItem
+            {
+                Key = "Blazor",
+                Title = "Blazor",
+                Href = "https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor?WT.mc_id=DT-MVP-5003987",
+                BlankTarget = true,
+            }
+        };
+
+        protected override Task OnInitializedAsync()
         {
             _menuData = new[] {
                 new MenuDataItem
@@ -23,6 +49,12 @@ namespace UI.Layouts
                     Icon = "smile",
                 }
             };
+            return Task.CompletedTask;
+        }
+
+        void Toggle()
+        {
+            collapsed = !collapsed;
         }
 
         void Reload()
@@ -34,6 +66,5 @@ namespace UI.Layouts
         {
             
         }
-
     }
 }
