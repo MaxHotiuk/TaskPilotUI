@@ -24,18 +24,11 @@ public class BoardService : IBoardService
         _localStorage = localStorage;
     }
 
-    private async Task<string> GetAuthTokenAsync()
-    {
-        var token = await _authService.GetAccessTokenAsync();
-        return string.IsNullOrEmpty(token) ? "" : $"Bearer {token}";
-    }
-
     public async Task<List<BoardDto>> GetUserBoardsAsync(string userId)
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            var boards = await _taskPilotApi.GetUserBoardsAsync(userId, token);
+            var boards = await _taskPilotApi.GetUserBoardsAsync(userId);
             
             await _localStorage.SetItemAsync($"{BOARDS_CACHE_KEY}_{userId}", boards);
             
@@ -57,8 +50,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.GetBoardByIdAsync(id, token);
+            return await _taskPilotApi.GetBoardByIdAsync(id);
         }
         catch (Exception)
         {
@@ -70,8 +62,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.CreateBoardAsync(request, token);
+            return await _taskPilotApi.CreateBoardAsync(request);
         }
         catch (Exception)
         {
@@ -83,8 +74,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            await _taskPilotApi.UpdateBoardAsync(id, request, token);
+            await _taskPilotApi.UpdateBoardAsync(id, request);
         }
         catch (Exception)
         {
@@ -96,8 +86,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            await _taskPilotApi.DeleteBoardAsync(id, token);
+            await _taskPilotApi.DeleteBoardAsync(id);
         }
         catch (Exception)
         {
@@ -109,8 +98,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.GetBoardMembersAsync(boardId, token);
+            return await _taskPilotApi.GetBoardMembersAsync(boardId);
         }
         catch (Exception)
         {
@@ -122,8 +110,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.GetBoardTasksAsync(boardId, token);
+            return await _taskPilotApi.GetBoardTasksAsync(boardId);
         }
         catch (Exception)
         {
@@ -186,8 +173,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.GetBoardStatesAsync(boardId, token);
+            return await _taskPilotApi.GetBoardStatesAsync(boardId);
         }
         catch (Exception)
         {
@@ -199,8 +185,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.CreateStateAsync(boardId, request, token);
+            return await _taskPilotApi.CreateStateAsync(boardId, request);
         }
         catch (Exception)
         {
@@ -245,8 +230,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            await _taskPilotApi.AddBoardMemberAsync(boardId, request, token);
+            await _taskPilotApi.AddBoardMemberAsync(boardId, request);
         }
         catch (Exception)
         {
@@ -258,8 +242,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            await _taskPilotApi.UpdateBoardMemberRoleAsync(boardId, userId, request, token);
+            await _taskPilotApi.UpdateBoardMemberRoleAsync(boardId, userId, request);
         }
         catch (Exception)
         {
@@ -271,8 +254,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            await _taskPilotApi.RemoveBoardMemberAsync(boardId, userId, token);
+            await _taskPilotApi.RemoveBoardMemberAsync(boardId, userId);
         }
         catch (Exception)
         {
@@ -284,8 +266,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.GetUserByEmailAsync(email, token);
+            return await _taskPilotApi.GetUserByEmailAsync(email);
         }
         catch (Exception)
         {
@@ -297,8 +278,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var token = await GetAuthTokenAsync();
-            return await _taskPilotApi.GetAllUsersAsync(token);
+            return await _taskPilotApi.GetAllUsersAsync();
         }
         catch (Exception)
         {

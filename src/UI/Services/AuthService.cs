@@ -12,7 +12,7 @@ namespace UI.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly ITaskPilotApi _taskPilotApi;
+    private readonly ITaskPilotAuthApi _taskPilotAuthApi;
     private readonly IMicrosoftGraphApi _microsoftGraphApi;
     private readonly IAzureAdTokenApi _azureAdTokenApi;
     private readonly IJSRuntime _jsRuntime;
@@ -25,7 +25,7 @@ public class AuthService : IAuthService
     public event Action? OnAuthStateChanged;
 
     public AuthService(
-        ITaskPilotApi taskPilotApi,
+        ITaskPilotAuthApi taskPilotAuthApi,
         IMicrosoftGraphApi microsoftGraphApi,
         IAzureAdTokenApi azureAdTokenApi,
         IJSRuntime jsRuntime, 
@@ -33,7 +33,7 @@ public class AuthService : IAuthService
         ILogger<AuthService> logger,
         IHttpClientFactory httpClientFactory)
     {
-        _taskPilotApi = taskPilotApi;
+        _taskPilotAuthApi = taskPilotAuthApi;
         _microsoftGraphApi = microsoftGraphApi;
         _azureAdTokenApi = azureAdTokenApi;
         _jsRuntime = jsRuntime;
@@ -91,7 +91,7 @@ public class AuthService : IAuthService
         {
             _logger.LogDebug("Making API call to get current user");
             
-            var user = await _taskPilotApi.GetCurrentUserAsync($"Bearer {token}");
+            var user = await _taskPilotAuthApi.GetCurrentUserAsync($"Bearer {token}");
                 
             if (user != null)
             {

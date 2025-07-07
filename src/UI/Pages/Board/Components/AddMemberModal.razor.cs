@@ -35,16 +35,11 @@ public partial class AddMemberModal : ComponentBase
             var isAuthenticated = await AuthService.IsAuthenticatedAsync();
             if (isAuthenticated)
             {
-                var accessToken = await AuthService.GetAccessTokenAsync();
-                if (!string.IsNullOrEmpty(accessToken))
-                {
-                    AllUsers = await TaskPilotApi.GetAllUsersAsync($"Bearer {accessToken}");
-                }
+                AllUsers = await TaskPilotApi.GetAllUsersAsync();
             }
         }
         catch (Exception ex)
         {
-            // Handle error appropriately - perhaps show a notification
             Console.WriteLine($"Error loading users: {ex.Message}");
         }
     }

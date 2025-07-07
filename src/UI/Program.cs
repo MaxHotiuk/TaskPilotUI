@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using UI.Services;
 using UI.Interfaces.Services;
 using UI.Interfaces.Api;
+using UI.Handlers;
 using Refit;
 using System.Text.Json;
 
@@ -32,7 +33,13 @@ namespace UI
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
             
+            builder.Services.AddScoped<AuthenticationHandler>();
+            
             builder.Services.AddRefitClient<ITaskPilotApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<ITaskPilotAuthApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
                 
             builder.Services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)

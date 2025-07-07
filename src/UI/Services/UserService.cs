@@ -28,14 +28,7 @@ public class UserService : IUserService
     {
         try
         {
-            var token = await _authService.GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(token))
-            {
-                _logger.LogWarning("No access token available for getting users");
-                return new List<UserDto>();
-            }
-
-            var users = await _taskPilotApi.GetAllUsersAsync($"Bearer {token}");
+            var users = await _taskPilotApi.GetAllUsersAsync();
             
             // Update cache
             foreach (var user in users)
@@ -58,7 +51,6 @@ public class UserService : IUserService
         if (string.IsNullOrEmpty(userId))
             return null;
 
-        // Check cache first
         if (_userCache.TryGetValue(userId, out var cachedUser) && 
             DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
         {
@@ -67,7 +59,6 @@ public class UserService : IUserService
 
         try
         {
-            // If not in cache or cache expired, fetch all users to populate cache
             var allUsers = await GetAllUsersAsync();
             return allUsers.FirstOrDefault(u => u.Id == userId);
         }
@@ -85,16 +76,8 @@ public class UserService : IUserService
 
         try
         {
-            var token = await _authService.GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(token))
-            {
-                _logger.LogWarning("No access token available for getting user by email");
-                return null;
-            }
-
-            var user = await _taskPilotApi.GetUserByEmailAsync(email, $"Bearer {token}");
+            var user = await _taskPilotApi.GetUserByEmailAsync(email);
             
-            // Update cache
             if (user != null)
             {
                 _userCache[user.Id] = user;
@@ -114,7 +97,6 @@ public class UserService : IUserService
         var result = new Dictionary<string, UserDto>();
         var missingUserIds = new List<string>();
 
-        // Check cache first
         foreach (var userId in userIds)
         {
             if (!string.IsNullOrEmpty(userId) && _userCache.TryGetValue(userId, out var cachedUser) &&
@@ -128,7 +110,6 @@ public class UserService : IUserService
             }
         }
 
-        // If we have missing users and cache is expired or incomplete, refresh cache
         if (missingUserIds.Any() || DateTime.UtcNow - _lastCacheUpdate >= _cacheExpiry)
         {
             var allUsers = await GetAllUsersAsync();
