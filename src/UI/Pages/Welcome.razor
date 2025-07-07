@@ -1,5 +1,5 @@
-﻿@page "/"
-@using UI.Services
+﻿@page "/welcome"
+@using UI.Interfaces.Services
 @using UI.Models
 @using AntDesign
 
@@ -21,7 +21,7 @@
                 <Alert
                     Message="Welcome back!"
                     Description="@($"You are successfully logged in as {_currentUser.Username}")"
-                    Type="@AlertType.Success"
+                    Type=@AlertType.Success
                     ShowIcon="true"
                     Banner
                     Style="margin-bottom: 24px"/>
@@ -29,7 +29,7 @@
             
             <Row Gutter="16">
                 <AntDesign.Col Span="24" Md="12">
-                    <Card Title="User Information" Size=@CardSize.Small>
+                    <Card Title="User Information" Size="@CardSize.Small">
                         <div style="margin-bottom: 16px;">
                             <Text Strong>Username: </Text>
                             <Text>@_currentUser.Username</Text>
@@ -40,7 +40,7 @@
                         </div>
                         <div style="margin-bottom: 16px;">
                             <Text Strong>Role: </Text>
-                            <Tag Color="@(_currentUser.Role == "Admin" ? "red" : "blue")">@_currentUser.Role</Tag>
+                            <Tag Color=@(_currentUser.Role == "Admin" ? "red" : "blue")>@_currentUser.Role</Tag>
                         </div>
                         <div style="margin-bottom: 16px;">
                             <Text Strong>Member Since: </Text>

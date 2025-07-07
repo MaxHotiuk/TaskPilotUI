@@ -1,0 +1,95 @@
+@page "/"
+@page "/boards"
+@using AntDesign
+@using UI.Models
+@using UI.Interfaces.Services
+@using UI.Pages.Boards.Components
+
+<PageHeader Title="My Boards">
+    <PageHeaderExtra>
+        <Space>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="reload" 
+                        Loading="_isLoading"
+                        OnClick="RefreshBoards">
+                    Refresh
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Primary
+                        Icon="plus" 
+                        OnClick="ShowCreateModal">
+                    Create Board
+                </Button>
+            </SpaceItem>
+        </Space>
+    </PageHeaderExtra>
+    
+    <PageHeaderContent>
+        @if (!_isLoading || _boards.Any())
+        {
+            <BoardsHeader @bind-SearchTerm="_searchTerm"
+                          FilterType="_filterType"
+                          OnSearchChanged="OnSearchChanged"
+                          OnFilterChanged="OnFilterChanged" />
+        }
+    </PageHeaderContent>
+</PageHeader>
+
+<div class="boards-content">
+    @if (_isLoading && !_boards.Any())
+    {
+        <div class="loading-container">
+            <Spin Size=@SpinSize.Large Tip="Loading your boards...">
+                <div style="height: 200px;"></div>
+            </Spin>
+        </div>
+    }
+    else if (_filteredBoards.Any())
+    {
+        <Row Gutter="(16, 16)" Style="margin-top: 24px;">
+            @foreach (var boardStats in _filteredBoards)
+            {
+                <AntDesign.Col Xxl="6" Xl="8" Lg="8" Md="12" Sm="12" Xs="24">
+                    <BoardCard BoardStats="boardStats"
+                               OnBoardClick="HandleBoardClick"
+                               OnEditBoard="HandleEditBoard"
+                               OnDeleteBoard="HandleDeleteBoard" />
+                </AntDesign.Col>
+            }
+        </Row>
+    }
+    else if (!_isLoading)
+    {
+        <Empty Description="GetEmptyDescription()"
+               Style="margin-top: 60px;">
+            <ChildContent>
+                @if (!_boards.Any())
+                {
+                    <Button Type=@ButtonType.Primary
+                            Icon="plus" 
+                            OnClick="ShowCreateModal">
+                        Create Your First Board
+                    </Button>
+                }
+                else
+                {
+                    <Button Type=@ButtonType.Default OnClick="ClearFilters">
+                        Clear Filters
+                    </Button>
+                }
+            </ChildContent>
+        </Empty>
+    }
+</div>
+
+<CreateBoardModal @bind-Visible="_showCreateModal" 
+                  OnBoardCreated="HandleBoardCreated" />
+
+<DeleteBoardModal @bind-Visible="_showDeleteModal"
+                  SelectedBoard="_selectedBoard"
+                  IsDeleting="_isDeleting"
+                  @bind-DeleteConfirmation="_deleteConfirmation"
+                  OnConfirmDelete="ConfirmDelete"
+                  OnCancelDelete="CancelDelete" />

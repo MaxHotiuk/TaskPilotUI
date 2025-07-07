@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
-using UI.Models;
-using UI.Services;
+using UI.Models.User;
+using UI.Interfaces.Services;
 
 namespace UI.Pages
 {

@@ -1,0 +1,62 @@
+@using AntDesign
+@using UI.Models
+
+<Card Hoverable="true" 
+      Style="margin-bottom: 16px;"
+      class="board-card">
+    <ActionTemplate>
+        <div class="board-action-btn board-action-edit" @onclick="HandleEditClick" title="Edit Board">
+            <Icon Type="edit" />
+        </div>
+        <div class="board-action-btn board-action-view" @onclick="HandleViewClick" title="View Board">
+            <Icon Type="eye" />
+        </div>
+        <div class="board-action-btn board-action-delete" @onclick="HandleDeleteClick" title="Delete Board">
+            <Icon Type="delete" />
+        </div>
+    </ActionTemplate>
+    
+    <ChildContent>
+        <div class="board-card-content">
+        <div class="board-header">
+            <Title Level="4" Style="margin-bottom: 8px;">@Board.Name</Title>
+            @if (BoardStats.IsOwner)
+            {
+                <Tag Color='"blue"'>Owner</Tag>
+            }
+            else
+            {
+                <Tag Color='"green"'>Member</Tag>
+            }
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Board.Description))
+        {
+            <Paragraph Ellipsis="true" Style="margin-bottom: 16px; color: #666;">
+                @Board.Description
+            </Paragraph>
+        }
+        else
+        {
+            <div style="height: 22px; margin-bottom: 16px;"></div>
+        }
+        
+        <div class="board-stats">
+            <div class="stat-item">
+                <Icon Type="check-circle" Style="margin-right: 4px;" />
+                <Text>@BoardStats.TaskCount tasks</Text>
+            </div>
+            <div class="stat-item">
+                <Icon Type="team" Style="margin-right: 4px;" />
+                <Text>@BoardStats.MemberCount members</Text>
+            </div>
+        </div>
+        
+        <div class="board-footer">
+            <Text Type="@TextElementType.Secondary" Style="font-size: 12px;">
+                Updated @GetRelativeTime(Board.UpdatedAt)
+            </Text>
+        </div>
+        </div>
+    </ChildContent>
+</Card>
