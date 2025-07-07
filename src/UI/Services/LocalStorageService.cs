@@ -1,15 +1,8 @@
 using Microsoft.JSInterop;
 using System.Text.Json;
+using UI.Interfaces.Services;
 
 namespace UI.Services;
-
-public interface ILocalStorageService
-{
-    Task<T?> GetItemAsync<T>(string key);
-    Task SetItemAsync<T>(string key, T value);
-    Task RemoveItemAsync(string key);
-    Task ClearAsync();
-}
 
 public class LocalStorageService : ILocalStorageService
 {
@@ -51,7 +44,6 @@ public class LocalStorageService : ILocalStorageService
         }
         catch
         {
-            // Silently fail - storage might be full or unavailable
         }
     }
 
@@ -63,7 +55,6 @@ public class LocalStorageService : ILocalStorageService
         }
         catch
         {
-            // Silently fail
         }
     }
 
@@ -75,7 +66,6 @@ public class LocalStorageService : ILocalStorageService
         }
         catch
         {
-            // Silently fail
         }
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using UI.Models.User;
-using UI.Services;
+using UI.Interfaces.Services;
 
 namespace UI.Pages
 {

@@ -1,5 +1,5 @@
 @page "/login"
-@using UI.Services
+@using UI.Interfaces.Services
 @using UI.Models
 @using AntDesign
 
@@ -25,9 +25,9 @@
             else if (_error != null)
             {
                 <Alert
-                    Type="@AlertType.Error"
+                    Type=@AlertType.Error
                     Message="Authentication Error"
-                    Description="@_error"
+                    Description="_error"
                     ShowIcon="true"
                     Closable="true"
                     OnClose="() => _error = null"
@@ -36,10 +36,10 @@
 
             <div class="login-actions">
                 <Button
-                    Type="@ButtonType.Primary"
-                    Size="@ButtonSize.Large"
+                    Type=@ButtonType.Primary
+                    Size=@ButtonSize.Large
                     Icon="microsoft"
-                    Loading="@_isLoading"
+                    Loading="_isLoading"
                     OnClick="HandleLogin"
                     Block="true"
                     Style="height: 48px; font-size: 16px;">

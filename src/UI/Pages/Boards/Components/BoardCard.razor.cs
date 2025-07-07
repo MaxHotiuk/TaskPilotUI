@@ -3,7 +3,7 @@ using UI.Models.Board;
 
 namespace UI.Pages.Boards.Components;
 
-public partial class BoardCard : ComponentBase
+public partial class BoardCard
 {
     [Parameter] public BoardWithStats BoardStats { get; set; } = new();
     [Parameter] public EventCallback<string> OnBoardClick { get; set; }
@@ -11,43 +11,6 @@ public partial class BoardCard : ComponentBase
     [Parameter] public EventCallback<string> OnDeleteBoard { get; set; }
 
     private BoardDto Board => BoardStats.Board;
-
-    private RenderFragment[] _actions => new RenderFragment[]
-    {
-        builder =>
-        {
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "board-action-btn board-action-edit");
-            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, HandleEditClick));
-            builder.AddAttribute(3, "title", "Edit Board");
-            builder.OpenComponent<AntDesign.Icon>(4);
-            builder.AddAttribute(5, "Type", "edit");
-            builder.CloseComponent();
-            builder.CloseElement();
-        },
-        builder =>
-        {
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "board-action-btn board-action-view");
-            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, HandleViewClick));
-            builder.AddAttribute(3, "title", "View Board");
-            builder.OpenComponent<AntDesign.Icon>(4);
-            builder.AddAttribute(5, "Type", "eye");
-            builder.CloseComponent();
-            builder.CloseElement();
-        },
-        builder =>
-        {
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "board-action-btn board-action-delete");
-            builder.AddAttribute(2, "onclick", EventCallback.Factory.Create(this, HandleDeleteClick));
-            builder.AddAttribute(3, "title", "Delete Board");
-            builder.OpenComponent<AntDesign.Icon>(4);
-            builder.AddAttribute(5, "Type", "delete");
-            builder.CloseComponent();
-            builder.CloseElement();
-        }
-    };
 
     private async Task HandleViewClick()
     {

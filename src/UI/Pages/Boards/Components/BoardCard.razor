@@ -2,11 +2,22 @@
 @using UI.Models
 
 <Card Hoverable="true" 
-      Actions="_actions" 
       Style="margin-bottom: 16px;"
       class="board-card">
+    <ActionTemplate>
+        <div class="board-action-btn board-action-edit" @onclick="HandleEditClick" title="Edit Board">
+            <Icon Type="edit" />
+        </div>
+        <div class="board-action-btn board-action-view" @onclick="HandleViewClick" title="View Board">
+            <Icon Type="eye" />
+        </div>
+        <div class="board-action-btn board-action-delete" @onclick="HandleDeleteClick" title="Delete Board">
+            <Icon Type="delete" />
+        </div>
+    </ActionTemplate>
     
-    <div class="board-card-content">
+    <ChildContent>
+        <div class="board-card-content">
         <div class="board-header">
             <Title Level="4" Style="margin-bottom: 8px;">@Board.Name</Title>
             @if (BoardStats.IsOwner)
@@ -42,9 +53,10 @@
         </div>
         
         <div class="board-footer">
-            <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
+            <Text Type="@TextElementType.Secondary" Style="font-size: 12px;">
                 Updated @GetRelativeTime(Board.UpdatedAt)
             </Text>
         </div>
-    </div>
+        </div>
+    </ChildContent>
 </Card>

@@ -1,75 +1,51 @@
-using System.Net.Http.Json;
 using UI.Models.Board;
 using UI.Models.Member;
 using UI.Models.Task;
+using Refit;
+using UI.Interfaces.Services;
+using UI.Interfaces.Api;
 
 namespace UI.Services;
 
-public interface IBoardService
-{
-    Task<List<BoardDto>> GetUserBoardsAsync(string userId);
-    Task<List<BoardDto>> GetCachedUserBoardsAsync(string userId);
-    Task<BoardDto?> GetBoardByIdAsync(string id);
-    Task<string> CreateBoardAsync(CreateBoardRequest request);
-    Task UpdateBoardAsync(string id, CreateBoardRequest request);
-    Task DeleteBoardAsync(string id);
-    Task<List<BoardMemberDto>> GetBoardMembersAsync(string boardId);
-    Task<List<TaskItemDto>> GetBoardTasksAsync(string boardId);
-    Task<BoardWithStats> GetBoardWithStatsAsync(string boardId);
-    Task<BoardWithStats> GetCachedBoardWithStatsAsync(string boardId);
-    Task ClearBoardCacheAsync(string userId);
-}
-
 public class BoardService : IBoardService
 {
-    private readonly HttpClient _httpClient;
+    private readonly ITaskPilotApi _taskPilotApi;
     private readonly IAuthService _authService;
     private readonly ILocalStorageService _localStorage;
     private const string BOARDS_CACHE_KEY = "cached_boards";
     private const string BOARD_STATS_CACHE_PREFIX = "cached_board_stats_";
 
-    public BoardService(HttpClient httpClient, IAuthService authService, ILocalStorageService localStorage)
+    public BoardService(ITaskPilotApi taskPilotApi, IAuthService authService, ILocalStorageService localStorage)
     {
-        _httpClient = httpClient;
+        _taskPilotApi = taskPilotApi;
         _authService = authService;
         _localStorage = localStorage;
     }
 
-    private async Task<HttpClient> GetAuthenticatedClientAsync()
+    private async Task<string> GetAuthTokenAsync()
     {
         var token = await _authService.GetAccessTokenAsync();
-        if (!string.IsNullOrEmpty(token))
-        {
-            _httpClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        }
-        return _httpClient;
+        return string.IsNullOrEmpty(token) ? "" : $"Bearer {token}";
     }
 
     public async Task<List<BoardDto>> GetUserBoardsAsync(string userId)
     {
         try
         {
-            var client = await GetAuthenticatedClientAsync();
-            var response = await client.GetAsync($"/api/users/{userId}/boards");
+            var token = await GetAuthTokenAsync();
+            var boards = await _taskPilotApi.GetUserBoardsAsync(userId, token);
             
-            if (response.IsSuccessStatusCode)
-            {
-                var boards = await response.Content.ReadFromJsonAsync<List<BoardDto>>() ?? new List<BoardDto>();
-                
-                // Cache the boards
-                await _localStorage.SetItemAsync($"{BOARDS_CACHE_KEY}_{userId}", boards);
-                
-                return boards;
-            }
+            await _localStorage.SetItemAsync($"{BOARDS_CACHE_KEY}_{userId}", boards);
             
-            // If API call fails, try to return cached data
+            return boards;
+        }
+        catch (ApiException)
+        {
             var cachedBoards = await _localStorage.GetItemAsync<List<BoardDto>>($"{BOARDS_CACHE_KEY}_{userId}");
             return cachedBoards ?? new List<BoardDto>();
         }
         catch (Exception)
         {
-            // If everything fails, try to return cached data
             var cachedBoards = await _localStorage.GetItemAsync<List<BoardDto>>($"{BOARDS_CACHE_KEY}_{userId}");
             return cachedBoards ?? new List<BoardDto>();
         }
@@ -79,15 +55,8 @@ public class BoardService : IBoardService
     {
         try
         {
-            var client = await GetAuthenticatedClientAsync();
-            var response = await client.GetAsync($"/api/boards/{id}");
-            
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<BoardDto>();
-            }
-            
-            return null;
+            var token = await GetAuthTokenAsync();
+            return await _taskPilotApi.GetBoardByIdAsync(id, token);
         }
         catch (Exception)
         {
@@ -99,15 +68,8 @@ public class BoardService : IBoardService
     {
         try
         {
-            var client = await GetAuthenticatedClientAsync();
-            var response = await client.PostAsJsonAsync("/api/boards", request);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStringAsync() ?? string.Empty;
-            }
-            
-            throw new Exception($"Failed to create board: {response.StatusCode}");
+            var token = await GetAuthTokenAsync();
+            return await _taskPilotApi.CreateBoardAsync(request, token);
         }
         catch (Exception)
         {
@@ -119,13 +81,8 @@ public class BoardService : IBoardService
     {
         try
         {
-            var client = await GetAuthenticatedClientAsync();
-            var response = await client.PutAsJsonAsync($"/api/boards/{id}", request);
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Failed to update board: {response.StatusCode}");
-            }
+            var token = await GetAuthTokenAsync();
+            await _taskPilotApi.UpdateBoardAsync(id, request, token);
         }
         catch (Exception)
         {
@@ -137,13 +94,8 @@ public class BoardService : IBoardService
     {
         try
         {
-            var client = await GetAuthenticatedClientAsync();
-            var response = await client.DeleteAsync($"/api/boards/{id}");
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Failed to delete board: {response.StatusCode}");
-            }
+            var token = await GetAuthTokenAsync();
+            await _taskPilotApi.DeleteBoardAsync(id, token);
         }
         catch (Exception)
         {
@@ -155,15 +107,8 @@ public class BoardService : IBoardService
     {
         try
         {
-            var client = await GetAuthenticatedClientAsync();
-            var response = await client.GetAsync($"/api/boards/{boardId}/members");
-            
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<List<BoardMemberDto>>() ?? new List<BoardMemberDto>();
-            }
-            
-            return new List<BoardMemberDto>();
+            var token = await GetAuthTokenAsync();
+            return await _taskPilotApi.GetBoardMembersAsync(boardId, token);
         }
         catch (Exception)
         {
@@ -175,15 +120,8 @@ public class BoardService : IBoardService
     {
         try
         {
-            var client = await GetAuthenticatedClientAsync();
-            var response = await client.GetAsync($"/api/boards/{boardId}/tasks");
-            
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<List<TaskItemDto>>() ?? new List<TaskItemDto>();
-            }
-            
-            return new List<TaskItemDto>();
+            var token = await GetAuthTokenAsync();
+            return await _taskPilotApi.GetBoardTasksAsync(boardId, token);
         }
         catch (Exception)
         {
@@ -214,14 +152,12 @@ public class BoardService : IBoardService
                 IsOwner = currentUser != null && board.OwnerId == currentUser.Id
             };
 
-            // Cache the board stats
             await _localStorage.SetItemAsync($"{BOARD_STATS_CACHE_PREFIX}{boardId}", boardWithStats);
             
             return boardWithStats;
         }
         catch (Exception)
         {
-            // If API call fails, try to return cached data
             var cachedStats = await _localStorage.GetItemAsync<BoardWithStats>($"{BOARD_STATS_CACHE_PREFIX}{boardId}");
             return cachedStats ?? new BoardWithStats();
         }
@@ -242,9 +178,5 @@ public class BoardService : IBoardService
     public async Task ClearBoardCacheAsync(string userId)
     {
         await _localStorage.RemoveItemAsync($"{BOARDS_CACHE_KEY}_{userId}");
-        
-        // Also clear all board stats cache - this is a simple approach
-        // In a real app, you might want to track which boards belong to which user
-        // For now, we'll clear the user's boards cache
     }
 }

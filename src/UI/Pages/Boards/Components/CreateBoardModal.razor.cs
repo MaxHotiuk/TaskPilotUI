@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using UI.Models.Board;
-using UI.Services;
+using UI.Interfaces.Services;
 
 namespace UI.Pages.Boards.Components;
 

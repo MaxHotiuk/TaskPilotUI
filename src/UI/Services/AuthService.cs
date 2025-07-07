@@ -1,46 +1,45 @@
 using Microsoft.JSInterop;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using UI.Models.Auth;
 using UI.Models.User;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Refit;
+using UI.Interfaces.Services;
+using UI.Interfaces.Api;
 
 namespace UI.Services;
 
-public interface IAuthService
-{
-    Task<bool> IsAuthenticatedAsync();
-    Task<UserDto?> GetCurrentUserAsync();
-    Task<UserDto?> GetCurrentUserAsync(bool forceRefresh = false);
-    UserDto? GetCachedUser();
-    Task<UserDto?> RefreshCurrentUserAsync();
-    Task InitializeAsync();
-    Task<string> GetLoginUrlAsync();
-    Task<bool> HandleCallbackAsync(string code, string state);
-    Task LogoutAsync();
-    Task<string?> GetAccessTokenAsync();
-    AuthState AuthState { get; }
-    event Action? OnAuthStateChanged;
-}
-
 public class AuthService : IAuthService
 {
-    private readonly HttpClient _httpClient;
+    private readonly ITaskPilotApi _taskPilotApi;
+    private readonly IMicrosoftGraphApi _microsoftGraphApi;
+    private readonly IAzureAdTokenApi _azureAdTokenApi;
     private readonly IJSRuntime _jsRuntime;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
     private AuthState _authState = new();
 
     public AuthState AuthState => _authState;
     public event Action? OnAuthStateChanged;
 
-    public AuthService(HttpClient httpClient, IJSRuntime jsRuntime, IConfiguration configuration, ILogger<AuthService> logger)
+    public AuthService(
+        ITaskPilotApi taskPilotApi,
+        IMicrosoftGraphApi microsoftGraphApi,
+        IAzureAdTokenApi azureAdTokenApi,
+        IJSRuntime jsRuntime, 
+        IConfiguration configuration, 
+        ILogger<AuthService> logger,
+        IHttpClientFactory httpClientFactory)
     {
-        _httpClient = httpClient;
+        _taskPilotApi = taskPilotApi;
+        _microsoftGraphApi = microsoftGraphApi;
+        _azureAdTokenApi = azureAdTokenApi;
         _jsRuntime = jsRuntime;
         _configuration = configuration;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<bool> IsAuthenticatedAsync()
@@ -90,52 +89,35 @@ public class AuthService : IAuthService
 
         try
         {
-            var apiUrl = $"{GetApiBaseUrl()}/api/users/me";
-            _logger.LogDebug("Making API call to: {ApiUrl}", apiUrl);
+            _logger.LogDebug("Making API call to get current user");
             
-            var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            var response = await _httpClient.SendAsync(request);
-            var responseContent = await response.Content.ReadAsStringAsync();
-            
-            _logger.LogDebug("API response status: {StatusCode}", response.StatusCode);
-            _logger.LogTrace("API response content: {ResponseContent}", responseContent);
-            
-            if (response.IsSuccessStatusCode)
+            var user = await _taskPilotApi.GetCurrentUserAsync($"Bearer {token}");
+                
+            if (user != null)
             {
-                var user = JsonSerializer.Deserialize<UserDto>(responseContent, new JsonSerializerOptions 
-                { 
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
-                });
-                
-                if (user != null)
-                {
-                    _logger.LogInformation("Successfully authenticated user: {Email}", user.Email);
-                    _authState.User = user;
-                    _authState.IsAuthenticated = true;
-                    _authState.AccessToken = token;
-                    OnAuthStateChanged?.Invoke();
-                }
-                
+                _logger.LogInformation("Successfully authenticated user: {Email}", user.Email);
+                _authState.User = user;
+                _authState.IsAuthenticated = true;
+                _authState.AccessToken = token;
+                OnAuthStateChanged?.Invoke();
                 return user;
             }
-            else
+        }
+        catch (ApiException ex)
+        {
+            _logger.LogWarning("API call failed with status: {StatusCode}", ex.StatusCode);
+            _logger.LogDebug("Response: {ResponseContent}", ex.Content);
+            
+            _logger.LogInformation("Attempting to create user from Microsoft Graph");
+            var graphUser = await CreateUserFromTokenAsync(token);
+            if (graphUser != null)
             {
-                _logger.LogWarning("API call failed with status: {StatusCode}", response.StatusCode);
-                _logger.LogDebug("Response: {ResponseContent}", responseContent);
-                
-                _logger.LogInformation("Attempting to create user from Microsoft Graph");
-                var graphUser = await CreateUserFromTokenAsync(token);
-                if (graphUser != null)
-                {
-                    _logger.LogInformation("Successfully created user from Microsoft Graph: {Email}", graphUser.Email);
-                    _authState.User = graphUser;
-                    _authState.IsAuthenticated = true;
-                    _authState.AccessToken = token;
-                    OnAuthStateChanged?.Invoke();
-                    return graphUser;
-                }
+                _logger.LogInformation("Successfully created user from Microsoft Graph: {Email}", graphUser.Email);
+                _authState.User = graphUser;
+                _authState.IsAuthenticated = true;
+                _authState.AccessToken = token;
+                OnAuthStateChanged?.Invoke();
+                return graphUser;
             }
         }
         catch (Exception ex)
@@ -224,57 +206,52 @@ public class AuthService : IAuthService
                 {"code_verifier", codeVerifier}
             };
 
-            var tokenUrl = $"https://login.microsoftonline.com/{config.TenantId}/oauth2/v2.0/token";
-            _logger.LogDebug("Token URL: {TokenUrl}", tokenUrl);
+            // Create a new HttpClient for the Azure AD token endpoint
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri($"https://login.microsoftonline.com/{config.TenantId}");
+            
+            var tokenApi = RestService.For<IAzureAdTokenApi>(httpClient);
+            var tokenResponse = await tokenApi.GetTokenAsync(tokenRequest);
 
-            var tokenResponse = await _httpClient.PostAsync(tokenUrl, new FormUrlEncodedContent(tokenRequest));
+            _logger.LogDebug("Token response received");
 
-            var responseContent = await tokenResponse.Content.ReadAsStringAsync();
-            _logger.LogDebug("Token response status: {StatusCode}", tokenResponse.StatusCode);
-            _logger.LogTrace("Token response content: {ResponseContent}", responseContent);
-
-            if (tokenResponse.IsSuccessStatusCode)
+            if (tokenResponse.TryGetProperty("access_token", out var accessTokenElement))
             {
-                var tokenData = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                var accessToken = accessTokenElement.GetString();
+                _logger.LogDebug("Successfully received access token (length: {TokenLength})", accessToken?.Length ?? 0);
                 
-                if (tokenData.TryGetProperty("access_token", out var accessTokenElement))
+                await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "access_token", accessToken);
+                
+                _logger.LogDebug("Attempting to get current user");
+                var user = await GetCurrentUserAsync();
+                if (user != null)
                 {
-                    var accessToken = accessTokenElement.GetString();
-                    _logger.LogDebug("Successfully received access token (length: {TokenLength})", accessToken?.Length ?? 0);
-                    
-                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "access_token", accessToken);
-                    
-                    _logger.LogDebug("Attempting to get current user");
-                    var user = await GetCurrentUserAsync();
-                    if (user != null)
-                    {
-                        _logger.LogInformation("Successfully authenticated user: {Email}", user.Email);
-                        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state");
-                        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "code_verifier");
-                        return true;
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Failed to get current user from API, using mock user for testing");
-                        user = CreateMockUser();
-                        _authState.User = user;
-                        _authState.IsAuthenticated = true;
-                        _authState.AccessToken = accessToken;
-                        OnAuthStateChanged?.Invoke();
-                        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state");
-                        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "code_verifier");
-                        return true;
-                    }
+                    _logger.LogInformation("Successfully authenticated user: {Email}", user.Email);
+                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state");
+                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "code_verifier");
+                    return true;
                 }
                 else
                 {
-                    _logger.LogWarning("No access_token found in token response");
+                    _logger.LogWarning("Failed to get current user from API, using mock user for testing");
+                    user = CreateMockUser();
+                    _authState.User = user;
+                    _authState.IsAuthenticated = true;
+                    _authState.AccessToken = accessToken;
+                    OnAuthStateChanged?.Invoke();
+                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state");
+                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "code_verifier");
+                    return true;
                 }
             }
             else
             {
-                _logger.LogWarning("Token request failed: {StatusCode} - {ResponseContent}", tokenResponse.StatusCode, responseContent);
+                _logger.LogWarning("No access_token found in token response");
             }
+        }
+        catch (ApiException ex)
+        {
+            _logger.LogWarning("Token request failed: {StatusCode} - {Content}", ex.StatusCode, ex.Content);
         }
         catch (Exception ex)
         {
@@ -337,34 +314,28 @@ public class AuthService : IAuthService
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            var response = await _httpClient.SendAsync(request);
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var graphData = await _microsoftGraphApi.GetMeAsync($"Bearer {accessToken}");
             
-            _logger.LogDebug("Microsoft Graph response status: {StatusCode}", response.StatusCode);
-            _logger.LogTrace("Microsoft Graph response: {ResponseContent}", responseContent);
+            _logger.LogDebug("Microsoft Graph response received successfully");
 
-            if (response.IsSuccessStatusCode)
+            var user = new UserDto
             {
-                var graphData = JsonSerializer.Deserialize<JsonElement>(responseContent);
-                
-                var user = new UserDto
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    EntraId = graphData.TryGetProperty("id", out var id) ? id.GetString() ?? "" : "",
-                    Username = graphData.TryGetProperty("displayName", out var name) ? name.GetString() ?? "" : "",
-                    Email = graphData.TryGetProperty("mail", out var mail) ? mail.GetString() ?? "" : 
-                           (graphData.TryGetProperty("userPrincipalName", out var upn) ? upn.GetString() ?? "" : ""),
-                    Role = "User",
-                    CreatedAt = DateTime.UtcNow.ToString("O"),
-                    UpdatedAt = DateTime.UtcNow.ToString("O")
-                };
+                Id = Guid.NewGuid().ToString(),
+                EntraId = graphData.TryGetProperty("id", out var id) ? id.GetString() ?? "" : "",
+                Username = graphData.TryGetProperty("displayName", out var name) ? name.GetString() ?? "" : "",
+                Email = graphData.TryGetProperty("mail", out var mail) ? mail.GetString() ?? "" : 
+                       (graphData.TryGetProperty("userPrincipalName", out var upn) ? upn.GetString() ?? "" : ""),
+                Role = "User",
+                CreatedAt = DateTime.UtcNow.ToString("O"),
+                UpdatedAt = DateTime.UtcNow.ToString("O")
+            };
 
-                _logger.LogInformation("Created user from Microsoft Graph: {Email}", user.Email);
-                return user;
-            }
+            _logger.LogInformation("Created user from Microsoft Graph: {Email}", user.Email);
+            return user;
+        }
+        catch (ApiException ex)
+        {
+            _logger.LogWarning("Microsoft Graph API call failed: {StatusCode} - {Content}", ex.StatusCode, ex.Content);
         }
         catch (Exception ex)
         {
