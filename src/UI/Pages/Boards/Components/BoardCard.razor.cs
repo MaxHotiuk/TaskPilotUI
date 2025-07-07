@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using UI.Models;
+using UI.Models.Board;
 
 namespace UI.Pages.Boards.Components;
 

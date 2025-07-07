@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
-using UI.Models;
+using UI.Models.Board;
+using UI.Models.Member;
+using UI.Models.Task;
 
 namespace UI.Services;
 

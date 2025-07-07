@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
-using UI.Models;
+using UI.Models.Board;
+using UI.Models.Member;
+using UI.Models.User;
 using UI.Services;
 
 namespace UI.Pages.Boards;

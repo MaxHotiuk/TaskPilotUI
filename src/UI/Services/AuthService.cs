@@ -1,7 +1,8 @@
 using Microsoft.JSInterop;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using UI.Models;
+using UI.Models.Auth;
+using UI.Models.User;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
