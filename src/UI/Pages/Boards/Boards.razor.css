@@ -1,0 +1,173 @@
+.boards-content {
+    padding: 0 24px 24px;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.page-header-search {
+    padding: 16px 0;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 16px;
+}
+
+.search-section {
+    display: flex;
+    align-items: center;
+}
+
+.search-section .ant-input-affix-wrapper {
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e8e8e8;
+    transition: all 0.3s ease;
+}
+
+.search-section .ant-input-affix-wrapper:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+.search-section .ant-input-affix-wrapper-focused {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+}
+
+.search-section .ant-input {
+    font-size: 15px;
+    padding: 8px 12px;
+}
+
+.search-section .ant-input::placeholder {
+    color: #bfbfbf;
+    font-style: italic;
+}
+
+.filter-section {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.filter-section .ant-btn {
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.filter-section .ant-btn:not(.ant-btn-primary):hover {
+    background-color: #f0f8ff;
+    border-color: #1890ff;
+    color: #1890ff;
+}
+
+.filter-section .ant-btn-text {
+    color: #666;
+    border: 1px solid transparent;
+}
+
+.filter-section .ant-btn-text:hover {
+    color: #1890ff;
+    background: rgba(24, 144, 255, 0.06);
+    border-color: rgba(24, 144, 255, 0.2);
+}
+
+.filter-section .ant-btn-primary {
+    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    border: none;
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+}
+
+.filter-section .ant-btn-primary:hover {
+    background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+    box-shadow: 0 4px 8px rgba(24, 144, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.board-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+/* Responsive grid improvements */
+@media (max-width: 1400px) {
+    .board-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 1200px) {
+    .board-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .boards-content {
+        padding: 0 16px 16px;
+    }
+    
+    .page-header-search {
+        padding: 12px 0;
+    }
+    
+    .search-section {
+        margin-bottom: 16px;
+    }
+    
+    .search-section .ant-input-affix-wrapper {
+        max-width: 100%;
+    }
+    
+    .filter-section {
+        justify-content: flex-start;
+    }
+    
+    .filter-section .ant-space {
+        flex-wrap: wrap;
+    }
+    
+    .board-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+    }
+}
+
+@media (max-width: 640px) {
+    .board-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .boards-content {
+        padding: 0 12px 12px;
+    }
+    
+    .page-header-search {
+        padding: 8px 0;
+    }
+    
+    .filter-section .ant-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+        height: auto;
+    }
+    
+    .board-grid {
+        gap: 8px;
+    }
+}
+
+/* Smooth transitions for all interactive elements */
+.page-header-search * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

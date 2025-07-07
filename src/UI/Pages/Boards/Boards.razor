@@ -1,0 +1,167 @@
+@page "/"
+@page "/boards"
+@using AntDesign
+@using UI.Models
+@using UI.Services
+@using UI.Pages.Boards.Components
+
+<PageHeader Title="My Boards">
+    <PageHeaderExtra>
+        <Space>
+            <SpaceItem>
+                <Button Type="@ButtonType.Default" 
+                        Icon="reload" 
+                        Loading="@_isLoading"
+                        OnClick="@RefreshBoards">
+                    Refresh
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type="@ButtonType.Primary" 
+                        Icon="plus" 
+                        OnClick="@ShowCreateModal">
+                    Create Board
+                </Button>
+            </SpaceItem>
+        </Space>
+    </PageHeaderExtra>
+    
+    <PageHeaderContent>
+        @if (!_isLoading || _boards.Any())
+        {
+            <div class="page-header-search">
+                <Row Gutter="24" Justify="@RowJustify.SpaceBetween" Align="@RowAlign.Middle">
+                    <AntDesign.Col Xs="24" Sm="24" Md="12" Lg="14" Xl="16">
+                        <div class="search-section">
+                            <Input Size="@InputSize.Large"
+                                   Placeholder="Search your boards..." 
+                                   @bind-Value="_searchTerm"
+                                   @oninput="OnSearchChanged"
+                                   AllowClear="true"
+                                   Style="border-radius: 8px;" />
+                        </div>
+                    </AntDesign.Col>
+                    <AntDesign.Col Xs="24" Sm="24" Md="12" Lg="10" Xl="8">
+                        <div class="filter-section">
+                            <Space Size="@SpaceSize.Small" Wrap="true">
+                                <SpaceItem>
+                                    <Text Type="@TextElementType.Secondary" Style="margin-right: 8px; font-weight: 500;">
+                                        Show:
+                                    </Text>
+                                </SpaceItem>
+                                <SpaceItem>
+                                    <Button Type="@(_filterType == "all" ? ButtonType.Primary : ButtonType.Text)" 
+                                            OnClick="@(() => OnFilterChanged("all"))"
+                                            Size="@ButtonSize.Small"
+                                            Style="border-radius: 6px;">
+                                        All Boards
+                                    </Button>
+                                </SpaceItem>
+                                <SpaceItem>
+                                    <Button Type="@(_filterType == "owner" ? ButtonType.Primary : ButtonType.Text)" 
+                                            OnClick="@(() => OnFilterChanged("owner"))"
+                                            Size="@ButtonSize.Small"
+                                            Style="border-radius: 6px;">
+                                        <Icon Type="crown" Style="margin-right: 4px;" />
+                                        Owner
+                                    </Button>
+                                </SpaceItem>
+                                <SpaceItem>
+                                    <Button Type="@(_filterType == "member" ? ButtonType.Primary : ButtonType.Text)" 
+                                            OnClick="@(() => OnFilterChanged("member"))"
+                                            Size="@ButtonSize.Small"
+                                            Style="border-radius: 6px;">
+                                        <Icon Type="team" Style="margin-right: 4px;" />
+                                        Member
+                                    </Button>
+                                </SpaceItem>
+                            </Space>
+                        </div>
+                    </AntDesign.Col>
+                </Row>
+            </div>
+        }
+    </PageHeaderContent>
+</PageHeader>
+
+<div class="boards-content">
+    @if (_isLoading && !_boards.Any())
+    {
+        <div class="loading-container">
+            <Spin Size="@SpinSize.Large" Tip="Loading your boards...">
+                <div style="height: 200px;"></div>
+            </Spin>
+        </div>
+    }
+    else if (_filteredBoards.Any())
+    {
+        <Row Gutter="(16, 16)" Style="margin-top: 24px;">
+            @foreach (var boardStats in _filteredBoards)
+            {
+                <AntDesign.Col Xxl="6" Xl="8" Lg="8" Md="12" Sm="12" Xs="24">
+                    <BoardCard BoardStats="@boardStats"
+                               OnBoardClick="@HandleBoardClick"
+                               OnEditBoard="@HandleEditBoard"
+                               OnDeleteBoard="@HandleDeleteBoard" />
+                </AntDesign.Col>
+            }
+        </Row>
+    }
+    else if (!_isLoading)
+    {
+        <Empty Description="@GetEmptyDescription()"
+               Style="margin-top: 60px;">
+            <ChildContent>
+                @if (!_boards.Any())
+                {
+                    <Button Type="@ButtonType.Primary" 
+                            Icon="plus" 
+                            OnClick="@ShowCreateModal">
+                        Create Your First Board
+                    </Button>
+                }
+                else
+                {
+                    <Button Type="@ButtonType.Default" OnClick="@ClearFilters">
+                        Clear Filters
+                    </Button>
+                }
+            </ChildContent>
+        </Empty>
+    }
+</div>
+
+<CreateBoardModal @bind-Visible="_showCreateModal" 
+                  OnBoardCreated="@HandleBoardCreated" />
+
+@if (_selectedBoard != null)
+{
+    <Modal Title="@($"Delete Board: {_selectedBoard.Board.Name}")"
+           Visible="@_showDeleteModal"
+           OnOk="@ConfirmDelete"
+           OnCancel="@CancelDelete"
+           OkText='"Delete"'
+           CancelText='"Cancel"'
+           ConfirmLoading="@_isDeleting">
+        
+        <Alert Type="@AlertType.Warning" 
+               ShowIcon="true"
+               Style="margin-bottom: 16px;">
+            <MessageTemplate>
+                <strong>Warning:</strong> This action cannot be undone.
+            </MessageTemplate>
+            <ChildContent>
+                Deleting this board will permanently remove all tasks, comments, and associated data.
+                Please type the board name to confirm.
+            </ChildContent>
+        </Alert>
+        
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                Type board name to confirm:
+            </label>
+            <Input @bind-Value="_deleteConfirmation" 
+                   Placeholder="@_selectedBoard.Board.Name" />
+        </div>
+    </Modal>
+}
