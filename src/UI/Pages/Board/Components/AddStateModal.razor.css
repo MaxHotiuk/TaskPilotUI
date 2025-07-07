@@ -1,0 +1,14 @@
+.add-state-form .ant-form-item {
+    margin-bottom: 16px;
+}
+
+.add-state-form .ant-input {
+    border-radius: 6px;
+}
+
+.state-info-text {
+    font-size: 12px;
+    color: #8c8c8c;
+    margin-bottom: 16px;
+    font-style: italic;
+}

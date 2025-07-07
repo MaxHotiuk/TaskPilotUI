@@ -3,6 +3,7 @@ using UI.Models.Board;
 using UI.Models.Member;
 using UI.Models.Task;
 using UI.Models.User;
+using UI.Models.State;
 
 namespace UI.Interfaces.Api;
 
@@ -33,4 +34,28 @@ public interface ITaskPilotApi
 
     [Get("/api/boards/{boardId}/tasks")]
     Task<List<TaskItemDto>> GetBoardTasksAsync(string boardId, [Header("Authorization")] string authorization);
+
+    // Board member endpoints
+    [Post("/api/boards/{boardId}/members")]
+    Task AddBoardMemberAsync(string boardId, [Body] AddBoardMemberRequest request, [Header("Authorization")] string authorization);
+
+    [Put("/api/boards/{boardId}/members/{userId}/role")]
+    Task UpdateBoardMemberRoleAsync(string boardId, string userId, [Body] UpdateBoardMemberRoleRequest request, [Header("Authorization")] string authorization);
+
+    [Delete("/api/boards/{boardId}/members/{userId}")]
+    Task RemoveBoardMemberAsync(string boardId, string userId, [Header("Authorization")] string authorization);
+
+    // State endpoints
+    [Get("/api/boards/{boardId}/states")]
+    Task<List<StateDto>> GetBoardStatesAsync(string boardId, [Header("Authorization")] string authorization);
+
+    [Post("/api/boards/{boardId}/states")]
+    Task<int> CreateStateAsync(string boardId, [Body] CreateStateRequest request, [Header("Authorization")] string authorization);
+
+    // User search endpoints
+    [Get("/api/users/by-email")]
+    Task<UserDto> GetUserByEmailAsync([Query] string email, [Header("Authorization")] string authorization);
+
+    [Get("/api/users")]
+    Task<List<UserDto>> GetAllUsersAsync([Header("Authorization")] string authorization);
 }

@@ -237,7 +237,7 @@ public partial class Boards : ComponentBase
 
     private void HandleBoardClick(string boardId)
     {
-        Navigation.NavigateTo($"/boards/{boardId}");
+        Navigation.NavigateTo($"/board/{boardId}");
     }
 
     private void HandleEditBoard(string boardId)

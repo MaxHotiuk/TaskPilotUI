@@ -52,6 +52,7 @@ namespace UI
             builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IBoardService, BoardService>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
             var host = builder.Build();
             

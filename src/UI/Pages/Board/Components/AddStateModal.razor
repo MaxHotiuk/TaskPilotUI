@@ -1,0 +1,63 @@
+@using AntDesign
+@using UI.Models.State
+
+<Modal Title="Add New State"
+       Visible=@IsVisible
+       OnOk=@HandleOk
+       OnCancel=@HandleCancel
+       ConfirmLoading=@IsLoading
+       Width="400">
+    <Form Model=@FormModel
+          LabelCol="new ColLayoutParam { Span = 6 }"
+          WrapperCol="new ColLayoutParam { Span = 18 }"
+          OnFinish="HandleSubmit"
+          OnFinishFailed="HandleSubmitFailed">
+
+        <FormItem Label="State Name" Required>
+            <Input @bind-Value=@FormModel.Name
+                   Placeholder="Enter state name (e.g., To Do, In Progress)" 
+                   MaxLength="50" />
+        </FormItem>
+
+        <div style="margin-bottom: 16px;">
+            <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
+                Default states: To Do, In Progress, Review, Done
+            </Text>
+        </div>
+
+    </Form>
+</Modal>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public CreateStateRequest FormModel { get; set; } = new();
+    [Parameter] public int NextOrder { get; set; }
+    [Parameter] public EventCallback OnOk { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task HandleOk()
+    {
+        if (OnOk.HasDelegate)
+        {
+            await OnOk.InvokeAsync();
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        if (OnCancel.HasDelegate)
+        {
+            await OnCancel.InvokeAsync();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        await HandleOk();
+    }
+
+    private void HandleSubmitFailed(EditContext editContext)
+    {
+    }
+}

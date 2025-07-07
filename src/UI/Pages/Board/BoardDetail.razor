@@ -1,0 +1,129 @@
+@page "/board/{BoardId}"
+@using AntDesign
+@using UI.Models.Board
+@using UI.Models.Task
+@using UI.Models.State
+@using UI.Models.Member
+@using UI.Models.User
+@using UI.Pages.Board.Components
+
+<BoardHeader BoardDetail="_boardDetail"
+             IsLoading="_isLoading"
+             OnBack="GoBack"
+             OnShowMembers="ShowMembersModal"
+             OnRefresh="RefreshBoard"
+             OnCreateTask="ShowCreateTaskModal"
+             OnCreateState="ShowCreateStateModal" />
+
+<div class="board-content">
+    @if (_isLoading && _boardDetail == null)
+    {
+        <div class="loading-container">
+            <Spin Size=@SpinSize.Large Tip="Loading board...">
+                <div style="height: 400px;"></div>
+            </Spin>
+        </div>
+    }
+    else if (_boardDetail != null)
+    {
+        <div class="board-columns">
+            @foreach (var state in _boardDetail.States.OrderBy(s => s.Order))
+            {
+                <div class="state-column">
+                    <div class="state-header">
+                        <div>
+                            <Text Strong>@state.Name</Text>
+                        </div>
+                        <div>
+                            <Badge Count=@GetTaskCountForState(state.Id) />
+                        </div>
+                    </div>
+                    <div class="task-container">
+                        @if (GetTasksForState(state.Id).Any())
+                        {
+                            <div class="task-list">
+                                @foreach (var task in GetTasksForState(state.Id))
+                                {
+                                    <Card Size=@CardSize.Small 
+                                          Class="task-item"
+                                          OnClick=@(() => ShowTaskDetails(task))
+                                          Hoverable>
+                                        <Body>
+                                            <div class="task-card">
+                                                <Text Strong>@task.Title</Text>
+                                                @if (!string.IsNullOrEmpty(task.Description))
+                                                {
+                                                    <div class="task-title">
+                                                        <Text Type=@TextElementType.Secondary>
+                                                            @TruncateDescription(task.Description)
+                                                        </Text>
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrEmpty(task.AssigneeId))
+                                                {
+                                                    <div class="task-assignee">
+                                                        <Tag>@GetAssigneeName(task.AssigneeId)</Tag>
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrEmpty(task.DueDate))
+                                                {
+                                                    <div class="task-due-date">
+                                                        <Tag>
+                                                            Due: @FormatDueDate(task.DueDate)
+                                                        </Tag>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </Body>
+                                    </Card>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                No tasks in this state
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="error-container">
+            <h3>Board Not Found</h3>
+            <p>The board you're looking for doesn't exist or you don't have access to it.</p>
+            <Button Type=@ButtonType.Primary OnClick="GoBack">
+                Go Back
+            </Button>
+        </div>
+    }
+</div>
+
+<MembersModal IsVisible="_showMembersModal"
+              BoardDetail="_boardDetail"
+              CanManageMembers="CanManageMembers()"
+              CurrentUserId="_currentUser?.Id"
+              OnCancel=@(() => _showMembersModal = false)
+              OnAddMember="ShowAddMemberModal"
+              OnChangeRole="HandleChangeRole"
+              OnRemoveMember="HandleRemoveMember" />
+
+<AddMemberModal IsVisible="_showAddMemberModal"
+                IsLoading="_isAddingMember"
+                FormModel="_addMemberForm"
+                ExistingMembers="_boardDetail?.Members ?? new List<BoardMemberDto>()"
+                BoardOwnerId="_boardDetail?.OwnerId"
+                OnOk="AddMember"
+                OnCancel=@(() => { _showAddMemberModal = false; ResetAddMemberForm(); }) />
+
+<AddStateModal IsVisible="_showAddStateModal"
+               IsLoading="_isAddingState"
+               FormModel="_addStateForm"
+               NextOrder=@(_boardDetail?.States?.Any() == true ? _boardDetail.States.Max(s => s.Order) + 1 : 1)
+               OnOk="AddState"
+               OnCancel=@(() => { _showAddStateModal = false; ResetAddStateForm(); }) />
+
+
