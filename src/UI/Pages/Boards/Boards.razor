@@ -5,37 +5,15 @@
 @using UI.Interfaces.Services
 @using UI.Pages.Boards.Components
 
-<PageHeader Title="My Boards">
-    <PageHeaderExtra>
-        <Space>
-            <SpaceItem>
-                <Button Type=@ButtonType.Default
-                        Icon="reload" 
-                        Loading="_isLoading"
-                        OnClick="RefreshBoards">
-                    Refresh
-                </Button>
-            </SpaceItem>
-            <SpaceItem>
-                <Button Type=@ButtonType.Primary
-                        Icon="plus" 
-                        OnClick="ShowCreateModal">
-                    Create Board
-                </Button>
-            </SpaceItem>
-        </Space>
-    </PageHeaderExtra>
-    
-    <PageHeaderContent>
-        @if (!_isLoading || _boards.Any())
-        {
-            <BoardsHeader @bind-SearchTerm="_searchTerm"
-                          FilterType="_filterType"
-                          OnSearchChanged="OnSearchChanged"
-                          OnFilterChanged="OnFilterChanged" />
-        }
-    </PageHeaderContent>
-</PageHeader>
+<BoardsPageHeader IsLoading="_isLoading"
+                  ShowHeader="!_isLoading || _boards.Any()"
+                  SearchTerm="_searchTerm"
+                  SearchTermChanged="(value) => _searchTerm = value"
+                  FilterType="_filterType"
+                  OnRefreshClicked="RefreshBoards"
+                  OnCreateClicked="ShowCreateModal"
+                  OnSearchChanged="OnSearchChanged"
+                  OnFilterChanged="OnFilterChanged" />
 
 <div class="boards-content">
     @if (_isLoading && !_boards.Any())

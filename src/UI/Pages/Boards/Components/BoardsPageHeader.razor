@@ -1,0 +1,33 @@
+@using AntDesign
+
+<PageHeader Title="My Boards">
+    <PageHeaderExtra>
+        <Space>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="reload" 
+                        Loading="IsLoading"
+                        OnClick="OnRefreshClicked">
+                    Refresh
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Primary
+                        Icon="plus" 
+                        OnClick="OnCreateClicked">
+                    Create Board
+                </Button>
+            </SpaceItem>
+        </Space>
+    </PageHeaderExtra>
+    
+    <PageHeaderContent>
+        @if (ShowHeader)
+        {
+            <BoardsHeader SearchTermChanged="SearchTermChanged"
+                          FilterType="FilterType"
+                          OnSearchChanged="OnSearchChanged"
+                          OnFilterChanged="OnFilterChanged" />
+        }
+    </PageHeaderContent>
+</PageHeader>
