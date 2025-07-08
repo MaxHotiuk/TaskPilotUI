@@ -1,25 +1,36 @@
 using UI.Models.Board;
-using UI.Models.Member;
-using UI.Models.Task;
-using UI.Models.State;
-using UI.Models.User;
-using Refit;
 using UI.Interfaces.Services;
 using UI.Interfaces.Api;
+using Refit;
 
 namespace UI.Services;
 
 public class BoardService : IBoardService
 {
-    private readonly ITaskPilotApi _taskPilotApi;
+    private readonly IUserApi _userApi;
+    private readonly IBoardApi _boardApi;
+    private readonly IBoardMemberService _boardMemberService;
+    private readonly ITaskService _taskService;
+    private readonly ITaskStateService _taskStateService;
     private readonly IAuthService _authService;
     private readonly ILocalStorageService _localStorage;
     private const string BOARDS_CACHE_KEY = "cached_boards";
     private const string BOARD_STATS_CACHE_PREFIX = "cached_board_stats_";
 
-    public BoardService(ITaskPilotApi taskPilotApi, IAuthService authService, ILocalStorageService localStorage)
+    public BoardService(
+        IUserApi userApi,
+        IBoardApi boardApi,
+        IBoardMemberService boardMemberService,
+        ITaskService taskService,
+        ITaskStateService taskStateService,
+        IAuthService authService, 
+        ILocalStorageService localStorage)
     {
-        _taskPilotApi = taskPilotApi;
+        _userApi = userApi;
+        _boardApi = boardApi;
+        _boardMemberService = boardMemberService;
+        _taskService = taskService;
+        _taskStateService = taskStateService;
         _authService = authService;
         _localStorage = localStorage;
     }
@@ -28,7 +39,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            var boards = await _taskPilotApi.GetUserBoardsAsync(userId);
+            var boards = await _userApi.GetUserBoardsAsync(userId);
             
             await _localStorage.SetItemAsync($"{BOARDS_CACHE_KEY}_{userId}", boards);
             
@@ -50,7 +61,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            return await _taskPilotApi.GetBoardByIdAsync(id);
+            return await _boardApi.GetBoardByIdAsync(id);
         }
         catch (Exception)
         {
@@ -62,7 +73,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            return await _taskPilotApi.CreateBoardAsync(request);
+            return await _boardApi.CreateBoardAsync(request);
         }
         catch (Exception)
         {
@@ -74,7 +85,7 @@ public class BoardService : IBoardService
     {
         try
         {
-            await _taskPilotApi.UpdateBoardAsync(id, request);
+            await _boardApi.UpdateBoardAsync(id, request);
         }
         catch (Exception)
         {
@@ -86,35 +97,11 @@ public class BoardService : IBoardService
     {
         try
         {
-            await _taskPilotApi.DeleteBoardAsync(id);
+            await _boardApi.DeleteBoardAsync(id);
         }
         catch (Exception)
         {
             throw;
-        }
-    }
-
-    public async Task<List<BoardMemberDto>> GetBoardMembersAsync(string boardId)
-    {
-        try
-        {
-            return await _taskPilotApi.GetBoardMembersAsync(boardId);
-        }
-        catch (Exception)
-        {
-            return new List<BoardMemberDto>();
-        }
-    }
-
-    public async Task<List<TaskItemDto>> GetBoardTasksAsync(string boardId)
-    {
-        try
-        {
-            return await _taskPilotApi.GetBoardTasksAsync(boardId);
-        }
-        catch (Exception)
-        {
-            return new List<TaskItemDto>();
         }
     }
 
@@ -128,8 +115,8 @@ public class BoardService : IBoardService
                 return new BoardWithStats();
             }
 
-            var tasks = await GetBoardTasksAsync(boardId);
-            var members = await GetBoardMembersAsync(boardId);
+            var tasks = await _taskService.GetBoardTasksAsync(boardId);
+            var members = await _boardMemberService.GetBoardMembersAsync(boardId);
             var currentUser = _authService.GetCachedUser();
             
             var boardWithStats = new BoardWithStats
@@ -169,30 +156,6 @@ public class BoardService : IBoardService
         await _localStorage.RemoveItemAsync($"{BOARDS_CACHE_KEY}_{userId}");
     }
 
-    public async Task<List<StateDto>> GetBoardStatesAsync(string boardId)
-    {
-        try
-        {
-            return await _taskPilotApi.GetBoardStatesAsync(boardId);
-        }
-        catch (Exception)
-        {
-            return new List<StateDto>();
-        }
-    }
-
-    public async Task<int> CreateStateAsync(string boardId, CreateStateRequest request)
-    {
-        try
-        {
-            return await _taskPilotApi.CreateStateAsync(boardId, request);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-
     public async Task<BoardDetailDto?> GetBoardDetailAsync(string boardId)
     {
         try
@@ -203,9 +166,9 @@ public class BoardService : IBoardService
                 return null;
             }
 
-            var members = await GetBoardMembersAsync(boardId);
-            var tasks = await GetBoardTasksAsync(boardId);
-            var states = await GetBoardStatesAsync(boardId);
+            var members = await _boardMemberService.GetBoardMembersAsync(boardId);
+            var tasks = await _taskService.GetBoardTasksAsync(boardId);
+            var states = await _taskStateService.GetBoardStatesAsync(boardId);
 
             return new BoardDetailDto
             {
@@ -223,66 +186,6 @@ public class BoardService : IBoardService
         catch (Exception)
         {
             return null;
-        }
-    }
-
-    public async Task AddBoardMemberAsync(string boardId, AddBoardMemberRequest request)
-    {
-        try
-        {
-            await _taskPilotApi.AddBoardMemberAsync(boardId, request);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-
-    public async Task UpdateBoardMemberRoleAsync(string boardId, string userId, UpdateBoardMemberRoleRequest request)
-    {
-        try
-        {
-            await _taskPilotApi.UpdateBoardMemberRoleAsync(boardId, userId, request);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-
-    public async Task RemoveBoardMemberAsync(string boardId, string userId)
-    {
-        try
-        {
-            await _taskPilotApi.RemoveBoardMemberAsync(boardId, userId);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-
-    public async Task<UserDto?> GetUserByEmailAsync(string email)
-    {
-        try
-        {
-            return await _taskPilotApi.GetUserByEmailAsync(email);
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
-    public async Task<List<UserDto>> GetAllUsersAsync()
-    {
-        try
-        {
-            return await _taskPilotApi.GetAllUsersAsync();
-        }
-        catch (Exception)
-        {
-            return new List<UserDto>();
         }
     }
 }

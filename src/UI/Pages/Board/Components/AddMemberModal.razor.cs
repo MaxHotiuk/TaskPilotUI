@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using UI.Models.User;
 using UI.Models.Member;
-using UI.Interfaces.Api;
 using UI.Interfaces.Services;
 
 namespace UI.Pages.Board.Components;
@@ -16,7 +15,7 @@ public partial class AddMemberModal : ComponentBase
     [Parameter] public EventCallback OnOk { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    [Inject] private ITaskPilotApi TaskPilotApi { get; set; } = default!;
+    [Inject] private IUserService UserService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
 
     private string SearchText { get; set; } = string.Empty;
@@ -35,7 +34,7 @@ public partial class AddMemberModal : ComponentBase
             var isAuthenticated = await AuthService.IsAuthenticatedAsync();
             if (isAuthenticated)
             {
-                AllUsers = await TaskPilotApi.GetAllUsersAsync();
+                AllUsers = await UserService.GetAllUsersAsync();
             }
         }
         catch (Exception ex)

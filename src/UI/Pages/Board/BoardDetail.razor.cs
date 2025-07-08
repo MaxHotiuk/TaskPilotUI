@@ -15,6 +15,8 @@ public partial class BoardDetail : ComponentBase
     [Parameter] public string BoardId { get; set; } = string.Empty;
     
     [Inject] private IBoardService BoardService { get; set; } = default!;
+    [Inject] private IBoardMemberService BoardMemberService { get; set; } = default!;
+    [Inject] private ITaskStateService TaskStateService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IMessageService Message { get; set; } = default!;
@@ -185,7 +187,7 @@ public partial class BoardDetail : ComponentBase
                         Role = _addMemberForm.Role
                     };
 
-                    await BoardService.AddBoardMemberAsync(BoardId, request);
+                    await BoardMemberService.AddBoardMemberAsync(BoardId, request);
                     successCount++;
                 }
                 catch (Exception ex)
@@ -233,7 +235,7 @@ public partial class BoardDetail : ComponentBase
         try
         {
             var request = new UpdateBoardMemberRoleRequest { Role = newRole };
-            await BoardService.UpdateBoardMemberRoleAsync(BoardId, member.UserId, request);
+            await BoardMemberService.UpdateBoardMemberRoleAsync(BoardId, member.UserId, request);
             Message.Success($"Successfully updated member role to {newRole}");
             await LoadBoardDetail();
         }
@@ -247,7 +249,7 @@ public partial class BoardDetail : ComponentBase
     {
         try
         {
-            await BoardService.RemoveBoardMemberAsync(BoardId, member.UserId);
+            await BoardMemberService.RemoveBoardMemberAsync(BoardId, member.UserId);
             Message.Success("Successfully removed member from board");
             await LoadBoardDetail();
         }
@@ -306,7 +308,7 @@ public partial class BoardDetail : ComponentBase
             _isAddingState = true;
             StateHasChanged();
 
-            var stateId = await BoardService.CreateStateAsync(BoardId, _addStateForm);
+            var stateId = await TaskStateService.CreateStateAsync(BoardId, _addStateForm);
             
             await LoadBoardDetail();
             

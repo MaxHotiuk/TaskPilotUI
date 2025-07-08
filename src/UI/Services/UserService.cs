@@ -7,7 +7,7 @@ namespace UI.Services;
 
 public class UserService : IUserService
 {
-    private readonly ITaskPilotApi _taskPilotApi;
+    private readonly IUserApi _userApi;
     private readonly IAuthService _authService;
     private readonly ILogger<UserService> _logger;
     private readonly Dictionary<string, UserDto> _userCache = new();
@@ -15,11 +15,11 @@ public class UserService : IUserService
     private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(5);
 
     public UserService(
-        ITaskPilotApi taskPilotApi,
+        IUserApi userApi,
         IAuthService authService,
         ILogger<UserService> logger)
     {
-        _taskPilotApi = taskPilotApi;
+        _userApi = userApi;
         _authService = authService;
         _logger = logger;
     }
@@ -28,7 +28,7 @@ public class UserService : IUserService
     {
         try
         {
-            var users = await _taskPilotApi.GetAllUsersAsync();
+            var users = await _userApi.GetAllUsersAsync();
             
             // Update cache
             foreach (var user in users)
@@ -76,7 +76,7 @@ public class UserService : IUserService
 
         try
         {
-            var user = await _taskPilotApi.GetUserByEmailAsync(email);
+            var user = await _userApi.GetUserByEmailAsync(email);
             
             if (user != null)
             {

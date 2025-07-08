@@ -34,8 +34,24 @@ namespace UI
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
             
             builder.Services.AddScoped<AuthenticationHandler>();
-            
-            builder.Services.AddRefitClient<ITaskPilotApi>(refitSettings)
+
+            builder.Services.AddRefitClient<IUserApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardMemberApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardTaskApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardStateApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
                 
@@ -59,6 +75,9 @@ namespace UI
             builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IBoardService, BoardService>();
+            builder.Services.AddScoped<IBoardMemberService, BoardMemberService>();
+            builder.Services.AddScoped<ITaskService, TaskService>();
+            builder.Services.AddScoped<ITaskStateService, TaskStateService>();
             builder.Services.AddScoped<IUserService, UserService>();
 
             var host = builder.Build();
