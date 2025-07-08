@@ -25,11 +25,11 @@ public class BoardMemberService : IBoardMemberService
         }
     }
 
-    public async Task AddBoardMemberAsync(string boardId, AddBoardMemberRequest request)
+    public async Task AddAsync(string boardId, AddBoardMemberRequest request)
     {
         try
         {
-            await _boardMemberApi.AddBoardMemberAsync(boardId, request);
+            await _boardMemberApi.AddAsync(boardId, request);
         }
         catch (Exception)
         {
@@ -37,11 +37,11 @@ public class BoardMemberService : IBoardMemberService
         }
     }
 
-    public async Task UpdateBoardMemberRoleAsync(string boardId, string userId, UpdateBoardMemberRoleRequest request)
+    public async Task UpdateRoleAsync(string boardId, string userId, UpdateBoardMemberRoleRequest request)
     {
         try
         {
-            await _boardMemberApi.UpdateBoardMemberRoleAsync(boardId, userId, request);
+            await _boardMemberApi.UpdateRoleAsync(boardId, userId, request);
         }
         catch (Exception)
         {
@@ -49,11 +49,11 @@ public class BoardMemberService : IBoardMemberService
         }
     }
 
-    public async Task RemoveBoardMemberAsync(string boardId, string userId)
+    public async Task RemoveAsync(string boardId, string userId)
     {
         try
         {
-            await _boardMemberApi.RemoveBoardMemberAsync(boardId, userId);
+            await _boardMemberApi.RemoveAsync(boardId, userId);
         }
         catch (Exception)
         {

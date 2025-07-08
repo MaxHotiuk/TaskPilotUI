@@ -4,14 +4,14 @@ namespace UI.Interfaces.Services;
 
 public interface IBoardService
 {
-    Task<List<BoardDto>> GetUserBoardsAsync(string userId);
-    Task<List<BoardDto>> GetCachedUserBoardsAsync(string userId);
-    Task<BoardDto?> GetBoardByIdAsync(string id);
-    Task<string> CreateBoardAsync(CreateBoardRequest request);
-    Task UpdateBoardAsync(string id, CreateBoardRequest request);
-    Task DeleteBoardAsync(string id);
-    Task<BoardDetailDto?> GetBoardDetailAsync(string boardId);
-    Task<BoardWithStats> GetBoardWithStatsAsync(string boardId);
-    Task<BoardWithStats> GetCachedBoardWithStatsAsync(string boardId);
-    Task ClearBoardCacheAsync(string userId);
+    Task<List<BoardDto>> GetBoardsAsync(string userId);
+    Task<List<BoardDto>> GetCachedBoardsAsync(string userId);
+    Task<BoardDto?> GetByIdAsync(string id);
+    Task<string> CreateAsync(CreateBoardRequest request);
+    Task UpdateAsync(string id, CreateBoardRequest request);
+    Task DeleteAsync(string id);
+    Task<BoardDetailDto?> GetDetailAsync(string boardId);
+    Task<BoardWithStats> GetWithStatsAsync(string boardId);
+    Task<BoardWithStats> GetCachedWithStatsAsync(string boardId);
+    Task ClearCacheAsync(string userId);
 }

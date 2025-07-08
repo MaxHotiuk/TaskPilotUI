@@ -57,7 +57,7 @@ public partial class CreateBoardModal : ComponentBase
             }
 
             _formModel.OwnerId = currentUser.Id;
-            var boardId = await BoardService.CreateBoardAsync(_formModel);
+            var boardId = await BoardService.CreateAsync(_formModel);
 
             await OnBoardCreated.InvokeAsync(boardId);
             await CloseModal();

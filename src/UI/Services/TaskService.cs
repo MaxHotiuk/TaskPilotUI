@@ -25,11 +25,11 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<TaskItemDto> GetTaskByIdAsync(string taskId)
+    public async Task<TaskItemDto> GetByIdAsync(string taskId)
     {
         try
         {
-            return await _boardTaskApi.GetTaskByIdAsync(taskId);
+            return await _boardTaskApi.GetByIdAsync(taskId);
         }
         catch (Exception ex)
         {
@@ -37,11 +37,11 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<string> CreateTaskAsync(CreateTaskRequest request)
+    public async Task<string> CreateAsync(CreateTaskRequest request)
     {
         try
         {
-            return await _boardTaskApi.CreateTaskAsync(request);
+            return await _boardTaskApi.CreateAsync(request);
         }
         catch (Exception ex)
         {
@@ -49,11 +49,11 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task UpdateTaskAsync(string taskId, UpdateTaskRequest request)
+    public async Task UpdateAsync(string taskId, UpdateTaskRequest request)
     {
         try
         {
-            await _boardTaskApi.UpdateTaskAsync(taskId, request);
+            await _boardTaskApi.UpdateAsync(taskId, request);
         }
         catch (Exception ex)
         {
@@ -61,11 +61,11 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task DeleteTaskAsync(string taskId)
+    public async Task DeleteAsync(string taskId)
     {
         try
         {
-            await _boardTaskApi.DeleteTaskAsync(taskId);
+            await _boardTaskApi.DeleteAsync(taskId);
         }
         catch (Exception ex)
         {

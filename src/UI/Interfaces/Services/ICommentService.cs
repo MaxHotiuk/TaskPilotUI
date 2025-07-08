@@ -5,8 +5,8 @@ namespace UI.Interfaces.Services;
 public interface ICommentService
 {
     Task<List<CommentDto>> GetTaskCommentsAsync(string taskId);
-    Task<CommentDto> GetCommentByIdAsync(string commentId);
-    Task<string> CreateCommentAsync(CreateCommentRequest request);
-    Task UpdateCommentAsync(string commentId, UpdateCommentRequest request);
-    Task DeleteCommentAsync(string commentId);
+    Task<CommentDto> GetByIdAsync(string commentId);
+    Task<string> CreateAsync(CreateCommentRequest request);
+    Task UpdateAsync(string commentId, UpdateCommentRequest request);
+    Task DeleteAsync(string commentId);
 }

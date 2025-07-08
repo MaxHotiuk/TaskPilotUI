@@ -5,8 +5,8 @@ namespace UI.Interfaces.Services;
 public interface IUserService
 {
     Task<List<UserDto>> GetAllUsersAsync();
-    Task<UserDto?> GetUserByIdAsync(string userId);
-    Task<UserDto?> GetUserByEmailAsync(string email);
-    Task<Dictionary<string, UserDto>> GetUsersByIdsAsync(IEnumerable<string> userIds);
+    Task<UserDto?> GetByIdAsync(string userId);
+    Task<UserDto?> GetByEmailAsync(string email);
+    Task<Dictionary<string, UserDto>> GetByIdsAsync(IEnumerable<string> userIds);
     void ClearCache();
 }

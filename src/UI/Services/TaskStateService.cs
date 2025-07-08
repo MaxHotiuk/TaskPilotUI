@@ -25,11 +25,11 @@ public class TaskStateService : ITaskStateService
         }
     }
 
-    public async Task<int> CreateStateAsync(string boardId, CreateStateRequest request)
+    public async Task<int> CreateAsync(string boardId, CreateStateRequest request)
     {
         try
         {
-            return await _boardStateApi.CreateStateAsync(boardId, request);
+            return await _boardStateApi.CreateAsync(boardId, request);
         }
         catch (Exception)
         {

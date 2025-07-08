@@ -35,11 +35,11 @@ public class BoardService : IBoardService
         _localStorage = localStorage;
     }
 
-    public async Task<List<BoardDto>> GetUserBoardsAsync(string userId)
+    public async Task<List<BoardDto>> GetBoardsAsync(string userId)
     {
         try
         {
-            var boards = await _userApi.GetUserBoardsAsync(userId);
+            var boards = await _userApi.GetBoardsAsync(userId);
             
             await _localStorage.SetItemAsync($"{BOARDS_CACHE_KEY}_{userId}", boards);
             
@@ -57,11 +57,11 @@ public class BoardService : IBoardService
         }
     }
 
-    public async Task<BoardDto?> GetBoardByIdAsync(string id)
+    public async Task<BoardDto?> GetByIdAsync(string id)
     {
         try
         {
-            return await _boardApi.GetBoardByIdAsync(id);
+            return await _boardApi.GetByIdAsync(id);
         }
         catch (Exception)
         {
@@ -69,11 +69,11 @@ public class BoardService : IBoardService
         }
     }
 
-    public async Task<string> CreateBoardAsync(CreateBoardRequest request)
+    public async Task<string> CreateAsync(CreateBoardRequest request)
     {
         try
         {
-            return await _boardApi.CreateBoardAsync(request);
+            return await _boardApi.CreateAsync(request);
         }
         catch (Exception)
         {
@@ -81,11 +81,11 @@ public class BoardService : IBoardService
         }
     }
 
-    public async Task UpdateBoardAsync(string id, CreateBoardRequest request)
+    public async Task UpdateAsync(string id, CreateBoardRequest request)
     {
         try
         {
-            await _boardApi.UpdateBoardAsync(id, request);
+            await _boardApi.UpdateAsync(id, request);
         }
         catch (Exception)
         {
@@ -93,11 +93,11 @@ public class BoardService : IBoardService
         }
     }
 
-    public async Task DeleteBoardAsync(string id)
+    public async Task DeleteAsync(string id)
     {
         try
         {
-            await _boardApi.DeleteBoardAsync(id);
+            await _boardApi.DeleteAsync(id);
         }
         catch (Exception)
         {
@@ -105,11 +105,11 @@ public class BoardService : IBoardService
         }
     }
 
-    public async Task<BoardWithStats> GetBoardWithStatsAsync(string boardId)
+    public async Task<BoardWithStats> GetWithStatsAsync(string boardId)
     {
         try
         {
-            var board = await GetBoardByIdAsync(boardId);
+            var board = await GetByIdAsync(boardId);
             if (board == null)
             {
                 return new BoardWithStats();
@@ -139,28 +139,28 @@ public class BoardService : IBoardService
         }
     }
 
-    public async Task<List<BoardDto>> GetCachedUserBoardsAsync(string userId)
+    public async Task<List<BoardDto>> GetCachedBoardsAsync(string userId)
     {
         var cachedBoards = await _localStorage.GetItemAsync<List<BoardDto>>($"{BOARDS_CACHE_KEY}_{userId}");
         return cachedBoards ?? new List<BoardDto>();
     }
 
-    public async Task<BoardWithStats> GetCachedBoardWithStatsAsync(string boardId)
+    public async Task<BoardWithStats> GetCachedWithStatsAsync(string boardId)
     {
         var cachedStats = await _localStorage.GetItemAsync<BoardWithStats>($"{BOARD_STATS_CACHE_PREFIX}{boardId}");
         return cachedStats ?? new BoardWithStats();
     }
 
-    public async Task ClearBoardCacheAsync(string userId)
+    public async Task ClearCacheAsync(string userId)
     {
         await _localStorage.RemoveItemAsync($"{BOARDS_CACHE_KEY}_{userId}");
     }
 
-    public async Task<BoardDetailDto?> GetBoardDetailAsync(string boardId)
+    public async Task<BoardDetailDto?> GetDetailAsync(string boardId)
     {
         try
         {
-            var board = await GetBoardByIdAsync(boardId);
+            var board = await GetByIdAsync(boardId);
             if (board == null)
             {
                 return null;

@@ -7,14 +7,14 @@ namespace UI.Interfaces.Api;
 public interface IUserApi
 {
     [Get("/api/users/me")]
-    Task<UserDto> GetCurrentUserAsync();
+    Task<UserDto> GetCurrentAsync();
 
     [Get("/api/users/{userId}/boards")]
-    Task<List<BoardDto>> GetUserBoardsAsync(string userId);
+    Task<List<BoardDto>> GetBoardsAsync(string userId);
 
     [Get("/api/users/by-email")]
-    Task<UserDto> GetUserByEmailAsync([Query] string email);
+    Task<UserDto> GetByEmailAsync([Query] string email);
 
     [Get("/api/users")]
-    Task<List<UserDto>> GetAllUsersAsync();
+    Task<List<UserDto>> GetAllAsync();
 }

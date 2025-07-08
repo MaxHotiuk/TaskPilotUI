@@ -92,7 +92,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             LoadingService,
             async service =>
             {
-                _boardDetail = await service.GetBoardDetailAsync(BoardId);
+                _boardDetail = await service.GetDetailAsync(BoardId);
                 
                 if (_boardDetail == null)
                 {
@@ -248,7 +248,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
                         Role = _addMemberForm.Role
                     };
 
-                    await BoardMemberService.AddBoardMemberAsync(BoardId, request);
+                    await BoardMemberService.AddAsync(BoardId, request);
                     successCount++;
                 }
                 catch (Exception ex)
@@ -296,7 +296,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
         try
         {
             var request = new UpdateBoardMemberRoleRequest { Role = newRole };
-            await BoardMemberService.UpdateBoardMemberRoleAsync(BoardId, member.UserId, request);
+            await BoardMemberService.UpdateRoleAsync(BoardId, member.UserId, request);
             Message.Success($"Successfully updated member role to {newRole}");
             await LoadBoardDetail();
         }
@@ -310,7 +310,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         try
         {
-            await BoardMemberService.RemoveBoardMemberAsync(BoardId, member.UserId);
+            await BoardMemberService.RemoveAsync(BoardId, member.UserId);
             Message.Success("Successfully removed member from board");
             await LoadBoardDetail();
         }
@@ -369,7 +369,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             _isAddingState = true;
             StateHasChanged();
 
-            var stateId = await TaskStateService.CreateStateAsync(BoardId, _addStateForm);
+            var stateId = await TaskStateService.CreateAsync(BoardId, _addStateForm);
             
             await LoadBoardDetail();
             
@@ -428,7 +428,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             _isAddingTask = true;
             StateHasChanged();
 
-            var taskId = await TaskService.CreateTaskAsync(_addTaskForm);
+            var taskId = await TaskService.CreateAsync(_addTaskForm);
             
             await LoadBoardDetail();
             

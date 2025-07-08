@@ -82,7 +82,7 @@ public partial class TaskCommentsComponent : ComponentBase
                 Content = NewCommentContent.Trim()
             };
 
-            await CommentService.CreateCommentAsync(request);
+            await CommentService.CreateAsync(request);
             NewCommentContent = string.Empty;
             await LoadComments();
 
@@ -129,7 +129,7 @@ public partial class TaskCommentsComponent : ComponentBase
                 Content = EditingContent.Trim()
             };
 
-            await CommentService.UpdateCommentAsync(commentId, request);
+            await CommentService.UpdateAsync(commentId, request);
             EditingCommentId = null;
             EditingContent = string.Empty;
             await LoadComments();
@@ -166,7 +166,7 @@ public partial class TaskCommentsComponent : ComponentBase
     {
         try
         {
-            await CommentService.DeleteCommentAsync(commentId);
+            await CommentService.DeleteAsync(commentId);
             await LoadComments();
 
             await NotificationService.Success(new NotificationConfig

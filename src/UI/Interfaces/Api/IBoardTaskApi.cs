@@ -9,14 +9,14 @@ public interface IBoardTaskApi
     Task<List<TaskItemDto>> GetBoardTasksAsync(string boardId);
     
     [Get("/api/tasks/{taskId}")]
-    Task<TaskItemDto> GetTaskByIdAsync(string taskId);
+    Task<TaskItemDto> GetByIdAsync(string taskId);
     
     [Post("/api/tasks")]
-    Task<string> CreateTaskAsync([Body] CreateTaskRequest request);
+    Task<string> CreateAsync([Body] CreateTaskRequest request);
     
     [Put("/api/tasks/{taskId}")]
-    Task UpdateTaskAsync(string taskId, [Body] UpdateTaskRequest request);
+    Task UpdateAsync(string taskId, [Body] UpdateTaskRequest request);
     
     [Delete("/api/tasks/{taskId}")]
-    Task DeleteTaskAsync(string taskId);
+    Task DeleteAsync(string taskId);
 }

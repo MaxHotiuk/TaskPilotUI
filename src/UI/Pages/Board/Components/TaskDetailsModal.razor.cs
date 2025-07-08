@@ -180,7 +180,7 @@ public partial class TaskDetailsModal : ComponentBase
                 FormModel.DueDate = null;
             }
 
-            await TaskService.UpdateTaskAsync(CurrentTask.Id, FormModel);
+            await TaskService.UpdateAsync(CurrentTask.Id, FormModel);
 
             CurrentTask.Title = FormModel.Title;
             CurrentTask.Description = FormModel.Description;
@@ -226,7 +226,7 @@ public partial class TaskDetailsModal : ComponentBase
             _internalLoading = true;
             StateHasChanged();
 
-            await TaskService.DeleteTaskAsync(CurrentTask.Id);
+            await TaskService.DeleteAsync(CurrentTask.Id);
 
             await NotificationService.Success(new NotificationConfig()
             {
@@ -274,7 +274,7 @@ public partial class TaskDetailsModal : ComponentBase
                 DueDate = CurrentTask.DueDate
             };
 
-            await TaskService.UpdateTaskAsync(CurrentTask.Id, updateRequest);
+            await TaskService.UpdateAsync(CurrentTask.Id, updateRequest);
 
             CurrentTask.StateId = newStateId;
             CurrentTask.UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");

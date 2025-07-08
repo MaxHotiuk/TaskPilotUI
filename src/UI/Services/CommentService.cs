@@ -25,11 +25,11 @@ public class CommentService : ICommentService
         }
     }
 
-    public async Task<CommentDto> GetCommentByIdAsync(string commentId)
+    public async Task<CommentDto> GetByIdAsync(string commentId)
     {
         try
         {
-            return await _commentApi.GetCommentByIdAsync(commentId);
+            return await _commentApi.GetByIdAsync(commentId);
         }
         catch (Exception ex)
         {
@@ -37,11 +37,11 @@ public class CommentService : ICommentService
         }
     }
 
-    public async Task<string> CreateCommentAsync(CreateCommentRequest request)
+    public async Task<string> CreateAsync(CreateCommentRequest request)
     {
         try
         {
-            return await _commentApi.CreateCommentAsync(request);
+            return await _commentApi.CreateAsync(request);
         }
         catch (Exception ex)
         {
@@ -49,11 +49,11 @@ public class CommentService : ICommentService
         }
     }
 
-    public async Task UpdateCommentAsync(string commentId, UpdateCommentRequest request)
+    public async Task UpdateAsync(string commentId, UpdateCommentRequest request)
     {
         try
         {
-            await _commentApi.UpdateCommentAsync(commentId, request);
+            await _commentApi.UpdateAsync(commentId, request);
         }
         catch (Exception ex)
         {
@@ -61,11 +61,11 @@ public class CommentService : ICommentService
         }
     }
 
-    public async Task DeleteCommentAsync(string commentId)
+    public async Task DeleteAsync(string commentId)
     {
         try
         {
-            await _commentApi.DeleteCommentAsync(commentId);
+            await _commentApi.DeleteAsync(commentId);
         }
         catch (Exception ex)
         {
