@@ -13,9 +13,6 @@ public class GlobalLoadingService : IGlobalLoadingService
 
     public bool IsLoading => _isLoading;
 
-    /// <summary>
-    /// Show global loading indicator
-    /// </summary>
     public void ShowLoading()
     {
         _loadingCounter++;
@@ -26,9 +23,6 @@ public class GlobalLoadingService : IGlobalLoadingService
         }
     }
 
-    /// <summary>
-    /// Hide global loading indicator
-    /// </summary>
     public void HideLoading()
     {
         if (_loadingCounter > 0)
@@ -43,9 +37,6 @@ public class GlobalLoadingService : IGlobalLoadingService
         }
     }
 
-    /// <summary>
-    /// Execute an async operation with global loading indicator
-    /// </summary>
     public async Task ExecuteWithLoadingAsync(Func<Task> operation)
     {
         try
@@ -59,9 +50,6 @@ public class GlobalLoadingService : IGlobalLoadingService
         }
     }
 
-    /// <summary>
-    /// Execute an async operation with global loading indicator and return result
-    /// </summary>
     public async Task<T> ExecuteWithLoadingAsync<T>(Func<Task<T>> operation)
     {
         try
@@ -75,9 +63,6 @@ public class GlobalLoadingService : IGlobalLoadingService
         }
     }
 
-    /// <summary>
-    /// Force hide all loading indicators
-    /// </summary>
     public void ForceHideLoading()
     {
         _loadingCounter = 0;
