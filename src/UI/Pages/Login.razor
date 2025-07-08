@@ -27,10 +27,10 @@
                 <Alert
                     Type=@AlertType.Error
                     Message="Authentication Error"
-                    Description="_error"
-                    ShowIcon="true"
-                    Closable="true"
-                    OnClose="() => _error = null"
+                    Description=@_error
+                    ShowIcon=@true
+                    Closable=@true
+                    OnClose=@(() => _error = null)
                     Style="margin-bottom: 24px;" />
             }
 
@@ -39,9 +39,9 @@
                     Type=@ButtonType.Primary
                     Size=@ButtonSize.Large
                     Icon="microsoft"
-                    Loading="_isLoading"
-                    OnClick="HandleLogin"
-                    Block="true"
+                    Loading=@_isLoading
+                    OnClick=@HandleLogin
+                    Block=@true
                     Style="height: 48px; font-size: 16px;">
                     Sign in with Microsoft
                 </Button>

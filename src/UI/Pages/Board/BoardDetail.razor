@@ -1,0 +1,46 @@
+@page "/board/{BoardId}"
+@using AntDesign
+@using UI.Models.Board
+@using UI.Models.Task
+@using UI.Models.State
+@using UI.Models.Member
+@using UI.Models.User
+@using UI.Pages.Board.Components
+@using UI.Interfaces.Services
+
+<BoardHeader BoardDetail=@_boardDetail
+             IsLoading=@IsLoading
+             OnBack=@GoBack
+             OnShowMembers=@ShowMembersModal
+             OnRefresh=@RefreshBoard
+             OnCreateTask=@ShowCreateTaskModal
+             OnCreateState=@ShowCreateStateModal />
+
+<BoardColumns BoardDetail=@_boardDetail
+              IsLoading=@IsLoading
+              OnTaskClick=@ShowTaskDetails
+              OnGoBack=@GoBack />
+
+<MembersModal IsVisible=@_showMembersModal
+              BoardDetail=@_boardDetail
+              CanManageMembers=@(CanManageMembers())
+              CurrentUserId=@(_currentUser?.Id)
+              OnCancel=@(() => _showMembersModal = false)
+              OnAddMember=@ShowAddMemberModal
+              OnChangeRole=@HandleChangeRole
+              OnRemoveMember=@HandleRemoveMember />
+
+<AddMemberModal IsVisible=@_showAddMemberModal
+                IsLoading=@_isAddingMember
+                FormModel=@_addMemberForm
+                ExistingMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+                BoardOwnerId=@(_boardDetail?.OwnerId)
+                OnOk=@AddMember
+                OnCancel=@(() => { _showAddMemberModal = false; ResetAddMemberForm(); }) />
+
+<AddStateModal IsVisible=@_showAddStateModal
+               IsLoading=@_isAddingState
+               FormModel=@_addStateForm
+               NextOrder=@(_boardDetail?.States?.Any() == true ? _boardDetail.States.Max(s => s.Order) + 1 : 1)
+               OnOk=@AddState
+               OnCancel=@(() => { _showAddStateModal = false; ResetAddStateForm(); }) />

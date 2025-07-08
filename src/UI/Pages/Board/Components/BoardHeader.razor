@@ -1,0 +1,56 @@
+@using AntDesign
+@using UI.Models.Board
+
+<PageHeader Title=@(BoardDetail?.Name ?? "Loading...")
+            OnBack="OnBack">
+    <PageHeaderExtra>
+        <Space>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="team" 
+                        OnClick="OnShowMembers">
+                    Members (@(BoardDetail?.Members.Count ?? 0))
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="reload" 
+                        Loading="IsLoading"
+                        OnClick="OnRefresh">
+                    Refresh
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="plus-square" 
+                        OnClick="OnCreateState">
+                    Add State
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Primary
+                        Icon="plus" 
+                        OnClick="OnCreateTask">
+                    Add Task
+                </Button>
+            </SpaceItem>
+        </Space>
+    </PageHeaderExtra>
+    
+    <PageHeaderContent>
+        @if (BoardDetail != null)
+        {
+            <Descriptions Size=@DescriptionsSize.Small Column="2">
+                <DescriptionsItem Title="Description" Span="2">
+                    @(BoardDetail.Description ?? "No description")
+                </DescriptionsItem>
+                <DescriptionsItem Title="Tasks">
+                    @BoardDetail.Tasks.Count
+                </DescriptionsItem>
+                <DescriptionsItem Title="Members">
+                    @BoardDetail.Members.Count
+                </DescriptionsItem>
+            </Descriptions>
+        }
+    </PageHeaderContent>
+</PageHeader>

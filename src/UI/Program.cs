@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using UI.Services;
 using UI.Interfaces.Services;
 using UI.Interfaces.Api;
+using UI.Handlers;
 using Refit;
 using System.Text.Json;
 
@@ -32,7 +33,29 @@ namespace UI
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
             
-            builder.Services.AddRefitClient<ITaskPilotApi>(refitSettings)
+            builder.Services.AddScoped<AuthenticationHandler>();
+
+            builder.Services.AddRefitClient<IUserApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardMemberApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardTaskApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<IBoardStateApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
+            builder.Services.AddRefitClient<ITaskPilotAuthApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
                 
             builder.Services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)
@@ -52,6 +75,11 @@ namespace UI
             builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IBoardService, BoardService>();
+            builder.Services.AddScoped<IBoardMemberService, BoardMemberService>();
+            builder.Services.AddScoped<ITaskService, TaskService>();
+            builder.Services.AddScoped<ITaskStateService, TaskStateService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddSingleton<IGlobalLoadingService, GlobalLoadingService>();
 
             var host = builder.Build();
             

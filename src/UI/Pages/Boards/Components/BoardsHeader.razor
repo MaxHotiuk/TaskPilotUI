@@ -6,23 +6,23 @@
             <div class="search-section">
                 <Input Size=@InputSize.Large
                        Placeholder="Search your boards..." 
-                       @bind-Value="SearchTerm"
-                       @oninput="OnSearchChanged"
-                       AllowClear="true"
+                       @bind-Value=@SearchTerm
+                       @oninput=@OnSearchChanged
+                       AllowClear=@true
                        Style="border-radius: 8px;" />
             </div>
         </AntDesign.Col>
         <AntDesign.Col Xs="24" Sm="24" Md="12" Lg="10" Xl="8">
             <div class="filter-section">
-                <Space Size=@SpaceSize.Small Wrap="true">
+                <Space Size=@SpaceSize.Small Wrap=@true>
                     <SpaceItem>
                         <Text Type=@TextElementType.Secondary Style="margin-right: 8px; font-weight: 500;">
                             Show:
                         </Text>
                     </SpaceItem>
                     <SpaceItem>
-                        <Button Type="@(FilterType == "all" ? ButtonType.Primary : ButtonType.Text)" 
-                                OnClick="@(() => OnFilterChanged.InvokeAsync("all"))"
+                        <Button Type=@(FilterType == "all" ? ButtonType.Primary : ButtonType.Text) 
+                                OnClick=@(() => OnFilterChanged.InvokeAsync("all"))
                                 Size=@ButtonSize.Small
                                 Style="border-radius: 6px;">
                             All Boards

@@ -1,0 +1,92 @@
+@using AntDesign
+@using UI.Models.Board
+@using UI.Models.Task
+@using UI.Models.State
+@using UI.Models.Member
+
+<div class="board-content">
+    @if (IsLoading && BoardDetail == null)
+    {
+        <div class="loading-container">
+            <Spin Size=@SpinSize.Large Tip="Loading board...">
+                <div style="height: 400px;"></div>
+            </Spin>
+        </div>
+    }
+    else if (BoardDetail != null)
+    {
+        <div class="board-columns">
+            @foreach (var state in BoardDetail.States.OrderBy(s => s.Order))
+            {
+                <div class="state-column">
+                    <div class="state-header">
+                        <div>
+                            <Text Strong>@state.Name</Text>
+                        </div>
+                        <div>
+                            <Badge Count=@GetTaskCountForState(state.Id) />
+                        </div>
+                    </div>
+                    <div class="task-container">
+                        @if (GetTasksForState(state.Id).Any())
+                        {
+                            <div class="task-list">
+                                @foreach (var task in GetTasksForState(state.Id))
+                                {
+                                    <Card Size=@CardSize.Small 
+                                          Class="task-item"
+                                          OnClick=@(() => OnTaskClick.InvokeAsync(task))
+                                          Hoverable>
+                                        <Body>
+                                            <div class="task-card">
+                                                <Text Strong>@task.Title</Text>
+                                                @if (!string.IsNullOrEmpty(task.Description))
+                                                {
+                                                    <div class="task-title">
+                                                        <Text Type=@TextElementType.Secondary>
+                                                            @TruncateDescription(task.Description)
+                                                        </Text>
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrEmpty(task.AssigneeId))
+                                                {
+                                                    <div class="task-assignee">
+                                                        <Tag>@GetAssigneeName(task.AssigneeId)</Tag>
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrEmpty(task.DueDate))
+                                                {
+                                                    <div class="task-due-date">
+                                                        <Tag>
+                                                            Due: @FormatDueDate(task.DueDate)
+                                                        </Tag>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </Body>
+                                    </Card>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                No tasks in this state
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="error-container">
+            <h3>Board Not Found</h3>
+            <p>The board you're looking for doesn't exist or you don't have access to it.</p>
+            <Button Type=@ButtonType.Primary OnClick=@(() => OnGoBack.InvokeAsync())>
+                Go Back
+            </Button>
+        </div>
+    }
+</div>

@@ -3,27 +3,27 @@
 @using UI.Interfaces.Services
 
 <Modal Title="Create New Board"
-       Visible="Visible"
-       OnOk="HandleOk"
-       OnCancel="HandleCancel"
-       ConfirmLoading="_isLoading"
+       Visible=@Visible
+       OnOk=@HandleOk
+       OnCancel=@HandleCancel
+       ConfirmLoading=@_isLoading
        OkText='"Create Board"'
        CancelText='"Cancel"'
        Width="500">
     
-    <Form Model="_formModel"
+    <Form Model=@_formModel
           Layout=@FormLayout.Vertical
-          OnFinish="HandleSubmit"
-          OnFinishFailed="HandleSubmitFailed">
+          OnFinish=@HandleSubmit
+          OnFinishFailed=@HandleSubmitFailed>
         
         <FormItem Label="Board Name" Required>
-            <Input @bind-Value="_formModel.Name" 
+            <Input @bind-Value=@_formModel.Name
                    Placeholder="Enter board name"
                    MaxLength="100" />
         </FormItem>
         
         <FormItem Label="Description">
-            <TextArea @bind-Value="_formModel.Description"
+            <TextArea @bind-Value=@_formModel.Description
                       Placeholder="Enter board description (optional)"
                       Rows="3"
                       MaxLength="500" />
@@ -32,10 +32,10 @@
         @if (!string.IsNullOrEmpty(_error))
         {
             <Alert Type=@AlertType.Error 
-                   Message="_error" 
-                   ShowIcon="true" 
-                   Closable="true"
-                   OnClose="() => _error = string.Empty"
+                   Message=@_error
+                   ShowIcon=@true
+                   Closable=@true
+                   OnClose=@(() => _error = string.Empty)
                    Style="margin-bottom: 16px;" />
         }
     </Form>
