@@ -33,10 +33,12 @@ public partial class TaskDetailsModal : ComponentBase
     private DateTime? DueDateValue { get; set; }
     private string DueDateString { get; set; } = string.Empty;
     private bool _internalLoading = false;
+    private string? CurrentUserId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await LoadAllUsers();
+        await LoadCurrentUser();
     }
 
     protected override void OnParametersSet()
@@ -92,6 +94,19 @@ public partial class TaskDetailsModal : ComponentBase
         catch (Exception)
         {
             AllUsers = new List<UserDto>();
+        }
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        try
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            CurrentUserId = currentUser?.Id;
+        }
+        catch (Exception)
+        {
+            CurrentUserId = null;
         }
     }
 

@@ -1,0 +1,147 @@
+@using AntDesign
+@using UI.Models.Comment
+@using UI.Models.User
+@using UI.Interfaces.Services
+
+<div class="task-comments-container">
+    <div class="comments-header">
+        <h4>Comments (@(Comments?.Count ?? 0))</h4>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="comments-loading">
+            <Spin Size=SpinSize.Small Tip="Loading comments...">
+                <div style="height: 100px;"></div>
+            </Spin>
+        </div>
+    }
+    else
+    {
+        <div class="comments-list">
+            @if (Comments?.Any() == true)
+            {
+                @foreach (var comment in Comments.OrderBy(c => c.CreatedAt))
+                {
+                    <div class="comment-item" key="@comment.Id">
+                        <div class="comment-header">
+                            <div class="comment-author">
+                                <Avatar Size=AvatarSize.Small>
+                                    @GetAuthorInitials(comment.AuthorId)
+                                </Avatar>
+                                <span class="author-name">@GetAuthorName(comment.AuthorId)</span>
+                            </div>
+                            <div class="comment-meta">
+                                <span class="comment-date">@FormatDate(comment.CreatedAt)</span>
+                                @if (CanEditComment(comment))
+                                {
+                                    <Dropdown Trigger=@(new AntDesign.Trigger[] { AntDesign.Trigger.Click })>
+                                        <Overlay>
+                                            <Menu>
+                                                <MenuItem OnClick=@(() => StartEditComment(comment))>
+                                                    <Icon Type="edit" /> Edit
+                                                </MenuItem>
+                                                <MenuItem OnClick=@(() => DeleteComment(comment.Id)) Danger="true">
+                                                    <Icon Type="delete" /> Delete
+                                                </MenuItem>
+                                            </Menu>
+                                        </Overlay>
+                                        <ChildContent>
+                                            <Button Type=@ButtonType.Text Size=@ButtonSize.Small Icon="more">
+                                            </Button>
+                                        </ChildContent>
+                                    </Dropdown>
+                                }
+                            </div>
+                        </div>
+                        
+                        @if (EditingCommentId == comment.Id)
+                        {
+                            <div class="comment-edit-form">
+                                <TextArea @bind-Value=EditingContent
+                                         Rows="3" 
+                                         Placeholder="Edit your comment..."
+                                         MaxLength="1000"
+                                         ShowCount=@true />
+                                <div class="comment-edit-actions">
+                                    <Button Size=@ButtonSize.Small 
+                                           OnClick=@CancelEditComment
+                                           Type=@ButtonType.Default>
+                                        Cancel
+                                    </Button>
+                                    <Button Size=@ButtonSize.Small
+                                           OnClick=@(() => SaveEditComment(comment.Id))
+                                           Type=@ButtonType.Primary
+                                           Loading=@IsUpdating
+                                           Disabled=@(string.IsNullOrWhiteSpace(EditingContent))>
+                                        Save
+                                    </Button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="comment-content">
+                                @((MarkupString)FormatCommentContent(comment.Content))
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="no-comments">
+                    <Empty>
+                        <DescriptionTemplate>
+                            <span>No comments yet. Be the first to comment on this task</span>
+                        </DescriptionTemplate>
+                    </Empty>
+                </div>
+            }
+        </div>
+
+        @if (CanAddComment)
+        {
+            <div class="add-comment-section">
+                <div class="add-comment-form">
+                    <div class="comment-input-header">
+                        <Avatar Size=AvatarSize.Small>
+                            @GetCurrentUserInitials()
+                        </Avatar>
+                        <span class="current-user-name">@GetCurrentUserName()</span>
+                    </div>
+                    
+                    <TextArea @bind-Value=NewCommentContent
+                             Rows="3" 
+                             Placeholder="Add a comment..."
+                             MaxLength="1000"
+                             ShowCount=@true
+                             @onkeydown=@HandleKeyDown />
+                    
+                    <div class="comment-actions">
+                        <div class="comment-actions-left">
+                            <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
+                                Press Ctrl+Enter to post
+                            </Text>
+                        </div>
+                        <div class="comment-actions-right">
+                            <Button Size=@ButtonSize.Small
+                                   OnClick=@ClearNewComment
+                                   Type=@ButtonType.Default
+                                   Disabled=@(string.IsNullOrWhiteSpace(NewCommentContent))>
+                                Clear
+                            </Button>
+                            <Button Size=@ButtonSize.Small
+                                   OnClick=@AddComment
+                                   Type=@ButtonType.Primary
+                                   Loading=@IsAdding
+                                   Disabled=@(string.IsNullOrWhiteSpace(NewCommentContent))>
+                                Comment
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

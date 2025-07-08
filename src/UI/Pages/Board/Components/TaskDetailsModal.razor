@@ -9,7 +9,7 @@
        OnOk=@HandleOk
        OnCancel=@HandleCancel
        ConfirmLoading=@IsLoading
-       Width="700"
+       Width="800"
        Footer=@GetModalFooter()>
     
     @if (CurrentTask != null)
@@ -37,6 +37,14 @@
                                   CurrentStateId=@CurrentTask.StateId
                                   IsLoading=@(IsLoading || _internalLoading)
                                   OnStateChange=@MoveTaskToState />
+            }
+
+            @if (!IsEditing)
+            {
+                <TaskCommentsComponent TaskId=@CurrentTask.Id
+                                     AllUsers=@AllUsers
+                                     CanAddComment=@CanManageTask
+                                     CurrentUserId=@CurrentUserId />
             }
         </div>
     }
