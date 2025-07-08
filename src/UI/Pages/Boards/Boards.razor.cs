@@ -3,18 +3,19 @@ using UI.Models.Board;
 using UI.Models.Member;
 using UI.Models.User;
 using UI.Interfaces.Services;
+using UI.Extensions;
 
 namespace UI.Pages.Boards;
 
 public partial class Boards : ComponentBase
 {
+    [CascadingParameter] public IGlobalLoadingService LoadingService { get; set; } = default!;
     [Inject] private IBoardService BoardService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
     private List<BoardWithStats> _boards = new();
     private List<BoardWithStats> _filteredBoards = new();
-    private bool _isLoading = true;
     private string _searchTerm = string.Empty;
     private string _filterType = "all";
     private bool _showCreateModal = false;
@@ -23,6 +24,8 @@ public partial class Boards : ComponentBase
     private BoardWithStats? _selectedBoard = null;
     private string _deleteConfirmation = string.Empty;
 
+    protected bool IsLoading => LoadingService?.IsLoading ?? false;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadBoardsWithCache();
@@ -30,38 +33,40 @@ public partial class Boards : ComponentBase
 
     private async Task LoadBoardsWithCache()
     {
-        try
+        await AuthService.ExecuteWithGlobalLoadingAsync(LoadingService, async service =>
         {
-            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
-            if (!isAuthenticated)
+            try
             {
-                Navigation.NavigateTo("/login");
-                return;
-            }
-
-            var currentUser = AuthService.GetCachedUser();
-            if (currentUser == null)
-            {
-                currentUser = await AuthService.GetCurrentUserAsync();
-                if (currentUser == null)
+                var isAuthenticated = await service.IsAuthenticatedAsync();
+                if (!isAuthenticated)
                 {
                     Navigation.NavigateTo("/login");
                     return;
                 }
-            }
 
-            await LoadCachedBoards(currentUser.Id);
-            
-            _ = Task.Run(async () => await LoadFreshBoards(currentUser.Id));
-        }
-        catch (Exception)
-        {
-        }
-        finally
-        {
-            _isLoading = false;
-            StateHasChanged();
-        }
+                var currentUser = service.GetCachedUser();
+                if (currentUser == null)
+                {
+                    currentUser = await service.GetCurrentUserAsync();
+                    if (currentUser == null)
+                    {
+                        Navigation.NavigateTo("/login");
+                        return;
+                    }
+                }
+
+                await LoadCachedBoards(currentUser.Id);
+                
+                _ = Task.Run(async () => await LoadFreshBoards(currentUser.Id));
+            }
+            catch (Exception)
+            {
+            }
+            finally
+            {
+                StateHasChanged();
+            }
+        });
     }
 
     private async Task LoadCachedBoards(string userId)
@@ -140,37 +145,39 @@ public partial class Boards : ComponentBase
 
     private async Task LoadBoards()
     {
-        try
-        {
-            _isLoading = true;
-            StateHasChanged();
-
-            var currentUser = AuthService.GetCachedUser();
-            if (currentUser == null)
+        await BoardService.ExecuteWithGlobalLoadingAndErrorHandlingAsync(
+            LoadingService,
+            async service =>
             {
-                Navigation.NavigateTo("/login");
-                return;
-            }
+                var currentUser = AuthService.GetCachedUser();
+                if (currentUser == null)
+                {
+                    Navigation.NavigateTo("/login");
+                    return;
+                }
 
-            var userBoards = await BoardService.GetUserBoardsAsync(currentUser.Id);
-            _boards = new List<BoardWithStats>();
+                var userBoards = await service.GetUserBoardsAsync(currentUser.Id);
+                _boards = new List<BoardWithStats>();
 
-            foreach (var board in userBoards)
+                foreach (var board in userBoards)
+                {
+                    var boardStats = await service.GetBoardWithStatsAsync(board.Id);
+                    _boards.Add(boardStats);
+                }
+
+                ApplyFilters();
+            },
+            onError: ex =>
             {
-                var boardStats = await BoardService.GetBoardWithStatsAsync(board.Id);
-                _boards.Add(boardStats);
-            }
-
-            ApplyFilters();
-        }
-        catch (Exception)
-        {
-        }
-        finally
-        {
-            _isLoading = false;
-            StateHasChanged();
-        }
+                // Silent error for now, could show a message to user
+                Console.WriteLine($"Error loading boards: {ex.Message}");
+                return Task.CompletedTask;
+            },
+            onFinally: () =>
+            {
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
     }
 
     private void ApplyFilters()

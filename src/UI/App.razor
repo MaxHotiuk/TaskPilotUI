@@ -1,3 +1,9 @@
 @namespace UI
+@using UI.Components
+@using UI.Interfaces.Services
+@inject IGlobalLoadingService LoadingService
 
-<Routes />
+<CascadingValue Value="LoadingService">
+    <Routes />
+    <GlobalLoadingComponent />
+</CascadingValue>

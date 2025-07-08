@@ -5,8 +5,8 @@
 @using UI.Interfaces.Services
 @using UI.Pages.Boards.Components
 
-<BoardsPageHeader IsLoading="_isLoading"
-                  ShowHeader="!_isLoading || _boards.Any()"
+<BoardsPageHeader IsLoading="IsLoading"
+                  ShowHeader="!IsLoading || _boards.Any()"
                   SearchTerm="_searchTerm"
                   SearchTermChanged="(value) => _searchTerm = value"
                   FilterType="_filterType"
@@ -16,7 +16,7 @@
                   OnFilterChanged="OnFilterChanged" />
 
 <div class="boards-content">
-    @if (_isLoading && !_boards.Any())
+    @if (IsLoading && !_boards.Any())
     {
         <div class="loading-container">
             <Spin Size=@SpinSize.Large Tip="Loading your boards...">
@@ -38,7 +38,7 @@
             }
         </Row>
     }
-    else if (!_isLoading)
+    else if (!IsLoading)
     {
         <Empty Description="GetEmptyDescription()"
                Style="margin-top: 60px;">

@@ -79,6 +79,7 @@ namespace UI
             builder.Services.AddScoped<ITaskService, TaskService>();
             builder.Services.AddScoped<ITaskStateService, TaskStateService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddSingleton<IGlobalLoadingService, GlobalLoadingService>();
 
             var host = builder.Build();
             

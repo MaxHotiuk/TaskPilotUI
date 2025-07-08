@@ -6,9 +6,10 @@
 @using UI.Models.Member
 @using UI.Models.User
 @using UI.Pages.Board.Components
+@using UI.Interfaces.Services
 
 <BoardHeader BoardDetail="_boardDetail"
-             IsLoading="_isLoading"
+             IsLoading="IsLoading"
              OnBack="GoBack"
              OnShowMembers="ShowMembersModal"
              OnRefresh="RefreshBoard"
@@ -16,7 +17,7 @@
              OnCreateState="ShowCreateStateModal" />
 
 <BoardColumns BoardDetail="_boardDetail"
-              IsLoading="_isLoading"
+              IsLoading="IsLoading"
               OnTaskClick="ShowTaskDetails"
               OnGoBack="GoBack" />
 

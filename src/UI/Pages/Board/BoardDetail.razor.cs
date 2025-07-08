@@ -6,13 +6,15 @@ using UI.Models.Member;
 using UI.Models.User;
 using UI.Interfaces.Services;
 using UI.Pages.Board.Components;
+using UI.Extensions;
 using AntDesign;
 
 namespace UI.Pages.Board;
 
-public partial class BoardDetail : ComponentBase
+public partial class BoardDetail : ComponentBase, IDisposable
 {
     [Parameter] public string BoardId { get; set; } = string.Empty;
+    [CascadingParameter] public IGlobalLoadingService LoadingService { get; set; } = default!;
     
     [Inject] private IBoardService BoardService { get; set; } = default!;
     [Inject] private IBoardMemberService BoardMemberService { get; set; } = default!;
@@ -23,7 +25,6 @@ public partial class BoardDetail : ComponentBase
 
     private BoardDetailDto? _boardDetail;
     private UserDto? _currentUser;
-    private bool _isLoading = true;
     private bool _showMembersModal = false;
     private bool _showAddMemberModal = false;
     private bool _isAddingMember = false;
@@ -32,10 +33,29 @@ public partial class BoardDetail : ComponentBase
     private AddMemberModal.AddMemberForm _addMemberForm = new();
     private CreateStateRequest _addStateForm = new();
 
+    protected bool IsLoading => LoadingService?.IsLoading ?? false;
+
+    protected override void OnInitialized()
+    {
+        if (LoadingService != null)
+        {
+            LoadingService.OnLoadingChanged += StateHasChanged;
+        }
+        base.OnInitialized();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadCurrentUser();
         await LoadBoardDetail();
+    }
+
+    public void Dispose()
+    {
+        if (LoadingService != null)
+        {
+            LoadingService.OnLoadingChanged -= StateHasChanged;
+        }
     }
 
     private async Task LoadCurrentUser()
@@ -61,33 +81,35 @@ public partial class BoardDetail : ComponentBase
 
     private async Task LoadBoardDetail()
     {
-        try
-        {
-            _isLoading = true;
-            _boardDetail = await BoardService.GetBoardDetailAsync(BoardId);
-            
-            if (_boardDetail == null)
+        await BoardService.ExecuteWithGlobalLoadingAndErrorHandlingAsync(
+            LoadingService,
+            async service =>
             {
-                Message.Error("Board not found or access denied");
-                return;
-            }
+                _boardDetail = await service.GetBoardDetailAsync(BoardId);
+                
+                if (_boardDetail == null)
+                {
+                    Message.Error("Board not found or access denied");
+                    return;
+                }
 
-            if (!HasBoardAccess())
+                if (!HasBoardAccess())
+                {
+                    Message.Error("You don't have access to this board");
+                    Navigation.NavigateTo("/boards");
+                    return;
+                }
+            },
+            onError: ex =>
             {
-                Message.Error("You don't have access to this board");
-                Navigation.NavigateTo("/boards");
-                return;
-            }
-        }
-        catch (Exception ex)
-        {
-            Message.Error($"Failed to load board: {ex.Message}");
-        }
-        finally
-        {
-            _isLoading = false;
-            StateHasChanged();
-        }
+                Message.Error($"Failed to load board: {ex.Message}");
+                return Task.CompletedTask;
+            },
+            onFinally: () =>
+            {
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
     }
 
     private bool HasBoardAccess()
