@@ -1,0 +1,51 @@
+@using AntDesign
+@using UI.Models.Task
+@using UI.Models.State
+@using UI.Models.Member
+@using UI.Models.User
+
+<Modal Title=@($"Task Details - {CurrentTask?.Title}")
+       Visible=@IsVisible
+       OnOk=@HandleOk
+       OnCancel=@HandleCancel
+       ConfirmLoading=@IsLoading
+       Width="700"
+       Footer=@GetModalFooter()>
+    
+    @if (CurrentTask != null)
+    {
+        <div class="task-details-container">
+
+            @if (IsEditing)
+            {
+                <TaskEditMode FormModel=@FormModel
+                              States=@States
+                              BoardMembers=@BoardMembers
+                              AllUsers=@AllUsers
+                              CanManageTask=@CanManageTask
+                              DueDateString=@DueDateString
+                              OnFormSubmit=@HandleSubmit
+                              OnFormSubmitFailed=@HandleSubmitFailed />
+            }
+            else
+            {
+                <TaskViewMode Task=@CurrentTask
+                              States=@States
+                              AllUsers=@AllUsers />
+
+                <TaskQuickActions States=@States
+                                  CurrentStateId=@CurrentTask.StateId
+                                  IsLoading=@(IsLoading || _internalLoading)
+                                  OnStateChange=@MoveTaskToState />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="loading-container">
+            <Spin Size=@SpinSize.Large Tip="Loading task details...">
+                <div style="height: 200px;"></div>
+            </Spin>
+        </div>
+    }
+</Modal>

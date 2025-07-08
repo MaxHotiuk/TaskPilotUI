@@ -3,6 +3,8 @@ using UI.Models.Board;
 using UI.Models.Task;
 using UI.Models.State;
 using UI.Models.Member;
+using UI.Models.User;
+using UI.Interfaces.Services;
 
 namespace UI.Pages.Board.Components;
 
@@ -12,6 +14,30 @@ public partial class BoardColumns : ComponentBase
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public EventCallback<TaskItemDto> OnTaskClick { get; set; }
     [Parameter] public EventCallback OnGoBack { get; set; }
+    
+    [Inject] private IUserService UserService { get; set; } = default!;
+    
+    private Dictionary<string, UserDto> _userCache = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (BoardDetail?.Members != null)
+        {
+            if (_userCache.Count == 0 || !BoardDetail.Members.All(m => _userCache.ContainsKey(m.UserId)))
+            {
+                _userCache.Clear();
+                await LoadUserData();
+            }
+        }
+    }
+
+    private async Task LoadUserData()
+    {
+        if (BoardDetail?.Members == null) return;
+
+        var userIds = BoardDetail.Members.Select(m => m.UserId).Distinct();
+        _userCache = await UserService.GetUsersByIdsAsync(userIds);
+    }
 
     private List<TaskItemDto> GetTasksForState(int stateId)
     {
@@ -25,6 +51,11 @@ public partial class BoardColumns : ComponentBase
 
     private string GetAssigneeName(string assigneeId)
     {
+        if (_userCache.TryGetValue(assigneeId, out var user))
+        {
+            return user.Username;
+        }
+        
         var member = BoardDetail?.Members.FirstOrDefault(m => m.UserId == assigneeId);
         return member != null ? "User" : "Unknown";
     }

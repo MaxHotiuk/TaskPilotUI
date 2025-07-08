@@ -1,0 +1,257 @@
+.task-details-card {
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    transition: box-shadow 0.3s ease;
+}
+
+.task-details-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Description Card Styling */
+.description-card {
+    margin-bottom: 16px;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+}
+
+.description-card .ant-card-head {
+    background: #f5f5f5;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.description-card .ant-card-body {
+    padding: 16px;
+}
+
+/* Due Date Alert Styling */
+.due-alert {
+    margin-top: 4px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.due-alert.ant-alert-banner {
+    border-radius: 4px;
+}
+
+/* Enhanced Card Hover Effects */
+.ant-card-hoverable:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    transition: all 0.3s ease;
+}
+
+/* Typography Enhancements */
+.ant-typography h3 {
+    color: #262626;
+    font-weight: 600;
+}
+
+.ant-typography-caption {
+    color: #8c8c8c;
+}
+
+/* Tag Customizations */
+.ant-tag {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Avatar Customizations */
+.ant-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Row and Column Spacing */
+.ant-row {
+    margin-left: -8px;
+    margin-right: -8px;
+}
+
+.ant-col {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* Inner Card Styling */
+.ant-card-type-inner {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+}
+
+.ant-card-type-inner:hover {
+    background: #f5f5f5;
+    border-color: #d9d9d9;
+}
+
+.ant-card-type-inner .ant-card-head {
+    padding: 0 16px;
+    min-height: 40px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.ant-card-type-inner .ant-card-body {
+    padding: 16px;
+}
+
+/* Space Component Customizations */
+.ant-space {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.ant-space-item {
+    display: flex;
+    align-items: center;
+}
+
+/* Icon Styling */
+.anticon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Task View Mode Specific Styles */
+.task-title-icon {
+    color: #1890ff;
+    font-size: 18px;
+}
+
+.task-title {
+    margin: 0;
+}
+
+.description-title {
+    font-weight: 500;
+}
+
+.card-row {
+    margin-top: 16px;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.assignee-icon {
+    color: #52c41a;
+}
+
+.field-label {
+    color: #999;
+    font-weight: 500;
+}
+
+.user-avatar {
+    background-color: #1890ff;
+}
+
+.not-assigned,
+.no-due-date {
+    color: #999;
+    font-style: italic;
+}
+
+.due-date-icon {
+    color: #fa8c16;
+}
+
+.due-date-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-divider {
+    margin: 16px 0;
+}
+
+.created-icon {
+    color: #52c41a;
+}
+
+.updated-icon {
+    color: #1890ff;
+}
+
+.timestamp {
+    color: #999;
+    font-size: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .task-details-card {
+        margin: 8px 0;
+    }
+    
+    .ant-card-body {
+        padding: 16px;
+    }
+    
+    .ant-col {
+        margin-bottom: 16px;
+    }
+    
+    .ant-row .ant-col:last-child {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .task-details-card {
+        margin: 4px 0;
+    }
+    
+    .ant-card-body {
+        padding: 12px;
+    }
+    
+    .ant-typography h3 {
+        font-size: 18px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .task-details-card {
+        background: #1f1f1f;
+        border-color: #434343;
+    }
+    
+    .description-card {
+        background: #262626;
+        border-color: #434343;
+    }
+    
+    .description-card .ant-card-head {
+        background: #303030;
+        border-bottom-color: #434343;
+    }
+    
+    .ant-card-type-inner {
+        background: #262626;
+        border-color: #434343;
+    }
+    
+    .ant-card-type-inner:hover {
+        background: #303030;
+        border-color: #595959;
+    }
+    
+    .ant-typography h3 {
+        color: #ffffff;
+    }
+}

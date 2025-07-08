@@ -1,0 +1,34 @@
+/* Task Edit Mode Styles */
+.ant-form-item {
+    margin-bottom: 16px;
+}
+
+.ant-form-item-label {
+    font-weight: 500;
+}
+
+.ant-input,
+.ant-select,
+.ant-picker {
+    border-radius: 6px;
+}
+
+.ant-input:focus,
+.ant-select:focus,
+.ant-picker:focus {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.ant-select-selector {
+    border-radius: 6px !important;
+}
+
+.ant-picker-input > input {
+    font-size: 14px;
+}
+
+.ant-form-item-explain-error {
+    font-size: 12px;
+    margin-top: 4px;
+}

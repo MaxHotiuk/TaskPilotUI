@@ -44,3 +44,22 @@
                NextOrder=@(_boardDetail?.States?.Any() == true ? _boardDetail.States.Max(s => s.Order) + 1 : 1)
                OnOk=@AddState
                OnCancel=@(() => { _showAddStateModal = false; ResetAddStateForm(); }) />
+
+<AddTaskModal IsVisible=@_showAddTaskModal
+              IsLoading=@_isAddingTask
+              FormModel=@_addTaskForm
+              States=@(_boardDetail?.States ?? new List<StateDto>())
+              BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+              BoardId=@BoardId
+              OnOk=@AddTask
+              OnCancel=@(() => { _showAddTaskModal = false; ResetAddTaskForm(); }) />
+
+<TaskDetailsModal IsVisible=@_showTaskDetailsModal
+                  IsLoading=@_isTaskDetailsLoading
+                  CurrentTask=@_selectedTask
+                  States=@(_boardDetail?.States ?? new List<StateDto>())
+                  BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+                  CanManageTask=@(CanManageMembers())
+                  OnTaskUpdated=@HandleTaskUpdated
+                  OnTaskDeleted=@HandleTaskDeleted
+                  OnCancel=@(() => { _showTaskDetailsModal = false; _selectedTask = null; }) />
