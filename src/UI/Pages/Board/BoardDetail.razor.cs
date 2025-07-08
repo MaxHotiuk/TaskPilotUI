@@ -19,6 +19,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     [Inject] private IBoardService BoardService { get; set; } = default!;
     [Inject] private IBoardMemberService BoardMemberService { get; set; } = default!;
     [Inject] private ITaskStateService TaskStateService { get; set; } = default!;
+    [Inject] private ITaskService TaskService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IMessageService Message { get; set; } = default!;
@@ -30,8 +31,14 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private bool _isAddingMember = false;
     private bool _showAddStateModal = false;
     private bool _isAddingState = false;
+    private bool _showAddTaskModal = false;
+    private bool _isAddingTask = false;
+    private bool _showTaskDetailsModal = false;
+    private bool _isTaskDetailsLoading = false;
+    private TaskItemDto? _selectedTask = null;
     private AddMemberModal.AddMemberForm _addMemberForm = new();
     private CreateStateRequest _addStateForm = new();
+    private CreateTaskRequest _addTaskForm = new();
 
     protected bool IsLoading => LoadingService?.IsLoading ?? false;
 
@@ -159,7 +166,14 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
     private void ShowCreateTaskModal()
     {
-        Message.Info("Task creation will be implemented soon");
+        if (!CanManageTasks())
+        {
+            Message.Warning("Only board owners and members can add tasks");
+            return;
+        }
+        
+        ResetAddTaskForm();
+        _showAddTaskModal = true;
     }
 
     private void ShowCreateStateModal()
@@ -176,7 +190,32 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
     private void ShowTaskDetails(TaskItemDto task)
     {
-        Message.Info($"Task details for: {task.Title}");
+        _selectedTask = task;
+        _showTaskDetailsModal = true;
+    }
+
+    private void HandleTaskUpdated(TaskItemDto updatedTask)
+    {
+        if (_boardDetail?.Tasks != null)
+        {
+            var taskIndex = _boardDetail.Tasks.FindIndex(t => t.Id == updatedTask.Id);
+            if (taskIndex >= 0)
+            {
+                _boardDetail.Tasks[taskIndex] = updatedTask;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void HandleTaskDeleted(string taskId)
+    {
+        if (_boardDetail?.Tasks != null)
+        {
+            _boardDetail.Tasks.RemoveAll(t => t.Id == taskId);
+            _showTaskDetailsModal = false;
+            _selectedTask = null;
+            StateHasChanged();
+        }
     }
 
     private async Task AddMember()
@@ -344,6 +383,65 @@ public partial class BoardDetail : ComponentBase, IDisposable
         finally
         {
             _isAddingState = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool CanManageTasks()
+    {
+        if (_boardDetail == null || _currentUser == null)
+            return false;
+
+        return _boardDetail.OwnerId == _currentUser.Id || 
+               _boardDetail.Members.Any(m => m.UserId == _currentUser.Id);
+    }
+
+    private void ResetAddTaskForm()
+    {
+        _addTaskForm = new CreateTaskRequest
+        {
+            BoardId = BoardId
+        };
+        
+        if (_boardDetail?.States != null && _boardDetail.States.Any())
+        {
+            _addTaskForm.StateId = _boardDetail.States.First().Id;
+        }
+    }
+
+    private async Task AddTask()
+    {
+        if (string.IsNullOrWhiteSpace(_addTaskForm.Title))
+        {
+            Message.Error("Please enter a task title");
+            return;
+        }
+
+        if (_addTaskForm.StateId == 0)
+        {
+            Message.Error("Please select a state for the task");
+            return;
+        }
+
+        try
+        {
+            _isAddingTask = true;
+            StateHasChanged();
+
+            var taskId = await TaskService.CreateTaskAsync(_addTaskForm);
+            
+            await LoadBoardDetail();
+            
+            _showAddTaskModal = false;
+            Message.Success($"Task '{_addTaskForm.Title}' created successfully");
+        }
+        catch (Exception ex)
+        {
+            Message.Error($"Failed to create task: {ex.Message}");
+        }
+        finally
+        {
+            _isAddingTask = false;
             StateHasChanged();
         }
     }

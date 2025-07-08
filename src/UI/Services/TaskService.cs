@@ -24,4 +24,52 @@ public class TaskService : ITaskService
             return new List<TaskItemDto>();
         }
     }
+
+    public async Task<TaskItemDto> GetTaskByIdAsync(string taskId)
+    {
+        try
+        {
+            return await _boardTaskApi.GetTaskByIdAsync(taskId);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get task: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> CreateTaskAsync(CreateTaskRequest request)
+    {
+        try
+        {
+            return await _boardTaskApi.CreateTaskAsync(request);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create task: {ex.Message}", ex);
+        }
+    }
+
+    public async Task UpdateTaskAsync(string taskId, UpdateTaskRequest request)
+    {
+        try
+        {
+            await _boardTaskApi.UpdateTaskAsync(taskId, request);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to update task: {ex.Message}", ex);
+        }
+    }
+
+    public async Task DeleteTaskAsync(string taskId)
+    {
+        try
+        {
+            await _boardTaskApi.DeleteTaskAsync(taskId);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to delete task: {ex.Message}", ex);
+        }
+    }
 }

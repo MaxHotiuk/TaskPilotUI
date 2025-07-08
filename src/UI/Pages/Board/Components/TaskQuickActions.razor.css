@@ -1,0 +1,35 @@
+/* Task Quick Actions Styles */
+.quick-actions {
+    margin-top: 24px;
+}
+
+.state-change-section {
+    margin-top: 16px;
+}
+
+.state-buttons {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.state-buttons .ant-btn {
+    border-radius: 16px;
+    font-size: 12px;
+    height: auto;
+    padding: 4px 12px;
+    line-height: 1.4;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .state-buttons {
+        flex-direction: column;
+    }
+    
+    .state-buttons .ant-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

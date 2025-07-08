@@ -1,0 +1,22 @@
+@using AntDesign
+@using UI.Models.Task
+@using UI.Models.State
+
+<div class="quick-actions">
+    <Divider>Quick Actions</Divider>
+    <div class="state-change-section">
+        <Text Strong>Move to State:</Text>
+        <div class="state-buttons">
+            @foreach (var state in States)
+            {
+                <Button Type=@(state.Id == CurrentStateId ? ButtonType.Primary : ButtonType.Default)
+                        Size=@ButtonSize.Small
+                        Disabled=@(state.Id == CurrentStateId || IsLoading)
+                        OnClick=@(async () => await OnStateChange.InvokeAsync(state.Id))
+                        Style="margin: 4px;">
+                    @state.Name
+                </Button>
+            }
+        </div>
+    </div>
+</div>

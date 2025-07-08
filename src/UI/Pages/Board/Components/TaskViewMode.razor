@@ -1,0 +1,163 @@
+@using AntDesign
+@using UI.Models.Task
+@using UI.Models.State
+@using UI.Models.Member
+@using UI.Models.User
+
+<Card Class="task-details-card" Bordered>
+    <TitleTemplate>
+        <Space>
+            <SpaceItem>
+                <Icon Type="file-text" Class="task-title-icon" />
+            </SpaceItem>
+            <SpaceItem>
+                <Title Level="3" Class="task-title">@Task.Title</Title>
+            </SpaceItem>
+        </Space>
+    </TitleTemplate>
+    
+    <Extra>
+        <Tag Color=@("blue") Icon="flag">
+            @GetStateName(Task.StateId)
+        </Tag>
+    </Extra>
+    
+    <Body>
+        @if (!string.IsNullOrEmpty(Task.Description))
+        {
+            <Card Type=@CardType.Inner Size=@CardSize.Small Class="description-card">
+                <TitleTemplate>
+                    <Space>
+                        <SpaceItem>
+                            <Icon Type="align-left" />
+                        </SpaceItem>
+                        <SpaceItem>
+                            <span class="description-title">Description</span>
+                        </SpaceItem>
+                    </Space>
+                </TitleTemplate>
+                <Body>
+                    <Paragraph>
+                        @Task.Description
+                    </Paragraph>
+                </Body>
+            </Card>
+        }
+
+        <Row Gutter="(16, 16)" Class="card-row">
+            <Col Span="12">
+                <Card Type=@CardType.Inner Size=@CardSize.Small Hoverable>
+                    <Body>
+                        <div class="card-content">
+                            <div>
+                                <Space>
+                                    <SpaceItem>
+                                        <Icon Type="user" Class="assignee-icon" />
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <span class="field-label">Assignee</span>
+                                    </SpaceItem>
+                                </Space>
+                            </div>
+                            <div>
+                                @if (!string.IsNullOrEmpty(Task.AssigneeId))
+                                {
+                                    <Space>
+                                        <SpaceItem>
+                                            <Avatar Size=@AvatarSize.Small Icon="user" Class="user-avatar" />
+                                        </SpaceItem>
+                                        <SpaceItem>
+                                            <span>@GetAssigneeName(Task.AssigneeId)</span>
+                                        </SpaceItem>
+                                    </Space>
+                                }
+                                else
+                                {
+                                    <span class="not-assigned">Not assigned</span>
+                                }
+                            </div>
+                        </div>
+                    </Body>
+                </Card>
+            </Col>
+            
+            <Col Span="12">
+                <Card Type=@CardType.Inner Size=@CardSize.Small Hoverable>
+                    <Body>
+                        <div class="card-content">
+                            <div>
+                                <Space>
+                                    <SpaceItem>
+                                        <Icon Type="calendar" Class="due-date-icon" />
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <span class="field-label">Due Date</span>
+                                    </SpaceItem>
+                                </Space>
+                            </div>
+                            <div>
+                                @if (!string.IsNullOrEmpty(Task.DueDate))
+                                {
+                                    <div class="due-date-content">
+                                        <div>
+                                            <Tag Color=@GetDueDateColor(Task.DueDate) Icon="clock-circle">
+                                                @FormatDueDate(Task.DueDate)
+                                            </Tag>
+                                        </div>
+                                        @if (IsDueSoon(Task.DueDate))
+                                        {
+                                            <div>
+                                                <Alert Type=@AlertType.Warning
+                                                       Message=@GetDueIndicator(Task.DueDate) 
+                                                       ShowIcon=@true
+                                                       Banner=@true
+                                                       Class="due-alert" />
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="no-due-date">No due date set</span>
+                                }
+                            </div>
+                        </div>
+                    </Body>
+                </Card>
+            </Col>
+        </Row>
+
+        <Divider Class="task-divider" />
+        
+        <Space>
+            <SpaceItem>
+                <Space>
+                    <SpaceItem>
+                        <Icon Type="plus-circle" Class="created-icon" />
+                    </SpaceItem>
+                    <SpaceItem>
+                        <span class="timestamp">
+                            Created @GetCreatedTimeString()
+                        </span>
+                    </SpaceItem>
+                </Space>
+            </SpaceItem>
+            
+            @if (!string.IsNullOrEmpty(Task.UpdatedAt))
+            {
+                <SpaceItem>
+                    <Space>
+                        <SpaceItem>
+                            <Icon Type="edit" Class="updated-icon" />
+                        </SpaceItem>
+                        <SpaceItem>
+                            <span class="timestamp">
+                                Updated @GetUpdatedTimeString()
+                            </span>
+                        </SpaceItem>
+                    </Space>
+                </SpaceItem>
+            }
+        </Space>
+    </Body>
+</Card>

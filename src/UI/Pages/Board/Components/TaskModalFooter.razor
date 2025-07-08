@@ -1,0 +1,34 @@
+@using AntDesign
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="task-modal-footer">
+    @if (IsEditing)
+    {
+        <Button OnClick=@OnCancelEdit>Cancel</Button>
+        <Button Type=@ButtonType.Primary
+                Loading=@IsLoading
+                OnClick=@OnSaveChanges>
+            Save Changes
+        </Button>
+    }
+    else
+    {
+        <Button OnClick=@OnClose>Close</Button>
+        
+        @if (CanManageTask)
+        {
+            <Button Type=@ButtonType.Default OnClick=@OnEdit>Edit Task</Button>
+            
+            <Popconfirm Title="Are you sure you want to delete this task?"
+                        OnConfirm=@OnDelete
+                        OkText="Yes"
+                        CancelText="No">
+                <Button Type=@ButtonType.Primary
+                        Danger=@true
+                        Loading=@IsLoading>
+                    Delete Task
+                </Button>
+            </Popconfirm>
+        }
+    }
+</div>

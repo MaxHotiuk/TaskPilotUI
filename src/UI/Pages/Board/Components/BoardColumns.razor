@@ -33,38 +33,39 @@
                             <div class="task-list">
                                 @foreach (var task in GetTasksForState(state.Id))
                                 {
-                                    <Card Size=@CardSize.Small 
-                                          Class="task-item"
-                                          OnClick=@(() => OnTaskClick.InvokeAsync(task))
-                                          Hoverable>
-                                        <Body>
-                                            <div class="task-card">
-                                                <Text Strong>@task.Title</Text>
-                                                @if (!string.IsNullOrEmpty(task.Description))
-                                                {
-                                                    <div class="task-title">
-                                                        <Text Type=@TextElementType.Secondary>
-                                                            @TruncateDescription(task.Description)
-                                                        </Text>
-                                                    </div>
-                                                }
-                                                @if (!string.IsNullOrEmpty(task.AssigneeId))
-                                                {
-                                                    <div class="task-assignee">
-                                                        <Tag>@GetAssigneeName(task.AssigneeId)</Tag>
-                                                    </div>
-                                                }
-                                                @if (!string.IsNullOrEmpty(task.DueDate))
-                                                {
-                                                    <div class="task-due-date">
-                                                        <Tag>
-                                                            Due: @FormatDueDate(task.DueDate)
-                                                        </Tag>
-                                                    </div>
-                                                }
-                                            </div>
-                                        </Body>
-                                    </Card>
+                                    <div class="task-item-wrapper" @onclick=@(() => OnTaskClick.InvokeAsync(task))>
+                                        <Card Size=@CardSize.Small 
+                                              Class="task-item"
+                                              Hoverable>
+                                            <Body>
+                                                <div class="task-card">
+                                                    <Text Strong>@task.Title</Text>
+                                                    @if (!string.IsNullOrEmpty(task.Description))
+                                                    {
+                                                        <div class="task-title">
+                                                            <Text Type=@TextElementType.Secondary>
+                                                                @TruncateDescription(task.Description)
+                                                            </Text>
+                                                        </div>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(task.AssigneeId))
+                                                    {
+                                                        <div class="task-assignee">
+                                                            <Tag>@GetAssigneeName(task.AssigneeId)</Tag>
+                                                        </div>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(task.DueDate))
+                                                    {
+                                                        <div class="task-due-date">
+                                                            <Tag>
+                                                                Due: @FormatDueDate(task.DueDate)
+                                                            </Tag>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </Body>
+                                        </Card>
+                                    </div>
                                 }
                             </div>
                         }
