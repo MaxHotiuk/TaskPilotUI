@@ -6,15 +6,15 @@
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="reload" 
-                        Loading="IsLoading"
-                        OnClick="OnRefreshClicked">
+                        Loading=@IsLoading
+                        OnClick=@OnRefreshClicked>
                     Refresh
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Primary
                         Icon="plus" 
-                        OnClick="OnCreateClicked">
+                        OnClick=@OnCreateClicked>
                     Create Board
                 </Button>
             </SpaceItem>
@@ -24,10 +24,10 @@
     <PageHeaderContent>
         @if (ShowHeader)
         {
-            <BoardsHeader SearchTermChanged="SearchTermChanged"
+            <BoardsHeader SearchTermChanged=@SearchTermChanged
                           FilterType="FilterType"
-                          OnSearchChanged="OnSearchChanged"
-                          OnFilterChanged="OnFilterChanged" />
+                          OnSearchChanged=@OnSearchChanged
+                          OnFilterChanged=@OnFilterChanged />
         }
     </PageHeaderContent>
 </PageHeader>

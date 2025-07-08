@@ -84,7 +84,7 @@
         <div class="error-container">
             <h3>Board Not Found</h3>
             <p>The board you're looking for doesn't exist or you don't have access to it.</p>
-            <Button Type=@ButtonType.Primary OnClick="() => OnGoBack.InvokeAsync()">
+            <Button Type=@ButtonType.Primary OnClick=@(() => OnGoBack.InvokeAsync())>
                 Go Back
             </Button>
         </div>

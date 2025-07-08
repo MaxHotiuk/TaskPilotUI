@@ -1,17 +1,17 @@
 @using AntDesign
 @using UI.Models
 
-<Card Hoverable="true" 
+<Card Hoverable=@true 
       Style="margin-bottom: 16px;"
       class="board-card">
     <ActionTemplate>
-        <div class="board-action-btn board-action-edit" @onclick="HandleEditClick" title="Edit Board">
+        <div class="board-action-btn board-action-edit" @onclick=@HandleEditClick title="Edit Board">
             <Icon Type="edit" />
         </div>
-        <div class="board-action-btn board-action-view" @onclick="HandleViewClick" title="View Board">
+        <div class="board-action-btn board-action-view" @onclick=@HandleViewClick title="View Board">
             <Icon Type="eye" />
         </div>
-        <div class="board-action-btn board-action-delete" @onclick="HandleDeleteClick" title="Delete Board">
+        <div class="board-action-btn board-action-delete" @onclick=@HandleDeleteClick title="Delete Board">
             <Icon Type="delete" />
         </div>
     </ActionTemplate>
@@ -32,7 +32,7 @@
         
         @if (!string.IsNullOrEmpty(Board.Description))
         {
-            <Paragraph Ellipsis="true" Style="margin-bottom: 16px; color: #666;">
+            <Paragraph Ellipsis=@true Style="margin-bottom: 16px; color: #666;">
                 @Board.Description
             </Paragraph>
         }
@@ -53,7 +53,7 @@
         </div>
         
         <div class="board-footer">
-            <Text Type="@TextElementType.Secondary" Style="font-size: 12px;">
+            <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
                 Updated @GetRelativeTime(Board.UpdatedAt)
             </Text>
         </div>

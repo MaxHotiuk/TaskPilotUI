@@ -5,15 +5,15 @@
 @using UI.Interfaces.Services
 @using UI.Pages.Boards.Components
 
-<BoardsPageHeader IsLoading="IsLoading"
-                  ShowHeader="!IsLoading || _boards.Any()"
-                  SearchTerm="_searchTerm"
-                  SearchTermChanged="(value) => _searchTerm = value"
-                  FilterType="_filterType"
-                  OnRefreshClicked="RefreshBoards"
-                  OnCreateClicked="ShowCreateModal"
-                  OnSearchChanged="OnSearchChanged"
-                  OnFilterChanged="OnFilterChanged" />
+<BoardsPageHeader IsLoading=@IsLoading
+                  ShowHeader=@(!IsLoading || _boards.Any())
+                  SearchTerm=@_searchTerm
+                  SearchTermChanged=@((value) => _searchTerm = value)
+                  FilterType=@_filterType
+                  OnRefreshClicked=@RefreshBoards
+                  OnCreateClicked=@ShowCreateModal
+                  OnSearchChanged=@OnSearchChanged
+                  OnFilterChanged=@OnFilterChanged />
 
 <div class="boards-content">
     @if (IsLoading && !_boards.Any())
@@ -30,30 +30,30 @@
             @foreach (var boardStats in _filteredBoards)
             {
                 <AntDesign.Col Xxl="6" Xl="8" Lg="8" Md="12" Sm="12" Xs="24">
-                    <BoardCard BoardStats="boardStats"
-                               OnBoardClick="HandleBoardClick"
-                               OnEditBoard="HandleEditBoard"
-                               OnDeleteBoard="HandleDeleteBoard" />
+                    <BoardCard BoardStats=@boardStats
+                               OnBoardClick=@HandleBoardClick
+                               OnEditBoard=@HandleEditBoard
+                               OnDeleteBoard=@HandleDeleteBoard />
                 </AntDesign.Col>
             }
         </Row>
     }
     else if (!IsLoading)
     {
-        <Empty Description="GetEmptyDescription()"
+        <Empty Description=@GetEmptyDescription()
                Style="margin-top: 60px;">
             <ChildContent>
                 @if (!_boards.Any())
                 {
                     <Button Type=@ButtonType.Primary
                             Icon="plus" 
-                            OnClick="ShowCreateModal">
+                            OnClick=@ShowCreateModal>
                         Create Your First Board
                     </Button>
                 }
                 else
                 {
-                    <Button Type=@ButtonType.Default OnClick="ClearFilters">
+                    <Button Type=@ButtonType.Default OnClick=@ClearFilters>
                         Clear Filters
                     </Button>
                 }
@@ -62,12 +62,12 @@
     }
 </div>
 
-<CreateBoardModal @bind-Visible="_showCreateModal" 
-                  OnBoardCreated="HandleBoardCreated" />
+<CreateBoardModal @bind-Visible=@_showCreateModal
+                  OnBoardCreated=@HandleBoardCreated />
 
-<DeleteBoardModal @bind-Visible="_showDeleteModal"
-                  SelectedBoard="_selectedBoard"
-                  IsDeleting="_isDeleting"
-                  @bind-DeleteConfirmation="_deleteConfirmation"
-                  OnConfirmDelete="ConfirmDelete"
-                  OnCancelDelete="CancelDelete" />
+<DeleteBoardModal @bind-Visible=@_showDeleteModal
+                  SelectedBoard=@_selectedBoard
+                  IsDeleting=@_isDeleting
+                  @bind-DeleteConfirmation=@_deleteConfirmation
+                  OnConfirmDelete=@ConfirmDelete
+                  OnCancelDelete=@CancelDelete />
