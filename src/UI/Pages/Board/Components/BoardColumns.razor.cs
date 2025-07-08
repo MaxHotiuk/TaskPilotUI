@@ -36,7 +36,7 @@ public partial class BoardColumns : ComponentBase
         if (BoardDetail?.Members == null) return;
 
         var userIds = BoardDetail.Members.Select(m => m.UserId).Distinct();
-        _userCache = await UserService.GetUsersByIdsAsync(userIds);
+        _userCache = await UserService.GetByIdsAsync(userIds);
     }
 
     private List<TaskItemDto> GetTasksForState(int stateId)

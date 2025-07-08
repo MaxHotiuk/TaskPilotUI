@@ -6,14 +6,14 @@ namespace UI.Interfaces.Api;
 public interface IBoardApi
 {
     [Get("/api/boards/{id}")]
-    Task<BoardDto> GetBoardByIdAsync(string id);
+    Task<BoardDto> GetByIdAsync(string id);
 
     [Post("/api/boards")]
-    Task<string> CreateBoardAsync([Body] CreateBoardRequest request);
+    Task<string> CreateAsync([Body] CreateBoardRequest request);
 
     [Put("/api/boards/{id}")]
-    Task UpdateBoardAsync(string id, [Body] CreateBoardRequest request);
+    Task UpdateAsync(string id, [Body] CreateBoardRequest request);
 
     [Delete("/api/boards/{id}")]
-    Task DeleteBoardAsync(string id);
+    Task DeleteAsync(string id);
 }

@@ -91,7 +91,7 @@ public class AuthService : IAuthService
         {
             _logger.LogDebug("Making API call to get current user");
             
-            var user = await _taskPilotAuthApi.GetCurrentUserAsync($"Bearer {token}");
+            var user = await _taskPilotAuthApi.GetCurrentAsync($"Bearer {token}");
                 
             if (user != null)
             {

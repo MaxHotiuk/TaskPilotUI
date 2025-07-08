@@ -71,13 +71,13 @@ public partial class Boards : ComponentBase
 
     private async Task LoadCachedBoards(string userId)
     {
-        var cachedBoards = await BoardService.GetCachedUserBoardsAsync(userId);
+        var cachedBoards = await BoardService.GetCachedBoardsAsync(userId);
         if (cachedBoards.Any())
         {
             _boards = new List<BoardWithStats>();
             foreach (var board in cachedBoards)
             {
-                var cachedStats = await BoardService.GetCachedBoardWithStatsAsync(board.Id);
+                var cachedStats = await BoardService.GetCachedWithStatsAsync(board.Id);
                 if (cachedStats.Board?.Id != null)
                 {
                     _boards.Add(cachedStats);
@@ -102,12 +102,12 @@ public partial class Boards : ComponentBase
     {
         try
         {
-            var userBoards = await BoardService.GetUserBoardsAsync(userId);
+            var userBoards = await BoardService.GetBoardsAsync(userId);
             var freshBoards = new List<BoardWithStats>();
 
             foreach (var board in userBoards)
             {
-                var boardStats = await BoardService.GetBoardWithStatsAsync(board.Id);
+                var boardStats = await BoardService.GetWithStatsAsync(board.Id);
                 freshBoards.Add(boardStats);
             }
 
@@ -156,12 +156,12 @@ public partial class Boards : ComponentBase
                     return;
                 }
 
-                var userBoards = await service.GetUserBoardsAsync(currentUser.Id);
+                var userBoards = await service.GetBoardsAsync(currentUser.Id);
                 _boards = new List<BoardWithStats>();
 
                 foreach (var board in userBoards)
                 {
-                    var boardStats = await service.GetBoardWithStatsAsync(board.Id);
+                    var boardStats = await service.GetWithStatsAsync(board.Id);
                     _boards.Add(boardStats);
                 }
 
@@ -236,7 +236,7 @@ public partial class Boards : ComponentBase
         var currentUser = AuthService.GetCachedUser();
         if (currentUser != null)
         {
-            await BoardService.ClearBoardCacheAsync(currentUser.Id);
+            await BoardService.ClearCacheAsync(currentUser.Id);
         }
         
         await LoadBoards();
@@ -274,12 +274,12 @@ public partial class Boards : ComponentBase
             _isDeleting = true;
             StateHasChanged();
 
-            await BoardService.DeleteBoardAsync(_selectedBoard.Board.Id);
+            await BoardService.DeleteAsync(_selectedBoard.Board.Id);
             
             var currentUser = AuthService.GetCachedUser();
             if (currentUser != null)
             {
-                await BoardService.ClearBoardCacheAsync(currentUser.Id);
+                await BoardService.ClearCacheAsync(currentUser.Id);
             }
             
             await LoadBoards();
@@ -326,7 +326,7 @@ public partial class Boards : ComponentBase
         var currentUser = AuthService.GetCachedUser();
         if (currentUser != null)
         {
-            await BoardService.ClearBoardCacheAsync(currentUser.Id);
+            await BoardService.ClearCacheAsync(currentUser.Id);
         }
         await LoadBoards();
     }

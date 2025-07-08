@@ -33,10 +33,12 @@ public partial class TaskDetailsModal : ComponentBase
     private DateTime? DueDateValue { get; set; }
     private string DueDateString { get; set; } = string.Empty;
     private bool _internalLoading = false;
+    private string? CurrentUserId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await LoadAllUsers();
+        await LoadCurrentUser();
     }
 
     protected override void OnParametersSet()
@@ -92,6 +94,19 @@ public partial class TaskDetailsModal : ComponentBase
         catch (Exception)
         {
             AllUsers = new List<UserDto>();
+        }
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        try
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            CurrentUserId = currentUser?.Id;
+        }
+        catch (Exception)
+        {
+            CurrentUserId = null;
         }
     }
 
@@ -165,7 +180,7 @@ public partial class TaskDetailsModal : ComponentBase
                 FormModel.DueDate = null;
             }
 
-            await TaskService.UpdateTaskAsync(CurrentTask.Id, FormModel);
+            await TaskService.UpdateAsync(CurrentTask.Id, FormModel);
 
             CurrentTask.Title = FormModel.Title;
             CurrentTask.Description = FormModel.Description;
@@ -211,7 +226,7 @@ public partial class TaskDetailsModal : ComponentBase
             _internalLoading = true;
             StateHasChanged();
 
-            await TaskService.DeleteTaskAsync(CurrentTask.Id);
+            await TaskService.DeleteAsync(CurrentTask.Id);
 
             await NotificationService.Success(new NotificationConfig()
             {
@@ -259,7 +274,7 @@ public partial class TaskDetailsModal : ComponentBase
                 DueDate = CurrentTask.DueDate
             };
 
-            await TaskService.UpdateTaskAsync(CurrentTask.Id, updateRequest);
+            await TaskService.UpdateAsync(CurrentTask.Id, updateRequest);
 
             CurrentTask.StateId = newStateId;
             CurrentTask.UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");

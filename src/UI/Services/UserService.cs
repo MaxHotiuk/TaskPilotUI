@@ -28,7 +28,7 @@ public class UserService : IUserService
     {
         try
         {
-            var users = await _userApi.GetAllUsersAsync();
+            var users = await _userApi.GetAllAsync();
             
             // Update cache
             foreach (var user in users)
@@ -46,7 +46,7 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<UserDto?> GetUserByIdAsync(string userId)
+    public async Task<UserDto?> GetByIdAsync(string userId)
     {
         if (string.IsNullOrEmpty(userId))
             return null;
@@ -69,14 +69,14 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<UserDto?> GetUserByEmailAsync(string email)
+    public async Task<UserDto?> GetByEmailAsync(string email)
     {
         if (string.IsNullOrEmpty(email))
             return null;
 
         try
         {
-            var user = await _userApi.GetUserByEmailAsync(email);
+            var user = await _userApi.GetByEmailAsync(email);
             
             if (user != null)
             {
@@ -92,7 +92,7 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<Dictionary<string, UserDto>> GetUsersByIdsAsync(IEnumerable<string> userIds)
+    public async Task<Dictionary<string, UserDto>> GetByIdsAsync(IEnumerable<string> userIds)
     {
         var result = new Dictionary<string, UserDto>();
         var missingUserIds = new List<string>();

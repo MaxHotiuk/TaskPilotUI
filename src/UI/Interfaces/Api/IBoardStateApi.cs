@@ -9,5 +9,5 @@ public interface IBoardStateApi
     Task<List<StateDto>> GetBoardStatesAsync(string boardId);
 
     [Post("/api/boards/{boardId}/states")]
-    Task<int> CreateStateAsync(string boardId, [Body] CreateStateRequest request);
+    Task<int> CreateAsync(string boardId, [Body] CreateStateRequest request);
 }

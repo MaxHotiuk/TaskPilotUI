@@ -55,6 +55,10 @@ namespace UI
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
                 
+            builder.Services.AddRefitClient<ICommentApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+                
             builder.Services.AddRefitClient<ITaskPilotAuthApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
                 
@@ -79,6 +83,7 @@ namespace UI
             builder.Services.AddScoped<ITaskService, TaskService>();
             builder.Services.AddScoped<ITaskStateService, TaskStateService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<ICommentService, CommentService>();
             builder.Services.AddSingleton<IGlobalLoadingService, GlobalLoadingService>();
 
             var host = builder.Build();

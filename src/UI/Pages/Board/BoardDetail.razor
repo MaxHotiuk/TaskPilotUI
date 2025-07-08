@@ -59,7 +59,7 @@
                   CurrentTask=@_selectedTask
                   States=@(_boardDetail?.States ?? new List<StateDto>())
                   BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
-                  CanManageTask=@(CanManageMembers())
+                  CanManageTask=@(HasBoardAccess())
                   OnTaskUpdated=@HandleTaskUpdated
                   OnTaskDeleted=@HandleTaskDeleted
                   OnCancel=@(() => { _showTaskDetailsModal = false; _selectedTask = null; }) />

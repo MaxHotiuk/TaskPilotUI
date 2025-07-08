@@ -1,5 +1,7 @@
 .task-details-container {
     padding: 8px 0;
+    max-height: 70vh;
+    overflow-y: auto;
 }
 
 .task-header {
@@ -11,6 +13,7 @@
     padding: 12px 16px;
     border-radius: 6px;
     border-left: 4px solid #1890ff;
+    margin-bottom: 16px;
 }
 
 .loading-container {

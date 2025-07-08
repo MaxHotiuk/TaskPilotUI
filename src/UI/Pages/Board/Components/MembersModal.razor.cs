@@ -42,7 +42,7 @@ public partial class MembersModal : ComponentBase
             var userIds = BoardDetail?.Members.Select(m => m.UserId).Where(id => !string.IsNullOrEmpty(id)) ?? Enumerable.Empty<string>();
             if (userIds.Any())
             {
-                _userCache = await UserService.GetUsersByIdsAsync(userIds);
+                _userCache = await UserService.GetByIdsAsync(userIds);
                 _usersLoaded = true;
                 StateHasChanged();
             }
