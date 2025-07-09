@@ -5,12 +5,15 @@ using UI.Models.Comment;
 using UI.Models.User;
 using UI.Interfaces.Services;
 using UI.Models.Avatar;
+using UI.Models.Attachment;
 using System.Collections.Concurrent;
 
 namespace UI.Pages.Board.Components;
 
 public partial class TaskCommentsComponent : ComponentBase
 {
+    [Inject] private IAttachmentService AttachmentService { get; set; } = default!;
+    [Inject] private IMessageService Message { get; set; } = default!;
     [Parameter] public string TaskId { get; set; } = string.Empty;
     [Parameter] public List<UserDto> AllUsers { get; set; } = new();
     [Parameter] public bool CanAddComment { get; set; } = true;
@@ -28,8 +31,47 @@ public partial class TaskCommentsComponent : ComponentBase
     private bool IsAdding { get; set; } = false;
     private bool IsUpdating { get; set; } = false;
     private string NewCommentContent { get; set; } = string.Empty;
+
     private string? EditingCommentId { get; set; }
     private string EditingContent { get; set; } = string.Empty;
+
+    private List<AttachmentMemory> SelectedAttachments { get; set; } = new();
+    private List<string> SelectedAttachmentNames { get; set; } = new();
+    private List<AttachmentDto> UploadedAttachments { get; set; } = new();
+
+
+    public async Task OnAttachmentsSelected(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
+    {
+        if (e.FileCount == 0) return;
+
+        var newFiles = e.GetMultipleFiles();
+        foreach (var file in newFiles)
+        {
+            if (!SelectedAttachments.Any(f => f.Name == file.Name))
+            {
+                using var stream = file.OpenReadStream(long.MaxValue);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                SelectedAttachments.Add(new AttachmentMemory
+                {
+                    Name = file.Name,
+                    Data = ms.ToArray(),
+                    ContentType = file.ContentType
+                });
+                SelectedAttachmentNames.Add(file.Name);
+            }
+        }
+        StateHasChanged();
+    }
+
+
+    private void ClearAttachments()
+    {
+        SelectedAttachments.Clear();
+        SelectedAttachmentNames.Clear();
+        UploadedAttachments.Clear();
+        StateHasChanged();
+    }
 
 
     protected override async Task OnInitializedAsync()
@@ -138,22 +180,28 @@ public partial class TaskCommentsComponent : ComponentBase
                 Content = NewCommentContent.Trim()
             };
 
-            await CommentService.CreateAsync(request);
-            NewCommentContent = string.Empty;
-            await LoadComments();
+            var createdCommentId = await CommentService.CreateAsync(request);
+            createdCommentId = createdCommentId.Substring(1, createdCommentId.Length - 2);
 
-            await NotificationService.Success(new NotificationConfig
+            if (SelectedAttachments != null && SelectedAttachments.Any())
             {
-                Message = "Success",
-                Description = "Comment added successfully"
-            });
+                foreach (var attachment in SelectedAttachments)
+                {
+                    using var ms = new MemoryStream(attachment.Data);
+                    await AttachmentService.UploadAsync(Guid.Parse(createdCommentId), ms, attachment.Name);
+                }
+            }
+
+            NewCommentContent = string.Empty;
+            ClearAttachments();
+            await LoadComments();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             await NotificationService.Error(new NotificationConfig
             {
                 Message = "Error",
-                Description = "Failed to add comment"
+                Description = $"Failed to add comment{(ex.Message != null ? ": " + ex.Message : string.Empty)}"
             });
         }
         finally
@@ -282,7 +330,7 @@ public partial class TaskCommentsComponent : ComponentBase
     private string GetCurrentUserName()
     {
         if (string.IsNullOrEmpty(CurrentUserId)) return "You";
-        
+
         var user = AllUsers.FirstOrDefault(u => u.Id == CurrentUserId);
         return user?.Username ?? "You";
     }
@@ -290,7 +338,7 @@ public partial class TaskCommentsComponent : ComponentBase
     private string GetCurrentUserInitials()
     {
         if (string.IsNullOrEmpty(CurrentUserId)) return "Y";
-        
+
         var user = AllUsers.FirstOrDefault(u => u.Id == CurrentUserId);
         if (user == null) return "Y";
 
@@ -315,7 +363,7 @@ public partial class TaskCommentsComponent : ComponentBase
             return $"{(int)timeSpan.TotalHours}h ago";
         if (timeSpan.TotalDays < 7)
             return $"{(int)timeSpan.TotalDays}d ago";
-        
+
         return dateTime.ToString("MMM dd, yyyy");
     }
 
@@ -325,5 +373,12 @@ public partial class TaskCommentsComponent : ComponentBase
             return string.Empty;
 
         return content.Replace("\n", "<br>").Replace("\r", "");
+    }
+    
+    private class AttachmentMemory
+    {
+        public string Name { get; set; } = string.Empty;
+        public byte[] Data { get; set; } = Array.Empty<byte>();
+        public string ContentType { get; set; } = string.Empty;
     }
 }

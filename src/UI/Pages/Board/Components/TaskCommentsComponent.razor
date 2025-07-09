@@ -2,6 +2,7 @@
 @using UI.Models.Comment
 @using UI.Models.User
 @using UI.Interfaces.Services
+@using UI.Pages.Board.Components
 
 <div class="task-comments-container">
     <div class="comments-header">
@@ -101,6 +102,7 @@
                             <div class="comment-content">
                                 @((MarkupString)FormatCommentContent(comment.Content))
                             </div>
+                            <CommentAttachments CommentId="@comment.Id" />
                         }
                     </div>
                 }
@@ -120,7 +122,7 @@
         @if (CanAddComment)
         {
             <div class="add-comment-section">
-                <div class="add-comment-form">
+                <div class="add-comment-form enhanced-add-comment-form">
                     <div class="comment-input-header">
                         @if (IsAvatarLoading(CurrentUserId!))
                         {
@@ -144,14 +146,34 @@
                         }
                         <span class="current-user-name">@GetCurrentUserName()</span>
                     </div>
-                    
-                    <TextArea @bind-Value=NewCommentContent
-                             Rows="3" 
-                             Placeholder="Add a comment..."
-                             MaxLength="1000"
-                             ShowCount=@true
-                             @onkeydown=@HandleKeyDown />
-                    
+
+                    <div class="comment-textarea-wrapper">
+                        <TextArea @bind-Value=NewCommentContent
+                                 Rows="3"
+                                 Placeholder="Add a comment..."
+                                 MaxLength="1000"
+                                 ShowCount=@true
+                                 @onkeydown=@HandleKeyDown
+                                 class="comment-textarea" />
+                    </div>
+
+                    <div class="attachment-row">
+                        <label class="attachment-upload-label">
+                            <InputFile OnChange=@OnAttachmentsSelected multiple style="display: none;" />
+                            <span class="avatar-upload-btn attachment-btn">
+                                <Icon Type="paper-clip" /> Attach files
+                            </span>
+                        </label>
+                        @if (SelectedAttachmentNames != null && SelectedAttachmentNames.Any())
+                        {
+                            @foreach (var name in SelectedAttachmentNames)
+                            {
+                                <span class="attachment-badge">📎 @name</span>
+                            }
+                            <Button Size=@ButtonSize.Small OnClick=@ClearAttachments Type=@ButtonType.Text class="remove-attachment-btn">Remove All</Button>
+                        }
+                    </div>
+
                     <div class="comment-actions">
                         <div class="comment-actions-left">
                             <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
