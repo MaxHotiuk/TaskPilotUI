@@ -5,18 +5,17 @@ using System.Threading.Tasks;
 using Refit;
 using UI.Models.Attachment;
 
-namespace UI.Interfaces.Api
+namespace UI.Interfaces.Api;
+
+public interface IAttachmentApi
 {
-    public interface IAttachmentApi
-    {
-        [Get("/api/attachments/{entityId}")]
-        Task<List<AttachmentDto>> GetAsync(Guid entityId);
+    [Get("/api/attachments/{entityId}")]
+    Task<List<AttachmentDto>> GetAsync(Guid entityId);
 
-        [Multipart]
-        [Post("/api/attachments/{entityId}")]
-        Task<AttachmentDto> UploadAsync(Guid entityId, [AliasAs("file")] StreamPart file);
+    [Multipart]
+    [Post("/api/attachments/{entityId}")]
+    Task<AttachmentDto> UploadAsync(Guid entityId, [AliasAs("file")] StreamPart file);
 
-        [Delete("/api/attachments/{fileName}")]
-        Task DeleteAsync(string fileName);
-    }
+    [Delete("/api/attachments/{fileName}")]
+    Task DeleteAsync(string fileName);
 }

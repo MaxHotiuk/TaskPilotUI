@@ -2,13 +2,12 @@ using System;
 using System.Threading.Tasks;
 using UI.Models.Avatar;
 
-namespace UI.Interfaces.Services
+namespace UI.Interfaces.Services;
+
+public interface IAvatarService
 {
-    public interface IAvatarService
-    {
-        Task<AvatarDto> UploadAsync(Guid userId, Stream fileStream, string fileName);
-        Task<AvatarDto> UpdateAsync(Guid userId, Stream fileStream, string fileName);
-        Task DeleteAsync(Guid userId);
-        Task<AvatarDto?> GetAvatarOrNullAsync(Guid userId);
-    }
+    Task<AvatarDto> UploadAsync(Guid userId, Stream fileStream, string fileName);
+    Task<AvatarDto> UpdateAsync(Guid userId, Stream fileStream, string fileName);
+    Task DeleteAsync(Guid userId);
+    Task<AvatarDto?> GetAvatarOrNullAsync(Guid userId);
 }
