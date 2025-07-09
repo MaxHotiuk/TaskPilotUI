@@ -4,6 +4,8 @@ using AntDesign;
 using UI.Models.Comment;
 using UI.Models.User;
 using UI.Interfaces.Services;
+using UI.Models.Avatar;
+using System.Collections.Concurrent;
 
 namespace UI.Pages.Board.Components;
 
@@ -17,6 +19,9 @@ public partial class TaskCommentsComponent : ComponentBase
     [Inject] private ICommentService CommentService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NotificationService NotificationService { get; set; } = default!;
+    [Inject] private IAvatarService AvatarService { get; set; } = default!;
+    private ConcurrentDictionary<string, AvatarDto?> _avatarCache = new();
+    private ConcurrentDictionary<string, bool> _avatarLoading = new();
 
     private List<CommentDto> Comments { get; set; } = new();
     private bool IsLoading { get; set; } = true;
@@ -26,9 +31,11 @@ public partial class TaskCommentsComponent : ComponentBase
     private string? EditingCommentId { get; set; }
     private string EditingContent { get; set; } = string.Empty;
 
+
     protected override async Task OnInitializedAsync()
     {
         await LoadComments();
+        await PreloadAvatarsForComments();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -36,8 +43,57 @@ public partial class TaskCommentsComponent : ComponentBase
         if (!string.IsNullOrEmpty(TaskId))
         {
             await LoadComments();
+            await PreloadAvatarsForComments();
         }
     }
+    private async Task PreloadAvatarsForComments()
+    {
+        if (Comments == null) return;
+        var userIds = Comments.Select(c => c.AuthorId).Distinct().ToList();
+        if (!string.IsNullOrEmpty(CurrentUserId))
+            userIds.Add(CurrentUserId);
+        foreach (var userId in userIds)
+        {
+            await LoadAvatarAsync(userId);
+        }
+    }
+
+    private async Task LoadAvatarAsync(string userId)
+    {
+        if (string.IsNullOrEmpty(userId) || _avatarCache.ContainsKey(userId) || _avatarLoading.ContainsKey(userId))
+            return;
+        _avatarLoading[userId] = true;
+        try
+        {
+            if (Guid.TryParse(userId, out var guid))
+            {
+                var avatar = await AvatarService.GetAvatarOrNullAsync(guid);
+                _avatarCache[userId] = avatar;
+            }
+            else
+            {
+                _avatarCache[userId] = null;
+            }
+        }
+        catch
+        {
+            _avatarCache[userId] = null;
+        }
+        finally
+        {
+            _avatarLoading.TryRemove(userId, out _);
+            StateHasChanged();
+        }
+    }
+
+    private string? GetAvatarUrl(string userId)
+    {
+        if (_avatarCache.TryGetValue(userId, out var avatar) && avatar != null && !string.IsNullOrEmpty(avatar.CompressedUrl))
+            return avatar.CompressedUrl;
+        return null;
+    }
+
+    private bool IsAvatarLoading(string userId) => _avatarLoading.ContainsKey(userId);
 
     private async Task LoadComments()
     {

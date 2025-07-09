@@ -64,7 +64,26 @@
                                 {
                                     <Space>
                                         <SpaceItem>
-                                            <Avatar Size=@AvatarSize.Small Icon="user" Class="user-avatar" />
+                                            @if (IsAvatarLoading(Task.AssigneeId))
+                                            {
+                                                <Avatar Size=AvatarSize.Small>
+                                                    @GetAssigneeInitials(Task.AssigneeId)
+                                                </Avatar>
+                                            }
+                                            else
+                                            {
+                                                var avatarUrl = GetAvatarUrl(Task.AssigneeId);
+                                                if (!string.IsNullOrEmpty(avatarUrl))
+                                                {
+                                                    <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                                                }
+                                                else
+                                                {
+                                                    <Avatar Size=AvatarSize.Small>
+                                                        @GetAssigneeInitials(Task.AssigneeId)
+                                                    </Avatar>
+                                                }
+                                            }
                                         </SpaceItem>
                                         <SpaceItem>
                                             <span>@GetAssigneeName(Task.AssigneeId)</span>

@@ -1,0 +1,12 @@
+@using UI.Models.User
+@using AntDesign
+
+<Card Title="User Information" Style="margin-bottom: 24px;">
+    <Descriptions Column="1">
+        <DescriptionsItem Title="Username">@_currentUser?.Username</DescriptionsItem>
+        <DescriptionsItem Title="Email">@_currentUser?.Email</DescriptionsItem>
+        <DescriptionsItem Title="Role">@_currentUser?.Role</DescriptionsItem>
+        <DescriptionsItem Title="Created At">@_currentUser?.CreatedAt?.ToString()?.Substring(0, 10)</DescriptionsItem>
+        <DescriptionsItem Title="Updated At">@_currentUser?.UpdatedAt?.ToString()?.Substring(0, 10)</DescriptionsItem>
+    </Descriptions>
+</Card>

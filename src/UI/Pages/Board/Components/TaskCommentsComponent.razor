@@ -26,9 +26,26 @@
                     <div class="comment-item" key="@comment.Id">
                         <div class="comment-header">
                             <div class="comment-author">
-                                <Avatar Size=AvatarSize.Small>
-                                    @GetAuthorInitials(comment.AuthorId)
-                                </Avatar>
+                                @if (IsAvatarLoading(comment.AuthorId))
+                                {
+                                    <Avatar Size=AvatarSize.Small>
+                                        @GetAuthorInitials(comment.AuthorId)
+                                    </Avatar>
+                                }
+                                else
+                                {
+                                    var avatarUrl = GetAvatarUrl(comment.AuthorId);
+                                    if (!string.IsNullOrEmpty(avatarUrl))
+                                    {
+                                        <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                                    }
+                                    else
+                                    {
+                                        <Avatar Size=AvatarSize.Small>
+                                            @GetAuthorInitials(comment.AuthorId)
+                                        </Avatar>
+                                    }
+                                }
                                 <span class="author-name">@GetAuthorName(comment.AuthorId)</span>
                             </div>
                             <div class="comment-meta">
@@ -105,9 +122,26 @@
             <div class="add-comment-section">
                 <div class="add-comment-form">
                     <div class="comment-input-header">
-                        <Avatar Size=AvatarSize.Small>
-                            @GetCurrentUserInitials()
-                        </Avatar>
+                        @if (IsAvatarLoading(CurrentUserId!))
+                        {
+                            <Avatar Size=AvatarSize.Small>
+                                @GetAuthorInitials(CurrentUserId!)
+                            </Avatar>
+                        }
+                        else
+                        {
+                            var avatarUrl = GetAvatarUrl(CurrentUserId!);
+                            if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                            }
+                            else
+                            {
+                                <Avatar Size=AvatarSize.Small>
+                                    @GetAuthorInitials(CurrentUserId!)
+                                </Avatar>
+                            }
+                        }
                         <span class="current-user-name">@GetCurrentUserName()</span>
                     </div>
                     
