@@ -44,10 +44,17 @@ namespace UI.Layouts
                 new MenuDataItem
                 {
                     Path = "/",
-                    Name = "welcome",
-                    Key = "welcome",
-                    Icon = "smile",
-                }
+                    Name = "boards",
+                    Key = "boards",
+                    Icon = "appstore",
+                },
+                new MenuDataItem
+                {
+                    Path = "/profile",
+                    Name = "profile",
+                    Key = "profile",
+                    Icon = "user",
+                },
             };
             return Task.CompletedTask;
         }

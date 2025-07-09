@@ -31,14 +31,36 @@
             @foreach (var member in BoardDetail.Members)
             {
                 <div class="member-item">
-                    <div>
-                        <strong>@GetMemberName(member.UserId)</strong>
-                        @if (!string.IsNullOrEmpty(GetMemberEmail(member.UserId)))
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        @if (IsAvatarLoading(member.UserId))
                         {
-                            <div class="member-email">@GetMemberEmail(member.UserId)</div>
+                            <Avatar Size=AvatarSize.Small>
+                                @GetMemberInitials(member.UserId)
+                            </Avatar>
                         }
-                        <div class="member-info">
-                            @member.Role • Joined @FormatDate(member.CreatedAt)
+                        else
+                        {
+                            var avatarUrl = GetAvatarUrl(member.UserId);
+                            if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                            }
+                            else
+                            {
+                                <Avatar Size=AvatarSize.Small>
+                                    @GetMemberInitials(member.UserId)
+                                </Avatar>
+                            }
+                        }
+                        <div>
+                            <strong>@GetMemberName(member.UserId)</strong>
+                            @if (!string.IsNullOrEmpty(GetMemberEmail(member.UserId)))
+                            {
+                                <div class="member-email">@GetMemberEmail(member.UserId)</div>
+                            }
+                            <div class="member-info">
+                                @member.Role • Joined @FormatDate(member.CreatedAt)
+                            </div>
                         </div>
                     </div>
                     @if (CanManageMembers && member.UserId != CurrentUserId)

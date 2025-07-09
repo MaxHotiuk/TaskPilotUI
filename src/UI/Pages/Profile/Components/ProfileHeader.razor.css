@@ -1,0 +1,10 @@
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.profile-email {
+    color: #888;
+    font-size: 13px;
+}

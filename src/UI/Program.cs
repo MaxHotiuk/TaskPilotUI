@@ -61,6 +61,14 @@ namespace UI
                 
             builder.Services.AddRefitClient<ITaskPilotAuthApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
+
+            builder.Services.AddRefitClient<IAttachmentApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+
+            builder.Services.AddRefitClient<IAvatarApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
                 
             builder.Services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.microsoft.com"));
@@ -85,6 +93,8 @@ namespace UI
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ICommentService, CommentService>();
             builder.Services.AddSingleton<IGlobalLoadingService, GlobalLoadingService>();
+            builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+            builder.Services.AddScoped<IAvatarService, AvatarService>();
 
             var host = builder.Build();
             

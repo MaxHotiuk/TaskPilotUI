@@ -1,0 +1,10 @@
+@using UI.Models.User
+@using AntDesign
+
+<div class="profile-header">
+    <Avatar Src=@_avatarUrl Size=AvatarSize.Small style="margin-right: 16px;" />
+    <div>
+        <Text Strong>@_currentUser?.Username</Text>
+        <div class="profile-email">@_currentUser?.Email</div>
+    </div>
+</div>
