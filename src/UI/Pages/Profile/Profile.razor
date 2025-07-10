@@ -1,5 +1,6 @@
 @page "/profile"
 @using UI.Pages.Profile.Components
+@using UI.Components.Shared
 @using AntDesign
 
 <PageContainer Title="Profile Settings">
@@ -7,6 +8,7 @@
         <Row Gutter="24">
             <AntDesign.Col Span="8">
                 <ProfileCard />
+                <LogoutComponent />
             </AntDesign.Col>
             <AntDesign.Col Span="16">
                 <ProfileEditForm />
