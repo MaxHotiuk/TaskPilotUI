@@ -1,0 +1,44 @@
+@using UI.Models.User
+@using AntDesign
+
+<Card Title="Edit Profile" Class="profile-edit-card">
+    <Form Model=@_formModel Layout=@FormLayout.Vertical>
+        <div class="form-section">
+            <Text Class="section-title">Basic Information</Text>
+            
+            <FormItem Label="Username">
+                <Input Value=@_currentUser?.Username Disabled Size=@InputSize.Large />
+            </FormItem>
+            
+            <FormItem Label="Email Address">
+                <Input Value=@_currentUser?.Email Disabled Size=@InputSize.Large />
+            </FormItem>
+            
+            <FormItem Label="Role">
+                <Input Value=@_currentUser?.Role Disabled Size=@InputSize.Large />
+                <div class="form-help-text">
+                    <Icon Type="info-circle" /> To change your role, please contact the administrator.
+                </div>
+            </FormItem>
+
+            <Icon Type="info-circle" /> User info is provided by Microsoft Entra ID.
+        </div>
+
+        <div class="form-section">
+            <Title Level="5" Class="section-title">Account Details</Title>
+            
+            <Row Gutter="16">
+                <AntDesign.Col Span="12">
+                    <FormItem Label="Member Since">
+                        <Input Value=@GetFormattedDate(_currentUser?.CreatedAt) Disabled Size="@InputSize.Large" />
+                    </FormItem>
+                </AntDesign.Col>
+                <AntDesign.Col Span="12">
+                    <FormItem Label="Last Updated">
+                        <Input Value=@GetFormattedDate(_currentUser?.UpdatedAt) Disabled Size="@InputSize.Large" />
+                    </FormItem>
+                </AntDesign.Col>
+            </Row>
+        </div>
+    </Form>
+</Card>

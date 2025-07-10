@@ -1,0 +1,54 @@
+@using UI.Models.User
+@using UI.Models.Avatar
+@using AntDesign
+
+<Card Class="profile-card" Bordered="true">
+    <div class="profile-card-content">
+        <div class="avatar-section">
+            <div class="avatar-container">
+                <Avatar Src=@_avatarUrl Size=@("5rem") Class="profile-avatar">
+                    @if (string.IsNullOrEmpty(_avatarUrl))
+                    {
+                        <Icon Type="user" />
+                    }
+                </Avatar>
+                <div class="avatar-overlay">
+                    <label class="avatar-upload-trigger">
+                        <InputFile OnChange=@OnFileSelected accept="image/*" style="display: none;" />
+                        <Icon Type="camera" Class="upload-icon" />
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-info">
+            <Title Level="4" Class="profile-name">@_currentUser?.Username</Title>
+            <Text Type=@TextElementType.Secondary Class="profile-email">@_currentUser?.Email</Text>
+            <div class="profile-role">
+                <Tag Color=@TagColor.Blue>@_currentUser?.Role</Tag>
+            </div>
+        </div>
+
+        <Divider />
+
+        <div class="profile-stats">
+            <div class="stat-item">
+                <Text Type=@TextElementType.Secondary Class="stat-label">Member Since</Text>
+                <Text Strong Class="stat-value">@GetFormattedDate(_currentUser?.CreatedAt)</Text>
+            </div>
+            <div class="stat-item">
+                <Text Type=@TextElementType.Secondary Class="stat-label">Last Updated</Text>
+                <Text Strong Class="stat-value">@GetFormattedDate(_currentUser?.UpdatedAt)</Text>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_avatarUrl))
+        {
+            <div class="avatar-actions">
+                <Button Type=@ButtonType.Text Danger OnClick="@OnDeleteAvatar" Size=@ButtonSize.Small>
+                    <Icon Type="delete" /> Remove Avatar
+                </Button>
+            </div>
+        }
+    </div>
+</Card>
