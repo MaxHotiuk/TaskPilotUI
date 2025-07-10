@@ -1,9 +1,18 @@
 @page "/profile"
 @using UI.Pages.Profile.Components
+@using UI.Components.Shared
 @using AntDesign
 
-<PageContainer Title="Profile">
-    <ProfileHeader />
-    <ProfileAvatar />
-    <ProfileInfo />
+<PageContainer Title="Profile Settings">
+    <div class="profile-container">
+        <Row Gutter="24">
+            <AntDesign.Col Span="8">
+                <ProfileCard />
+                <LogoutComponent />
+            </AntDesign.Col>
+            <AntDesign.Col Span="16">
+                <ProfileEditForm />
+            </AntDesign.Col>
+        </Row>
+    </div>
 </PageContainer>

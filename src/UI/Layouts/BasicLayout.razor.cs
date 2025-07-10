@@ -13,31 +13,7 @@ namespace UI.Layouts
 
         [Inject] private ReuseTabsService TabService { get; set; } = default!;
 
-        public LinkItem[] Links => new[]
-        {
-            new LinkItem
-            {
-                Key = "Ant Design Blazor",
-                Title = "Ant Design Blazor",
-                Href = "https://antblazor.com",
-                BlankTarget = true,
-            },
-            new LinkItem
-            {
-                Key = "github",
-                Title = "GitHub",
-                Href = "https://github.com/ant-design-blazor/ant-design-pro-blazor",
-                BlankTarget = true,
-            },
-            new LinkItem
-            {
-                Key = "Blazor",
-                Title = "Blazor",
-                Href = "https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor?WT.mc_id=DT-MVP-5003987",
-                BlankTarget = true,
-            }
-        };
-
+        public LinkItem[] Links => Array.Empty<LinkItem>();
         protected override Task OnInitializedAsync()
         {
             _menuData = new[] {

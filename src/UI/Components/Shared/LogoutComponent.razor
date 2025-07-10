@@ -1,0 +1,62 @@
+@using AntDesign
+
+@if (ShowAsDropdownItem)
+{
+    <MenuItem Key="logout" OnClick=@OnLogoutClick Class="logout-menu-item">
+        <Icon Type="logout" />
+        <span>Logout</span>
+    </MenuItem>
+}
+else if (ShowAsButton)
+{
+    <Button Type=@ButtonType.Default
+            Danger=@DangerButton 
+            Size=@Size 
+            OnClick=@OnLogoutClick
+            Loading=@_isLoading
+            Class="logout-button">
+        <Icon Type="logout" />
+        @if (!IconOnly)
+        {
+            <span>Logout</span>
+        }
+    </Button>
+}
+else if (ShowAsLink)
+{
+    <a href="#" @onclick=@OnLogoutClick @onclick:preventDefault=@true class="logout-link">
+        <Icon Type="logout" />
+        @if (!IconOnly)
+        {
+            <span>Logout</span>
+        }
+    </a>
+}
+else
+{
+    <Card Class="logout-card">
+        <div class="logout-section">
+            <div class="logout-info">
+                <Icon Type="info-circle" Class="info-icon" />
+                <div>
+                    <Text Strong>Sign Out</Text>
+                    <div class="logout-description">
+                        <Text Type=@TextElementType.Secondary>This will log you out of your account and redirect you to the login page.</Text>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="logout-actions">
+                <Button Type=@ButtonType.Default
+                        Danger=@true
+                        Size=@ButtonSize.Large
+                        OnClick=@OnLogoutClick 
+                        Loading=@_isLoading
+                        Class="logout-action-button">
+                    <Icon Type="logout" />
+                    Sign Out
+                </Button>
+            </div>
+        </div>
+    </Card>
+}
