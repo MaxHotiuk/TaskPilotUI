@@ -14,7 +14,7 @@
              OnShowMembers=@ShowMembersModal
              OnRefresh=@RefreshBoard
              OnCreateTask=@ShowCreateTaskModal
-             OnCreateState=@ShowCreateStateModal />
+             OnManageStates=@ShowManageStatesModal />
 
 <BoardColumns BoardDetail=@_boardDetail
               IsLoading=@IsLoading
@@ -38,12 +38,9 @@
                 OnOk=@AddMember
                 OnCancel=@(() => { _showAddMemberModal = false; ResetAddMemberForm(); }) />
 
-<AddStateModal IsVisible=@_showAddStateModal
-               IsLoading=@_isAddingState
-               FormModel=@_addStateForm
-               NextOrder=@(_boardDetail?.States?.Any() == true ? _boardDetail.States.Max(s => s.Order) + 1 : 1)
-               OnOk=@AddState
-               OnCancel=@(() => { _showAddStateModal = false; ResetAddStateForm(); }) />
+<ManageStatesModal IsVisible=@_showManageStatesModal
+                   BoardId=@BoardId
+                   OnCancel=@(() => _showManageStatesModal = false) />
 
 <AddTaskModal IsVisible=@_showAddTaskModal
               IsLoading=@_isAddingTask

@@ -11,5 +11,5 @@ public partial class BoardHeader : ComponentBase
     [Parameter] public EventCallback OnShowMembers { get; set; }
     [Parameter] public EventCallback OnRefresh { get; set; }
     [Parameter] public EventCallback OnCreateTask { get; set; }
-    [Parameter] public EventCallback OnCreateState { get; set; }
+    [Parameter] public EventCallback OnManageStates { get; set; }
 }

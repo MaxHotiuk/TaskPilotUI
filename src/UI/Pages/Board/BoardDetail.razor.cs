@@ -29,12 +29,11 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private bool _showMembersModal = false;
     private bool _showAddMemberModal = false;
     private bool _isAddingMember = false;
-    private bool _showAddStateModal = false;
-    private bool _isAddingState = false;
     private bool _showAddTaskModal = false;
     private bool _isAddingTask = false;
     private bool _showTaskDetailsModal = false;
     private bool _isTaskDetailsLoading = false;
+    private bool _showManageStatesModal = false;
     private TaskItemDto? _selectedTask = null;
     private AddMemberModal.AddMemberForm _addMemberForm = new();
     private CreateStateRequest _addStateForm = new();
@@ -176,16 +175,14 @@ public partial class BoardDetail : ComponentBase, IDisposable
         _showAddTaskModal = true;
     }
 
-    private void ShowCreateStateModal()
+    private void ShowManageStatesModal()
     {
         if (!CanManageStates())
         {
-            Message.Warning("Only board owners and members can add states");
+            Message.Warning("Only board owners and members can manage states");
             return;
         }
-        
-        ResetAddStateForm();
-        _showAddStateModal = true;
+        _showManageStatesModal = true;
     }
 
     private void ShowTaskDetails(TaskItemDto task)
@@ -353,37 +350,6 @@ public partial class BoardDetail : ComponentBase, IDisposable
         else
         {
             _addStateForm.Order = 1;
-        }
-    }
-
-    private async Task AddState()
-    {
-        if (string.IsNullOrWhiteSpace(_addStateForm.Name))
-        {
-            Message.Error("Please enter a state name");
-            return;
-        }
-
-        try
-        {
-            _isAddingState = true;
-            StateHasChanged();
-
-            var stateId = await TaskStateService.CreateAsync(BoardId, _addStateForm);
-            
-            await LoadBoardDetail();
-            
-            _showAddStateModal = false;
-            Message.Success($"State '{_addStateForm.Name}' added successfully");
-        }
-        catch (Exception ex)
-        {
-            Message.Error($"Failed to add state: {ex.Message}");
-        }
-        finally
-        {
-            _isAddingState = false;
-            StateHasChanged();
         }
     }
 

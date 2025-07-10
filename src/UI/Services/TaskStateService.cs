@@ -36,4 +36,19 @@ public class TaskStateService : ITaskStateService
             throw;
         }
     }
+
+    public async Task UpdateAsync(int id, UpdateStateRequest request)
+    {
+        await _boardStateApi.UpdateAsync(id, request);
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        await _boardStateApi.DeleteAsync(id);
+    }
+
+    public async Task SwapOrderAsync(string boardId, SwapStateOrderRequest request)
+    {
+        await _boardStateApi.SwapOrderAsync(boardId, request);
+    }
 }
