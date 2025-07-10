@@ -166,9 +166,17 @@
                         </label>
                         @if (SelectedAttachmentNames != null && SelectedAttachmentNames.Any())
                         {
-                            @foreach (var name in SelectedAttachmentNames)
+                            @for (int i = 0; i < SelectedAttachmentNames.Count; i++)
                             {
-                                <span class="attachment-badge">📎 @name</span>
+                                var name = SelectedAttachmentNames[i];
+                                var displayName = name?.Length > 8 ? name.Substring(0, 8) + "..." : name;
+                                var currentIndex = i;
+                                <span class="attachment-badge">
+                                    📎 @displayName
+                                    <Button Size=@ButtonSize.Small Type=@ButtonType.Text OnClick=@(() => RemoveAttachmentAt(currentIndex))>
+                                        <Icon Type="close" />
+                                    </Button>
+                                </span>
                             }
                             <Button Size=@ButtonSize.Small OnClick=@ClearAttachments Type=@ButtonType.Text class="remove-attachment-btn">Remove All</Button>
                         }

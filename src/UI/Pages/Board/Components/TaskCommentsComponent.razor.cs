@@ -39,6 +39,21 @@ public partial class TaskCommentsComponent : ComponentBase
     private List<string> SelectedAttachmentNames { get; set; } = new();
     private List<AttachmentDto> UploadedAttachments { get; set; } = new();
 
+    private void RemoveAttachmentAt(int index)
+    {
+        if (index >= 0 && index < SelectedAttachmentNames.Count)
+        {
+            var name = SelectedAttachmentNames[index];
+            SelectedAttachmentNames.RemoveAt(index);
+            var attachmentToRemove = SelectedAttachments.FirstOrDefault(a => a.Name == name);
+            if (attachmentToRemove != null)
+            {
+                SelectedAttachments.Remove(attachmentToRemove);
+            }
+            StateHasChanged();
+        }
+    }
+
 
     public async Task OnAttachmentsSelected(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
     {

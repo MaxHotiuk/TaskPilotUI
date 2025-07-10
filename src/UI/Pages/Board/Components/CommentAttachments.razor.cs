@@ -12,6 +12,11 @@ namespace UI.Pages.Board.Components
         private bool IsLoading = true;
         protected bool IsPreviewVisible = false;
         protected string? PreviewImageUrl;
+        private static readonly HashSet<string> AllowedImageExtensions = new HashSet<string>
+        {
+            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"
+        };
+
 
         protected override async Task OnInitializedAsync()
         {
@@ -38,11 +43,10 @@ namespace UI.Pages.Board.Components
             IsPreviewVisible = false;
             PreviewImageUrl = null;
         }
-
         protected static bool IsImage(string fileName)
         {
             var ext = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
-            return ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".webp";
+            return AllowedImageExtensions.Contains(ext);
         }
     }
 }
