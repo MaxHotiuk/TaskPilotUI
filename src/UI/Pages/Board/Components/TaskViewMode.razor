@@ -4,179 +4,88 @@
 @using UI.Models.Member
 @using UI.Models.User
 
-<Card Class="task-details-card" Bordered>
-    <TitleTemplate>
-        <Space>
-            <SpaceItem>
-                <Icon Type="file-text" Class="task-title-icon" />
-            </SpaceItem>
-            <SpaceItem>
-                <Title Level="3" Class="task-title">@Task.Title</Title>
-            </SpaceItem>
-        </Space>
-    </TitleTemplate>
-    
-    <Extra>
-        <Tag Color=@("blue") Icon="flag">
-            @GetStateName(Task.StateId)
-        </Tag>
-    </Extra>
-    
+<Card Class="task-card" Bordered>
     <Body>
-        @if (!string.IsNullOrEmpty(Task.Description))
-        {
-            <Card Type=@CardType.Inner Size=@CardSize.Small Class="description-card">
-                <TitleTemplate>
-                    <Space>
-                        <SpaceItem>
-                            <Icon Type="align-left" />
-                        </SpaceItem>
-                        <SpaceItem>
-                            <span class="description-title">Description</span>
-                        </SpaceItem>
-                    </Space>
-                </TitleTemplate>
-                <Body>
-                    <Paragraph>
-                        @Task.Description
-                    </Paragraph>
-                </Body>
-            </Card>
-        }
-
-        <Row Gutter="(16, 16)" Class="card-row">
-            <Col Span="12">
-                <Card Type=@CardType.Inner Size=@CardSize.Small Hoverable>
-                    <Body>
-                        <div class="card-content">
-                            <div>
-                                <Space>
-                                    <SpaceItem>
-                                        <Icon Type="user" Class="assignee-icon" />
-                                    </SpaceItem>
-                                    <SpaceItem>
-                                        <span class="field-label">Assignee</span>
-                                    </SpaceItem>
-                                </Space>
-                            </div>
-                            <div>
-                                @if (!string.IsNullOrEmpty(Task.AssigneeId))
-                                {
-                                    <Space>
-                                        <SpaceItem>
-                                            @if (IsAvatarLoading(Task.AssigneeId))
-                                            {
-                                                <Avatar Size=AvatarSize.Small>
-                                                    @GetAssigneeInitials(Task.AssigneeId)
-                                                </Avatar>
-                                            }
-                                            else
-                                            {
-                                                var avatarUrl = GetAvatarUrl(Task.AssigneeId);
-                                                if (!string.IsNullOrEmpty(avatarUrl))
-                                                {
-                                                    <Avatar Size=AvatarSize.Small Src=@avatarUrl />
-                                                }
-                                                else
-                                                {
-                                                    <Avatar Size=AvatarSize.Small>
-                                                        @GetAssigneeInitials(Task.AssigneeId)
-                                                    </Avatar>
-                                                }
-                                            }
-                                        </SpaceItem>
-                                        <SpaceItem>
-                                            <span>@GetAssigneeName(Task.AssigneeId)</span>
-                                        </SpaceItem>
-                                    </Space>
-                                }
-                                else
-                                {
-                                    <span class="not-assigned">Not assigned</span>
-                                }
-                            </div>
-                        </div>
-                    </Body>
-                </Card>
-            </Col>
+        <div class="task-header">
+            <div class="task-title-row">
+                <Icon Type="file-text" />
+                <Title Level="4" Class="task-title">@Task.Title</Title>
+                <Tag Color=@TagColor.Blue Icon="flag">@GetStateName(Task.StateId)</Tag>
+            </div>
             
-            <Col Span="12">
-                <Card Type=@CardType.Inner Size=@CardSize.Small Hoverable>
-                    <Body>
-                        <div class="card-content">
-                            <div>
-                                <Space>
-                                    <SpaceItem>
-                                        <Icon Type="calendar" Class="due-date-icon" />
-                                    </SpaceItem>
-                                    <SpaceItem>
-                                        <span class="field-label">Due Date</span>
-                                    </SpaceItem>
-                                </Space>
-                            </div>
-                            <div>
-                                @if (!string.IsNullOrEmpty(Task.DueDate))
-                                {
-                                    <div class="due-date-content">
-                                        <div>
-                                            <Tag Color=@GetDueDateColor(Task.DueDate) Icon="clock-circle">
-                                                @FormatDueDate(Task.DueDate)
-                                            </Tag>
-                                        </div>
-                                        @if (IsDueSoon(Task.DueDate))
-                                        {
-                                            <div>
-                                                <Alert Type=@AlertType.Warning
-                                                       Message=@GetDueIndicator(Task.DueDate) 
-                                                       ShowIcon=@true
-                                                       Banner=@true
-                                                       Class="due-alert" />
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="no-due-date">No due date set</span>
-                                }
-                            </div>
-                        </div>
-                    </Body>
-                </Card>
-            </Col>
-        </Row>
+            @if (!string.IsNullOrEmpty(Task.Description))
+            {
+                <div class="task-description">
+                    <Icon Type="align-left" />
+                    <span>@Task.Description</span>
+                </div>
+            }
+        </div>
 
-        <Divider Class="task-divider" />
-        
-        <Space>
-            <SpaceItem>
-                <Space>
-                    <SpaceItem>
-                        <Icon Type="plus-circle" Class="created-icon" />
-                    </SpaceItem>
-                    <SpaceItem>
-                        <span class="timestamp">
-                            Created @GetCreatedTimeString()
-                        </span>
-                    </SpaceItem>
-                </Space>
-            </SpaceItem>
-            
+        <div class="task-details">
+            <div class="detail-item">
+                <Icon Type="user" />
+                <span class="label">Assignee:</span>
+                @if (!string.IsNullOrEmpty(Task.AssigneeId))
+                {
+                    <div class="assignee-info">
+                        @if (IsAvatarLoading(Task.AssigneeId))
+                        {
+                            <Avatar Size=AvatarSize.Small>@GetAssigneeInitials(Task.AssigneeId)</Avatar>
+                        }
+                        else
+                        {
+                            var avatarUrl = GetAvatarUrl(Task.AssigneeId);
+                            if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                            }
+                            else
+                            {
+                                <Avatar Size=AvatarSize.Small>@GetAssigneeInitials(Task.AssigneeId)</Avatar>
+                            }
+                        }
+                        <span>@GetAssigneeName(Task.AssigneeId)</span>
+                    </div>
+                }
+                else
+                {
+                    <span class="not-assigned">Not assigned</span>
+                }
+            </div>
+
+            <div class="detail-item">
+                <Icon Type="calendar" />
+                <span class="label">Due:</span>
+                @if (!string.IsNullOrEmpty(Task.DueDate))
+                {
+                    <div class="due-date-info">
+                        <Tag Color=@GetDueDateColor(Task.DueDate) Icon="clock-circle">@FormatDueDate(Task.DueDate)</Tag>
+                        @if (IsDueSoon(Task.DueDate))
+                        {
+                            <Alert Type=@AlertType.Warning Message=@GetDueIndicator(Task.DueDate) ShowIcon=@true Banner=@true Class="due-alert" />
+                        }
+                    </div>
+                }
+                else
+                {
+                    <span class="no-due-date">No due date</span>
+                }
+            </div>
+        </div>
+
+        <div class="task-timestamps">
+            <span class="timestamp">
+                <Icon Type="plus-circle" />
+                Created @GetCreatedTimeString()
+            </span>
             @if (!string.IsNullOrEmpty(Task.UpdatedAt))
             {
-                <SpaceItem>
-                    <Space>
-                        <SpaceItem>
-                            <Icon Type="edit" Class="updated-icon" />
-                        </SpaceItem>
-                        <SpaceItem>
-                            <span class="timestamp">
-                                Updated @GetUpdatedTimeString()
-                            </span>
-                        </SpaceItem>
-                    </Space>
-                </SpaceItem>
+                <span class="timestamp">
+                    <Icon Type="edit" />
+                    Updated @GetUpdatedTimeString()
+                </span>
             }
-        </Space>
+        </div>
     </Body>
 </Card>

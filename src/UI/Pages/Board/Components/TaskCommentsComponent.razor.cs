@@ -23,75 +23,31 @@ public partial class TaskCommentsComponent : ComponentBase
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NotificationService NotificationService { get; set; } = default!;
     [Inject] private IAvatarService AvatarService { get; set; } = default!;
+
     private ConcurrentDictionary<string, AvatarDto?> _avatarCache = new();
     private ConcurrentDictionary<string, bool> _avatarLoading = new();
-
     private List<CommentDto> Comments { get; set; } = new();
+    private int CurrentPage { get; set; } = 1;
+    private int PageSize { get; set; } = 10;
+    private bool HasMoreComments { get; set; } = false;
+    private int TotalComments { get; set; } = 0;
+    private string SearchTerm { get; set; } = string.Empty;
+    private bool IsSearching { get; set; } = false;
+    private Timer? _searchTimer;
     private bool IsLoading { get; set; } = true;
+    private bool IsLoadingMore { get; set; } = false;
     private bool IsAdding { get; set; } = false;
     private bool IsUpdating { get; set; } = false;
     private string NewCommentContent { get; set; } = string.Empty;
-
     private string? EditingCommentId { get; set; }
     private string EditingContent { get; set; } = string.Empty;
-
     private List<AttachmentMemory> SelectedAttachments { get; set; } = new();
     private List<string> SelectedAttachmentNames { get; set; } = new();
     private List<AttachmentDto> UploadedAttachments { get; set; } = new();
 
-    private void RemoveAttachmentAt(int index)
-    {
-        if (index >= 0 && index < SelectedAttachmentNames.Count)
-        {
-            var name = SelectedAttachmentNames[index];
-            SelectedAttachmentNames.RemoveAt(index);
-            var attachmentToRemove = SelectedAttachments.FirstOrDefault(a => a.Name == name);
-            if (attachmentToRemove != null)
-            {
-                SelectedAttachments.Remove(attachmentToRemove);
-            }
-            StateHasChanged();
-        }
-    }
-
-
-    public async Task OnAttachmentsSelected(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
-    {
-        if (e.FileCount == 0) return;
-
-        var newFiles = e.GetMultipleFiles();
-        foreach (var file in newFiles)
-        {
-            if (!SelectedAttachments.Any(f => f.Name == file.Name))
-            {
-                using var stream = file.OpenReadStream(long.MaxValue);
-                using var ms = new MemoryStream();
-                await stream.CopyToAsync(ms);
-                SelectedAttachments.Add(new AttachmentMemory
-                {
-                    Name = file.Name,
-                    Data = ms.ToArray(),
-                    ContentType = file.ContentType
-                });
-                SelectedAttachmentNames.Add(file.Name);
-            }
-        }
-        StateHasChanged();
-    }
-
-
-    private void ClearAttachments()
-    {
-        SelectedAttachments.Clear();
-        SelectedAttachmentNames.Clear();
-        UploadedAttachments.Clear();
-        StateHasChanged();
-    }
-
-
     protected override async Task OnInitializedAsync()
     {
-        await LoadComments();
+        await LoadComments(isInitial: true);
         await PreloadAvatarsForComments();
     }
 
@@ -99,16 +55,120 @@ public partial class TaskCommentsComponent : ComponentBase
     {
         if (!string.IsNullOrEmpty(TaskId))
         {
-            await LoadComments();
+            await LoadComments(isInitial: true);
             await PreloadAvatarsForComments();
         }
     }
+
+    private async Task LoadComments(bool isInitial = false)
+    {
+        if (string.IsNullOrEmpty(TaskId)) return;
+
+        if (isInitial)
+        {
+            IsLoading = true;
+            CurrentPage = 1;
+            Comments.Clear();
+        }
+        else
+        {
+            IsLoadingMore = true;
+        }
+
+        StateHasChanged();
+
+        try
+        {
+            List<CommentDto> newComments;
+            
+            if (IsSearching && !string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                newComments = await CommentService.SearchCommentsAsync(
+                    SearchTerm, Guid.Parse(TaskId), CurrentPage, PageSize);
+            }
+            else
+            {
+                if (CurrentPage == 1)
+                {
+                    var allComments = await CommentService.GetTaskCommentsAsync(TaskId);
+                    newComments = allComments.Take(PageSize).ToList();
+                    TotalComments = allComments.Count;
+                }
+                else
+                {
+                    var allComments = await CommentService.GetTaskCommentsAsync(TaskId);
+                    newComments = allComments.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
+                    TotalComments = allComments.Count;
+                }
+            }
+
+            if (isInitial)
+            {
+                Comments = newComments;
+            }
+            else
+            {
+                Comments.AddRange(newComments);
+            }
+
+            if (IsSearching && !string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                HasMoreComments = newComments.Count == PageSize;
+            }
+            else
+            {
+                HasMoreComments = Comments.Count < TotalComments;
+            }
+        }
+        catch (Exception)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Failed to load comments"
+            });
+        }
+        finally
+        {
+            IsLoading = false;
+            IsLoadingMore = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadMoreComments()
+    {
+        if (IsLoadingMore || !HasMoreComments) return;
+        
+        CurrentPage++;
+        await LoadComments(isInitial: false);
+        await PreloadAvatarsForComments();
+    }
+
+    private void OnSearchComments()
+    {
+        _searchTimer?.Dispose();
+        _searchTimer = new Timer(async _ => await PerformSearch(), null, 300, Timeout.Infinite);
+    }
+
+    private async Task PerformSearch()
+    {
+        await InvokeAsync(async () =>
+        {
+            IsSearching = !string.IsNullOrWhiteSpace(SearchTerm);
+            CurrentPage = 1;
+            await LoadComments(isInitial: true);
+            await PreloadAvatarsForComments();
+        });
+    }
+
     private async Task PreloadAvatarsForComments()
     {
         if (Comments == null) return;
         var userIds = Comments.Select(c => c.AuthorId).Distinct().ToList();
         if (!string.IsNullOrEmpty(CurrentUserId))
             userIds.Add(CurrentUserId);
+        
         foreach (var userId in userIds)
         {
             await LoadAvatarAsync(userId);
@@ -119,6 +179,7 @@ public partial class TaskCommentsComponent : ComponentBase
     {
         if (string.IsNullOrEmpty(userId) || _avatarCache.ContainsKey(userId) || _avatarLoading.ContainsKey(userId))
             return;
+        
         _avatarLoading[userId] = true;
         try
         {
@@ -152,32 +213,6 @@ public partial class TaskCommentsComponent : ComponentBase
 
     private bool IsAvatarLoading(string userId) => _avatarLoading.ContainsKey(userId);
 
-    private async Task LoadComments()
-    {
-        if (string.IsNullOrEmpty(TaskId)) return;
-
-        IsLoading = true;
-        StateHasChanged();
-
-        try
-        {
-            Comments = await CommentService.GetTaskCommentsAsync(TaskId);
-        }
-        catch (Exception)
-        {
-            await NotificationService.Error(new NotificationConfig
-            {
-                Message = "Error",
-                Description = "Failed to load comments"
-            });
-        }
-        finally
-        {
-            IsLoading = false;
-            StateHasChanged();
-        }
-    }
-
     private async Task AddComment()
     {
         if (string.IsNullOrWhiteSpace(NewCommentContent) || string.IsNullOrEmpty(CurrentUserId))
@@ -209,7 +244,9 @@ public partial class TaskCommentsComponent : ComponentBase
 
             NewCommentContent = string.Empty;
             ClearAttachments();
-            await LoadComments();
+            
+            await LoadComments(isInitial: true);
+            await PreloadAvatarsForComments();
         }
         catch (Exception ex)
         {
@@ -251,7 +288,9 @@ public partial class TaskCommentsComponent : ComponentBase
             await CommentService.UpdateAsync(commentId, request);
             EditingCommentId = null;
             EditingContent = string.Empty;
-            await LoadComments();
+            
+            await LoadComments(isInitial: true);
+            await PreloadAvatarsForComments();
 
             await NotificationService.Success(new NotificationConfig
             {
@@ -286,7 +325,9 @@ public partial class TaskCommentsComponent : ComponentBase
         try
         {
             await CommentService.DeleteAsync(commentId);
-            await LoadComments();
+            
+            await LoadComments(isInitial: true);
+            await PreloadAvatarsForComments();
 
             await NotificationService.Success(new NotificationConfig
             {
@@ -388,6 +429,58 @@ public partial class TaskCommentsComponent : ComponentBase
             return string.Empty;
 
         return content.Replace("\n", "<br>").Replace("\r", "");
+    }
+
+    private void RemoveAttachmentAt(int index)
+    {
+        if (index >= 0 && index < SelectedAttachmentNames.Count)
+        {
+            var name = SelectedAttachmentNames[index];
+            SelectedAttachmentNames.RemoveAt(index);
+            var attachmentToRemove = SelectedAttachments.FirstOrDefault(a => a.Name == name);
+            if (attachmentToRemove != null)
+            {
+                SelectedAttachments.Remove(attachmentToRemove);
+            }
+            StateHasChanged();
+        }
+    }
+
+    public async Task OnAttachmentsSelected(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
+    {
+        if (e.FileCount == 0) return;
+
+        var newFiles = e.GetMultipleFiles();
+        foreach (var file in newFiles)
+        {
+            if (!SelectedAttachments.Any(f => f.Name == file.Name))
+            {
+                using var stream = file.OpenReadStream(long.MaxValue);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                SelectedAttachments.Add(new AttachmentMemory
+                {
+                    Name = file.Name,
+                    Data = ms.ToArray(),
+                    ContentType = file.ContentType
+                });
+                SelectedAttachmentNames.Add(file.Name);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void ClearAttachments()
+    {
+        SelectedAttachments.Clear();
+        SelectedAttachmentNames.Clear();
+        UploadedAttachments.Clear();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _searchTimer?.Dispose();
     }
     
     private class AttachmentMemory
