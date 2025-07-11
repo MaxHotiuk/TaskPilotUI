@@ -16,4 +16,25 @@ public interface IBoardApi
 
     [Delete("/api/boards/{id}")]
     Task DeleteAsync(string id);
+
+    [Get("/api/boards/owner/search")]
+    Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForOwnerAsync(
+        [Query] Guid ownerId,
+        [Query] string searchTerm,
+        [Query] int page,
+        [Query] int pageSize);
+
+    [Get("/api/boards/user/search")]
+    Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForUserAsync(
+        [Query] Guid userId,
+        [Query] string searchTerm,
+        [Query] int page,
+        [Query] int pageSize);
+
+    [Get("/api/boards/member/search")]
+    Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForMemberAsync(
+        [Query] Guid userId,
+        [Query] string searchTerm,
+        [Query] int page,
+        [Query] int pageSize);
 }

@@ -9,4 +9,6 @@ public interface ICommentService
     Task<string> CreateAsync(CreateCommentRequest request);
     Task UpdateAsync(string commentId, UpdateCommentRequest request);
     Task DeleteAsync(string commentId);
+    Task<List<CommentDto>> SearchCommentsAsync(
+        string searchTerm, Guid taskId, int page, int pageSize);
 }

@@ -14,4 +14,11 @@ public interface IBoardService
     Task<BoardWithStats> GetWithStatsAsync(string boardId);
     Task<BoardWithStats> GetCachedWithStatsAsync(string boardId);
     Task ClearCacheAsync(string userId);
+    Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForOwnerAsync(
+        Guid ownerId, string searchTerm, int page, int pageSize);
+    Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForUserAsync(
+        Guid userId, string searchTerm, int page, int pageSize);
+    
+    Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForMemberAsync(
+        Guid userId, string searchTerm, int page, int pageSize);
 }

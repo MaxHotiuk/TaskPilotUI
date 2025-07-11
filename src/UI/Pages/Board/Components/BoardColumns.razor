@@ -24,7 +24,9 @@
                             <Text Strong>@state.Name</Text>
                         </div>
                         <div>
-                            <Badge Count=@GetTaskCountForState(state.Id) />
+                            <Badge Class="site-badge-count-109"
+                                Count=@GetTaskCountForState(state.Id)
+                                Style="background-color: rgb(58, 143, 234); " />
                         </div>
                     </div>
                     <div class="task-container">
@@ -51,13 +53,14 @@
                                                     @if (!string.IsNullOrEmpty(task.AssigneeId))
                                                     {
                                                         <div class="task-assignee">
-                                                            <Tag>@GetAssigneeName(task.AssigneeId)</Tag>
+                                                            <Tag Color=@TagColor.Blue>@GetAssigneeName(task.AssigneeId)</Tag>
                                                         </div>
                                                     }
                                                     @if (!string.IsNullOrEmpty(task.DueDate))
                                                     {
                                                         <div class="task-due-date">
-                                                            <Tag>
+                                                            <Tag Color=@TagColor.Green>
+                                                                <Icon Type="clock-circle" />
                                                                 Due: @FormatDueDate(task.DueDate)
                                                             </Tag>
                                                         </div>

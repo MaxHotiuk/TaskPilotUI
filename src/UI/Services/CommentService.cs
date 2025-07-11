@@ -72,4 +72,17 @@ public class CommentService : ICommentService
             throw new Exception($"Failed to delete comment: {ex.Message}", ex);
         }
     }
+
+    public async Task<List<CommentDto>> SearchCommentsAsync(
+        string searchTerm, Guid taskId, int page, int pageSize)
+    {
+        try
+        {
+            return await _commentApi.SearchCommentsAsync(searchTerm, taskId, page, pageSize);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to search comments: {ex.Message}", ex);
+        }
+    }
 }

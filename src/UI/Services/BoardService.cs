@@ -40,7 +40,7 @@ public class BoardService : IBoardService
         try
         {
             var boards = await _userApi.GetBoardsAsync(userId);
-            
+
             await _localStorage.SetItemAsync($"{BOARDS_CACHE_KEY}_{userId}", boards);
             
             return boards;
@@ -129,7 +129,7 @@ public class BoardService : IBoardService
             };
 
             await _localStorage.SetItemAsync($"{BOARD_STATS_CACHE_PREFIX}{boardId}", boardWithStats);
-            
+
             return boardWithStats;
         }
         catch (Exception)
@@ -186,6 +186,45 @@ public class BoardService : IBoardService
         catch (Exception)
         {
             return null;
+        }
+    }
+
+    public async Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForOwnerAsync(
+        Guid ownerId, string searchTerm, int page, int pageSize)
+    {
+        try
+        {
+            return await _boardApi.SearchBoardsRangeForOwnerAsync(ownerId, searchTerm, page, pageSize);
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    public async Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForUserAsync(
+        Guid userId, string searchTerm, int page, int pageSize)
+    {
+        try
+        {
+            return await _boardApi.SearchBoardsRangeForUserAsync(userId, searchTerm, page, pageSize);
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    public async Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForMemberAsync(
+        Guid userId, string searchTerm, int page, int pageSize)
+    {
+        try
+        {
+            return await _boardApi.SearchBoardsRangeForMemberAsync(userId, searchTerm, page, pageSize);
+        }
+        catch (Exception)
+        {
+            return [];
         }
     }
 }

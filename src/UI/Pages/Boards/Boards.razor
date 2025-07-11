@@ -2,8 +2,10 @@
 @page "/boards"
 @using AntDesign
 @using UI.Models
+@using UI.Models.Board
 @using UI.Interfaces.Services
 @using UI.Pages.Boards.Components
+@implements IDisposable
 
 <BoardsPageHeader IsLoading=@IsLoading
                   ShowHeader=@(!IsLoading || _boards.Any())
@@ -24,41 +26,86 @@
             </Spin>
         </div>
     }
-    else if (_filteredBoards.Any())
+    else if (_boards.Any())
     {
-        <Row Gutter="(16, 16)" Style="margin-top: 24px;">
-            @foreach (var boardStats in _filteredBoards)
+        <div class="boards-grid-container">
+            <Row Gutter="(16, 16)" Style="margin-top: 24px;">
+                @foreach (var board in _boards)
+                {
+                    <AntDesign.Col Xxl="6" Xl="8" Lg="8" Md="12" Sm="12" Xs="24">
+                        <BoardSearchCard Board=@board
+                                        IsOwner=@IsCurrentUserOwner(board.OwnerId)
+                                        OnBoardClick=@HandleBoardClick
+                                        OnEditBoard=@HandleEditBoard
+                                        OnDeleteBoard=@HandleDeleteBoard />
+                    </AntDesign.Col>
+                }
+            </Row>
+            
+            @if (_hasMoreData)
             {
-                <AntDesign.Col Xxl="6" Xl="8" Lg="8" Md="12" Sm="12" Xs="24">
-                    <BoardCard BoardStats=@boardStats
-                               OnBoardClick=@HandleBoardClick
-                               OnEditBoard=@HandleEditBoard
-                               OnDeleteBoard=@HandleDeleteBoard />
-                </AntDesign.Col>
+                <div class="load-more-container">
+                    <Button Type=@ButtonType.Default
+                            Size=@ButtonSize.Large
+                            Loading=@_isSearching
+                            OnClick=@LoadMoreBoards
+                            Block=@false
+                            Style="margin-top: 24px; min-width: 150px;">
+                        <Icon Type="down" Style="margin-right: 8px;" />
+                        Load More Boards
+                    </Button>
+                </div>
             }
-        </Row>
+            
+            @if (_isSearching && _boards.Any())
+            {
+                <div class="loading-more-container">
+                    <Spin Size=@SpinSize.Small Tip="Loading more boards...">
+                        <div style="height: 50px;"></div>
+                    </Spin>
+                </div>
+            }
+        </div>
     }
-    else if (!IsLoading)
+    else if (!IsLoading && !_isSearching)
     {
-        <Empty Description=@GetEmptyDescription()
-               Style="margin-top: 60px;">
-            <ChildContent>
-                @if (!_boards.Any())
-                {
-                    <Button Type=@ButtonType.Primary
-                            Icon="plus" 
-                            OnClick=@ShowCreateModal>
-                        Create Your First Board
-                    </Button>
-                }
-                else
-                {
-                    <Button Type=@ButtonType.Default OnClick=@ClearFilters>
-                        Clear Filters
-                    </Button>
-                }
-            </ChildContent>
-        </Empty>
+        <div class="empty-state-container">
+            <Empty Description=@GetEmptyDescription()
+                   Style="margin-top: 60px;">
+                <ChildContent>
+                    @if (!_boards.Any() && string.IsNullOrWhiteSpace(_searchTerm) && _filterType == "all")
+                    {
+                        <Space Direction=@SpaceDirection.Vertical Size=@SpaceSize.Middle>
+                            <SpaceItem>
+                                <Button Type=@ButtonType.Primary
+                                        Size=@ButtonSize.Large
+                                        Icon="plus" 
+                                        OnClick=@ShowCreateModal>
+                                    Create Your First Board
+                                </Button>
+                            </SpaceItem>
+                        </Space>
+                    }
+                    else
+                    {
+                        <Space>
+                            <SpaceItem>
+                                <Button Type=@ButtonType.Default OnClick=@ClearFilters>
+                                    Clear Filters
+                                </Button>
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Button Type=@ButtonType.Primary
+                                        Icon="plus" 
+                                        OnClick=@ShowCreateModal>
+                                    Create New Board
+                                </Button>
+                            </SpaceItem>
+                        </Space>
+                    }
+                </ChildContent>
+            </Empty>
+        </div>
     }
 </div>
 
