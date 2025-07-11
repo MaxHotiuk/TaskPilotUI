@@ -14,24 +14,28 @@ public partial class Boards : ComponentBase
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-    private List<BoardWithStats> _boards = new();
-    private List<BoardWithStats> _filteredBoards = new();
+    private List<BoardSearchDto> _boards = new();
     private string _searchTerm = string.Empty;
     private string _filterType = "all";
+    private int _currentPage = 1;
+    private int _pageSize = 6;
+    private bool _hasMoreData = true;
+    private bool _isSearching = false;
     private bool _showCreateModal = false;
     private bool _showDeleteModal = false;
     private bool _isDeleting = false;
-    private BoardWithStats? _selectedBoard = null;
+    private BoardSearchDto? _selectedBoard = null;
     private string _deleteConfirmation = string.Empty;
+    private System.Timers.Timer? _searchTimer;
 
     protected bool IsLoading => LoadingService?.IsLoading ?? false;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadBoardsWithCache();
+        await LoadInitialBoards();
     }
 
-    private async Task LoadBoardsWithCache()
+    private async Task LoadInitialBoards()
     {
         await AuthService.ExecuteWithGlobalLoadingAsync(LoadingService, async service =>
         {
@@ -55,9 +59,7 @@ public partial class Boards : ComponentBase
                     }
                 }
 
-                await LoadCachedBoards(currentUser.Id);
-                
-                _ = Task.Run(async () => await LoadFreshBoards(currentUser.Id));
+                await SearchBoards(reset: true);
             }
             catch (Exception)
             {
@@ -69,159 +71,108 @@ public partial class Boards : ComponentBase
         });
     }
 
-    private async Task LoadCachedBoards(string userId)
+    private async Task SearchBoards(bool reset = false)
     {
-        var cachedBoards = await BoardService.GetCachedBoardsAsync(userId);
-        if (cachedBoards.Any())
+        if (reset)
         {
-            _boards = new List<BoardWithStats>();
-            foreach (var board in cachedBoards)
-            {
-                var cachedStats = await BoardService.GetCachedWithStatsAsync(board.Id);
-                if (cachedStats.Board?.Id != null)
-                {
-                    _boards.Add(cachedStats);
-                }
-                else
-                {
-                    _boards.Add(new BoardWithStats
-                    {
-                        Board = board,
-                        TaskCount = 0,
-                        MemberCount = 1,
-                        Members = new List<BoardMemberDto>(),
-                        IsOwner = board.OwnerId == userId
-                    });
-                }
-            }
-            ApplyFilters();
+            _currentPage = 1;
+            _boards.Clear();
+            _hasMoreData = true;
         }
-    }
 
-    private async Task LoadFreshBoards(string userId)
-    {
+        if (!_hasMoreData) return;
+
         try
         {
-            var userBoards = await BoardService.GetBoardsAsync(userId);
-            var freshBoards = new List<BoardWithStats>();
+            _isSearching = true;
+            StateHasChanged();
 
-            foreach (var board in userBoards)
+            var currentUser = AuthService.GetCachedUser();
+            if (currentUser == null) return;
+
+            var userId = Guid.Parse(currentUser.Id);
+            IEnumerable<BoardSearchDto> results;
+
+            if (_filterType == "owner")
             {
-                var boardStats = await BoardService.GetWithStatsAsync(board.Id);
-                freshBoards.Add(boardStats);
+                results = await BoardService.SearchBoardsRangeForOwnerAsync(
+                    userId, _searchTerm, _currentPage, _pageSize);
+            }
+            else if (_filterType == "member")
+            {
+                results = await BoardService.SearchBoardsRangeForMemberAsync(
+                    userId, _searchTerm, _currentPage, _pageSize);
+            }
+            else
+            {
+                results = await BoardService.SearchBoardsRangeForUserAsync(
+                    userId, _searchTerm, _currentPage, _pageSize);
             }
 
-            if (freshBoards.Any() && !AreBoardListsEqual(_boards, freshBoards))
+            var resultsList = results.ToList();
+            
+            if (reset)
             {
-                await InvokeAsync(() =>
-                {
-                    _boards = freshBoards;
-                    ApplyFilters();
-                    StateHasChanged();
-                });
+                _boards = resultsList;
+            }
+            else
+            {
+                _boards.AddRange(resultsList);
+            }
+
+            _hasMoreData = resultsList.Count == _pageSize;
+            
+            if (!reset)
+            {
+                _currentPage++;
             }
         }
         catch (Exception)
         {
         }
-    }
-
-    private bool AreBoardListsEqual(List<BoardWithStats> list1, List<BoardWithStats> list2)
-    {
-        if (list1.Count != list2.Count) return false;
-        
-        for (int i = 0; i < list1.Count; i++)
+        finally
         {
-            if (list1[i].Board.Id != list2[i].Board.Id ||
-                list1[i].Board.UpdatedAt != list2[i].Board.UpdatedAt ||
-                list1[i].TaskCount != list2[i].TaskCount ||
-                list1[i].MemberCount != list2[i].MemberCount)
-            {
-                return false;
-            }
+            _isSearching = false;
+            StateHasChanged();
         }
-        return true;
-    }
-
-    private async Task LoadBoards()
-    {
-        await BoardService.ExecuteWithGlobalLoadingAndErrorHandlingAsync(
-            LoadingService,
-            async service =>
-            {
-                var currentUser = AuthService.GetCachedUser();
-                if (currentUser == null)
-                {
-                    Navigation.NavigateTo("/login");
-                    return;
-                }
-
-                var userBoards = await service.GetBoardsAsync(currentUser.Id);
-                _boards = new List<BoardWithStats>();
-
-                foreach (var board in userBoards)
-                {
-                    var boardStats = await service.GetWithStatsAsync(board.Id);
-                    _boards.Add(boardStats);
-                }
-
-                ApplyFilters();
-            },
-            onError: ex =>
-            {
-                // Silent error for now, could show a message to user
-                Console.WriteLine($"Error loading boards: {ex.Message}");
-                return Task.CompletedTask;
-            },
-            onFinally: () =>
-            {
-                StateHasChanged();
-                return Task.CompletedTask;
-            });
-    }
-
-    private void ApplyFilters()
-    {
-        _filteredBoards = _boards.Where(board =>
-        {
-            if (!string.IsNullOrWhiteSpace(_searchTerm))
-            {
-                var searchLower = _searchTerm.ToLower();
-                if (!board.Board.Name.ToLower().Contains(searchLower) &&
-                    !board.Board.Description?.ToLower().Contains(searchLower) == true)
-                {
-                    return false;
-                }
-            }
-
-            return _filterType switch
-            {
-                "owner" => board.IsOwner,
-                "member" => !board.IsOwner,
-                _ => true
-            };
-        }).ToList();
-
-        StateHasChanged();
     }
 
     private void OnSearchChanged(ChangeEventArgs e)
     {
         _searchTerm = e.Value?.ToString() ?? string.Empty;
-        ApplyFilters();
+        
+        _searchTimer?.Stop();
+        _searchTimer?.Dispose();
+        
+        _searchTimer = new System.Timers.Timer(300);
+        _searchTimer.Elapsed += async (_, _) =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await SearchBoards(reset: true);
+            });
+        };
+        _searchTimer.AutoReset = false;
+        _searchTimer.Start();
     }
 
-    private void OnFilterChanged(string value)
+    private async Task OnFilterChanged(string value)
     {
         _filterType = value;
-        ApplyFilters();
+        await SearchBoards(reset: true);
+    }
+
+    private async Task LoadMoreBoards()
+    {
+        if (!_hasMoreData || _isSearching) return;
+        await SearchBoards(reset: false);
     }
 
     private void ClearFilters()
     {
         _searchTerm = string.Empty;
         _filterType = "all";
-        ApplyFilters();
+        InvokeAsync(async () => await SearchBoards(reset: true));
     }
 
     private void ShowCreateModal()
@@ -239,7 +190,7 @@ public partial class Boards : ComponentBase
             await BoardService.ClearCacheAsync(currentUser.Id);
         }
         
-        await LoadBoards();
+        await SearchBoards(reset: true);
     }
 
     private void HandleBoardClick(string boardId)
@@ -254,7 +205,7 @@ public partial class Boards : ComponentBase
 
     private void HandleDeleteBoard(string boardId)
     {
-        _selectedBoard = _boards.FirstOrDefault(b => b.Board.Id == boardId);
+        _selectedBoard = _boards.FirstOrDefault(b => b.Id == boardId);
         if (_selectedBoard != null)
         {
             _deleteConfirmation = string.Empty;
@@ -264,7 +215,7 @@ public partial class Boards : ComponentBase
 
     private async Task ConfirmDelete()
     {
-        if (_selectedBoard == null || _deleteConfirmation != _selectedBoard.Board.Name)
+        if (_selectedBoard == null || _deleteConfirmation != _selectedBoard.Name)
         {
             return;
         }
@@ -274,7 +225,7 @@ public partial class Boards : ComponentBase
             _isDeleting = true;
             StateHasChanged();
 
-            await BoardService.DeleteAsync(_selectedBoard.Board.Id);
+            await BoardService.DeleteAsync(_selectedBoard.Id);
             
             var currentUser = AuthService.GetCachedUser();
             if (currentUser != null)
@@ -282,7 +233,7 @@ public partial class Boards : ComponentBase
                 await BoardService.ClearCacheAsync(currentUser.Id);
             }
             
-            await LoadBoards();
+            await SearchBoards(reset: true);
             
             _showDeleteModal = false;
             _selectedBoard = null;
@@ -308,17 +259,19 @@ public partial class Boards : ComponentBase
     private string GetEmptyDescription()
     {
         if (!_boards.Any())
-            return "You don't have any boards yet. Create your first board to get started!";
-        
-        if (!string.IsNullOrWhiteSpace(_searchTerm))
-            return $"No boards found matching \"{_searchTerm}\"";
-        
-        return _filterType switch
         {
-            "owner" => "You don't own any boards",
-            "member" => "You're not a member of any boards",
-            _ => "No boards found"
-        };
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+                return $"No boards found matching \"{_searchTerm}\"";
+            
+            return _filterType switch
+            {
+                "owner" => "You don't own any boards yet. Create your first board to get started!",
+                "member" => "You're not a member of any boards yet.",
+                _ => "You don't have any boards yet. Create your first board to get started!"
+            };
+        }
+        
+        return "No boards found";
     }
 
     private async Task RefreshBoards()
@@ -328,6 +281,18 @@ public partial class Boards : ComponentBase
         {
             await BoardService.ClearCacheAsync(currentUser.Id);
         }
-        await LoadBoards();
+        await SearchBoards(reset: true);
+    }
+
+    private bool IsCurrentUserOwner(string ownerId)
+    {
+        var currentUser = AuthService.GetCachedUser();
+        return currentUser?.Id == ownerId;
+    }
+
+    public void Dispose()
+    {
+        _searchTimer?.Stop();
+        _searchTimer?.Dispose();
     }
 }

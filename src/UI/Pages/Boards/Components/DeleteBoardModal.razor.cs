@@ -7,7 +7,7 @@ public partial class DeleteBoardModal
 {
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
-    [Parameter] public BoardWithStats? SelectedBoard { get; set; }
+    [Parameter] public BoardSearchDto? SelectedBoard { get; set; }
     [Parameter] public bool IsDeleting { get; set; }
     [Parameter] public string DeleteConfirmation { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> DeleteConfirmationChanged { get; set; }

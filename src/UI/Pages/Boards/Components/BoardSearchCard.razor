@@ -1,0 +1,76 @@
+@using AntDesign
+@using UI.Models.Board
+
+<Card Hoverable=@true
+    Class="board-search-card"
+    Actions=@GetCardActions()>
+    
+    <ChildContent>
+        <div class="board-card-content">
+            <div class="board-header">
+                <div class="board-title-section">
+                    <Title Level="4" Class="board-title">@Board.Name</Title>
+                    <div class="board-owner-badge">
+                        @if (IsOwner)
+                        {
+                            <Tag Color=@TagColor.Gold Icon="crown">Owner</Tag>
+                        }
+                        else
+                        {
+                            <Tag Color=@TagColor.Cyan Icon="team">Member</Tag>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            @if (!string.IsNullOrEmpty(Board.Description))
+            {
+                <div class="board-description">
+                    <Paragraph Ellipsis=@true Class="description-text">
+                        @Board.Description
+                    </Paragraph>
+                </div>
+            }
+            else
+            {
+                <div class="board-description">
+                    <div class="board-description-placeholder"></div>
+                </div>
+            }
+            
+            <div class="board-stats">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <Icon Type="check-circle" />
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">@Board.NumberOfTasks</div>
+                            <div class="stat-label">Tasks</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <Icon Type="team" />
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">@Board.NumberOfMembers</div>
+                            <div class="stat-label">Members</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="board-footer">
+                <div class="board-dates">
+                    <div class="date-item">
+                        <Icon Type="calendar" />
+                        <Text Type=@TextElementType.Secondary Class="date-text">
+                            Updated @GetRelativeTime(Board.UpdatedAt)
+                        </Text>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ChildContent>
+</Card>

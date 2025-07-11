@@ -3,7 +3,7 @@
 
 @if (SelectedBoard != null)
 {
-    <Modal Title=@($"Delete Board: {SelectedBoard.Board.Name}")
+    <Modal Title=@($"Delete Board: {SelectedBoard.Name}")
            Visible=@Visible
            OnOk=@ConfirmDelete
            OnCancel=@CancelDelete
@@ -28,7 +28,7 @@
                 Type board name to confirm:
             </label>
             <Input @bind-Value=@DeleteConfirmation
-                   Placeholder=@SelectedBoard.Board.Name />
+                   Placeholder=@SelectedBoard.Name />
         </div>
     </Modal>
 }

@@ -19,4 +19,11 @@ public interface ICommentApi
 
     [Delete("/api/comments/{id}")]
     Task DeleteAsync(string id);
+
+    [Get("/api/comments/search")]
+    Task<List<CommentDto>> SearchCommentsAsync(
+        [AliasAs("searchTerm")] string searchTerm,
+        [AliasAs("taskId")] Guid taskId,
+        [AliasAs("page")] int page,
+        [AliasAs("pageSize")] int pageSize);
 }
