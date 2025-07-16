@@ -6,7 +6,16 @@
 
 <div class="task-comments-container">
     <div class="comments-header">
-        <h4>Comments (@(Comments?.Count ?? 0))</h4>
+        <h4>Comments (@(TotalComments))</h4>
+        <div class="comments-search">
+            <Search Placeholder="Search comments..." 
+                   @bind-Value=@SearchTerm
+                   OnSearch=@OnSearchComments
+                   OnPressEnter=@OnSearchComments
+                   AllowClear=@true
+                   Size=InputSize.Small
+                   Style="width: 250px;" />
+        </div>
     </div>
 
     @if (IsLoading)
@@ -22,7 +31,7 @@
         <div class="comments-list">
             @if (Comments?.Any() == true)
             {
-                @foreach (var comment in Comments.OrderBy(c => c.CreatedAt))
+                @foreach (var comment in Comments)
                 {
                     <div class="comment-item" key="@comment.Id">
                         <div class="comment-header">
@@ -106,13 +115,41 @@
                         }
                     </div>
                 }
+
+                @if (HasMoreComments)
+                {
+                    <div class="load-more-section">
+                        <Button Type=@ButtonType.Default
+                               Size=@ButtonSize.Small
+                               Loading=@IsLoadingMore
+                               OnClick=@LoadMoreComments
+                               Block="true"
+                               Style="margin-top: 16px;">
+                            @if (IsLoadingMore)
+                            {
+                                <span>Loading more comments...</span>
+                            }
+                            else
+                            {
+                                <span>Load more comments</span>
+                            }
+                        </Button>
+                    </div>
+                }
             }
             else
             {
                 <div class="no-comments">
                     <Empty>
                         <DescriptionTemplate>
-                            <span>No comments yet. Be the first to comment on this task</span>
+                            @if (IsSearching)
+                            {
+                                <span>No comments found matching "@SearchTerm"</span>
+                            }
+                            else
+                            {
+                                <span>No comments yet. Be the first to comment on this task</span>
+                            }
                         </DescriptionTemplate>
                     </Empty>
                 </div>
