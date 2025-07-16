@@ -22,6 +22,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: url('/background.jpg') no-repeat center center fixed;
 }
 ul,
 ol {
@@ -52,4 +53,10 @@ ol {
   body .ant-design-pro > .ant-layout {
     min-height: 100vh;
   }
+}
+.ant-layout,
+.ant-layout-content {
+  background-color: transparent !important;
+  background: url('/background.jpg') no-repeat center center fixed;
+  background-size: cover;
 }

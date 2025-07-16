@@ -1,0 +1,9 @@
+.archive-board-modal-content {
+    padding: 16px 0;
+}
+
+.archive-warning {
+    color: #d4380d;
+    font-weight: bold;
+    margin-top: 8px;
+}

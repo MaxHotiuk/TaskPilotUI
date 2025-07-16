@@ -34,6 +34,16 @@
                     Add Task
                 </Button>
             </SpaceItem>
+        @if (BoardDetail != null && CurrentUserId != null && BoardDetail.OwnerId == CurrentUserId)
+        {
+            <SpaceItem>
+                <Button Type=@ButtonType.Primary
+                        Icon="delete"
+                        OnClick=@OnArchive>
+                    Archive Board
+                </Button>
+            </SpaceItem>
+        }
         </Space>
     </PageHeaderExtra>
     

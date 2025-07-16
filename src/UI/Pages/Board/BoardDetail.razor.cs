@@ -39,6 +39,9 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private CreateStateRequest _addStateForm = new();
     private CreateTaskRequest _addTaskForm = new();
 
+    private bool _showArchiveBoardModal = false;
+    private bool _isArchivingBoard = false;
+
     protected bool IsLoading => LoadingService?.IsLoading ?? false;
 
     protected override void OnInitialized()
@@ -183,6 +186,40 @@ public partial class BoardDetail : ComponentBase, IDisposable
             return;
         }
         _showManageStatesModal = true;
+    }
+
+    private void ShowArchiveBoardModal()
+    {
+        if (_boardDetail == null || _currentUser == null || _boardDetail.OwnerId != _currentUser.Id)
+        {
+            Message.Warning("Only the board owner can archive the board");
+            return;
+        }
+        _showArchiveBoardModal = true;
+    }
+
+    private async Task ArchiveBoard()
+    {
+        if (_boardDetail == null)
+            return;
+
+        try
+        {
+            _isArchivingBoard = true;
+            await BoardService.ArchiveBoardAsync(_boardDetail.Id);
+            Message.Success("Board archived successfully");
+            Navigation.NavigateTo("/boards");
+        }
+        catch (Exception ex)
+        {
+            Message.Error($"Failed to archive board: {ex.Message}");
+        }
+        finally
+        {
+            _isArchivingBoard = false;
+            _showArchiveBoardModal = false;
+            StateHasChanged();
+        }
     }
 
     private void ShowTaskDetails(TaskItemDto task)

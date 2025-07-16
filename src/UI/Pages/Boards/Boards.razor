@@ -35,6 +35,7 @@
                     <AntDesign.Col Xxl="6" Xl="8" Lg="8" Md="12" Sm="12" Xs="24">
                         <BoardSearchCard Board=@board
                                         IsOwner=@IsCurrentUserOwner(board.OwnerId)
+                                        IsArchived=@(_filterType == "archived")
                                         OnBoardClick=@HandleBoardClick
                                         OnEditBoard=@HandleEditBoard
                                         OnDeleteBoard=@HandleDeleteBoard />

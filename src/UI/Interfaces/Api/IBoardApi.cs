@@ -37,4 +37,19 @@ public interface IBoardApi
         [Query] string searchTerm,
         [Query] int page,
         [Query] int pageSize);
+
+    [Post("/api/boards/{boardId}/archive")]
+    Task ArchiveBoardAsync(
+        string boardId,
+        CancellationToken cancellationToken = default);
+
+    [Post("/api/boards/{boardId}/dearchive")]
+    Task DearchiveBoardAsync(
+        string boardId,
+        CancellationToken cancellationToken = default);
+
+    [Get("/api/users/{ownerId}/boards/archived")]
+    Task<IEnumerable<BoardDto>> GetArchivedBoardsByOwnerAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default);
 }

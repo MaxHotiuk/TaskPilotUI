@@ -23,7 +23,7 @@ public class BoardService : IBoardService
         IBoardMemberService boardMemberService,
         ITaskService taskService,
         ITaskStateService taskStateService,
-        IAuthService authService, 
+        IAuthService authService,
         ILocalStorageService localStorage)
     {
         _userApi = userApi;
@@ -42,7 +42,7 @@ public class BoardService : IBoardService
             var boards = await _userApi.GetBoardsAsync(userId);
 
             await _localStorage.SetItemAsync($"{BOARDS_CACHE_KEY}_{userId}", boards);
-            
+
             return boards;
         }
         catch (ApiException)
@@ -118,7 +118,7 @@ public class BoardService : IBoardService
             var tasks = await _taskService.GetBoardTasksAsync(boardId);
             var members = await _boardMemberService.GetBoardMembersAsync(boardId);
             var currentUser = _authService.GetCachedUser();
-            
+
             var boardWithStats = new BoardWithStats
             {
                 Board = board,
@@ -226,5 +226,79 @@ public class BoardService : IBoardService
         {
             return [];
         }
+    }
+
+    public async Task ArchiveBoardAsync(
+        string boardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _boardApi.ArchiveBoardAsync(boardId, cancellationToken);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    public async Task DearchiveBoardAsync(
+        string boardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _boardApi.DearchiveBoardAsync(boardId, cancellationToken);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<BoardDto>> GetArchivedBoardsByOwnerAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _boardApi.GetArchivedBoardsByOwnerAsync(ownerId, cancellationToken);
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+    
+    public async Task<IEnumerable<BoardSearchDto>> GetArchivedBoardsRangeForUserAsync(
+        Guid userId,
+        string searchTerm,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var archivedBoards = await GetArchivedBoardsByOwnerAsync(userId, cancellationToken);
+
+        var filteredBoards = string.IsNullOrWhiteSpace(searchTerm)
+            ? archivedBoards
+            : archivedBoards.Where(b => 
+            (!string.IsNullOrEmpty(b.Name) && b.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+            (!string.IsNullOrEmpty(b.Description) && b.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+
+        var pagedBoards = filteredBoards
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize);
+
+        return pagedBoards.Select(b => new BoardSearchDto
+        {
+            Id = b.Id,
+            Name = b.Name,
+            Description = b.Description,
+            OwnerId = b.OwnerId,
+            CreatedAt = b.CreatedAt,
+            UpdatedAt = b.UpdatedAt,
+            NumberOfMembers = 0,
+            NumberOfTasks = 0
+        });
     }
 }
