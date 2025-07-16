@@ -14,6 +14,8 @@
              OnShowMembers=@ShowMembersModal
              OnRefresh=@RefreshBoard
              OnCreateTask=@ShowCreateTaskModal
+             OnArchive=@ShowArchiveBoardModal
+             CurrentUserId=@(_currentUser?.Id)
              OnManageStates=@ShowManageStatesModal />
 
 <BoardColumns BoardDetail=@_boardDetail
@@ -60,3 +62,8 @@
                   OnTaskUpdated=@HandleTaskUpdated
                   OnTaskDeleted=@HandleTaskDeleted
                   OnCancel=@(() => { _showTaskDetailsModal = false; _selectedTask = null; }) />
+
+<ArchiveBoardModal IsVisible=@_showArchiveBoardModal
+                       IsLoading=@_isArchivingBoard
+                       OnOk=@ArchiveBoard
+                       OnCancel=@(() => _showArchiveBoardModal = false) />

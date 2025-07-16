@@ -3,8 +3,7 @@
 
 <Card Hoverable=@true
     Class="board-search-card"
-    Actions=@GetCardActions()>
-    
+    Actions=@(IsArchived ? Array.Empty<RenderFragment>() : GetCardActions())>
     <ChildContent>
         <div class="board-card-content">
             <div class="board-header">
@@ -22,7 +21,6 @@
                     </div>
                 </div>
             </div>
-            
             @if (!string.IsNullOrEmpty(Board.Description))
             {
                 <div class="board-description">
@@ -31,46 +29,47 @@
                     </Paragraph>
                 </div>
             }
-            else
+            @if (IsArchived)
             {
-                <div class="board-description">
-                    <div class="board-description-placeholder"></div>
+                <div class="board-archived-footer" style="margin-top: 16px;">
+                    <Button Type=@ButtonType.Primary OnClick="@DearchiveBoardAsync">De-archive</Button>
                 </div>
             }
-            
-            <div class="board-stats">
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <Icon Type="check-circle" />
+            else
+            {
+                <div class="board-stats">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <Icon Type="check-circle" />
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">@Board.NumberOfTasks</div>
+                                <div class="stat-label">Tasks</div>
+                            </div>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-number">@Board.NumberOfTasks</div>
-                            <div class="stat-label">Tasks</div>
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <Icon Type="team" />
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">@Board.NumberOfMembers</div>
+                                <div class="stat-label">Members</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <Icon Type="team" />
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-number">@Board.NumberOfMembers</div>
-                            <div class="stat-label">Members</div>
+                </div>
+                <div class="board-footer">
+                    <div class="board-dates">
+                        <div class="date-item">
+                            <Icon Type="calendar" />
+                            <Text Type=@TextElementType.Secondary Class="date-text">
+                                Updated @GetRelativeTime(Board.UpdatedAt)
+                            </Text>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="board-footer">
-                <div class="board-dates">
-                    <div class="date-item">
-                        <Icon Type="calendar" />
-                        <Text Type=@TextElementType.Secondary Class="date-text">
-                            Updated @GetRelativeTime(Board.UpdatedAt)
-                        </Text>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </ChildContent>
 </Card>

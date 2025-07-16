@@ -18,7 +18,26 @@ public interface IBoardService
         Guid ownerId, string searchTerm, int page, int pageSize);
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForUserAsync(
         Guid userId, string searchTerm, int page, int pageSize);
-    
+
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForMemberAsync(
         Guid userId, string searchTerm, int page, int pageSize);
+
+    Task ArchiveBoardAsync(
+        string boardId,
+        CancellationToken cancellationToken = default);
+
+    Task DearchiveBoardAsync(
+        string boardId,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<BoardDto>> GetArchivedBoardsByOwnerAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default);
+        
+    Task<IEnumerable<BoardSearchDto>> GetArchivedBoardsRangeForUserAsync(
+        Guid userId,
+        string searchTerm,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }

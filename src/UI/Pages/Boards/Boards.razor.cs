@@ -103,6 +103,11 @@ public partial class Boards : ComponentBase
                 results = await BoardService.SearchBoardsRangeForMemberAsync(
                     userId, _searchTerm, _currentPage, _pageSize);
             }
+            else if (_filterType == "archived")
+            {
+                results = await BoardService.GetArchivedBoardsRangeForUserAsync(
+                    userId, _searchTerm, _currentPage, _pageSize);
+            }
             else
             {
                 results = await BoardService.SearchBoardsRangeForUserAsync(

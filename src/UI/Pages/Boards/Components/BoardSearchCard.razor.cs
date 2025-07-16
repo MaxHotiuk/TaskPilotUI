@@ -1,13 +1,17 @@
 using Microsoft.AspNetCore.Components;
 using UI.Models.Board;
 using AntDesign;
+using UI.Interfaces.Services;
 
 namespace UI.Pages.Boards.Components;
 
 public partial class BoardSearchCard
 {
+    [Inject] private IBoardService BoardService { get; set; } = default!;
+    [Inject] private MessageService MessageService { get; set; } = default!;
     [Parameter] public BoardSearchDto Board { get; set; } = new();
     [Parameter] public bool IsOwner { get; set; }
+    [Parameter] public bool IsArchived { get; set; }
     [Parameter] public EventCallback<string> OnBoardClick { get; set; }
     [Parameter] public EventCallback<string> OnEditBoard { get; set; }
     [Parameter] public EventCallback<string> OnDeleteBoard { get; set; }
@@ -28,6 +32,13 @@ public partial class BoardSearchCard
     private async Task HandleDeleteClick()
     {
         await OnDeleteBoard.InvokeAsync(Board.Id);
+    }
+
+    private async Task DearchiveBoardAsync()
+    {
+        await BoardService.DearchiveBoardAsync(Board.Id);
+        StateHasChanged();
+        MessageService.Info("Refresh to see changes");
     }
 
     private string GetRelativeTime(string dateTimeString)

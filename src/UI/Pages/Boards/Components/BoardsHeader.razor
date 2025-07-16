@@ -46,6 +46,15 @@
                             Member
                         </Button>
                     </SpaceItem>
+                    <SpaceItem>
+                        <Button Type=@(FilterType == "archived" ? ButtonType.Primary : ButtonType.Text)
+                                OnClick=@(() => OnFilterChanged.InvokeAsync("archived"))
+                                Size=@ButtonSize.Small
+                                Style="border-radius: 6px;">
+                            <Icon Type="inbox" Style="margin-right: 4px;" />
+                            Archived
+                        </Button>
+                    </SpaceItem>
                 </Space>
             </div>
         </AntDesign.Col>
