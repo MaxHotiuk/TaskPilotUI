@@ -9,44 +9,50 @@
        OnOk=@HandleOk
        OnCancel=@HandleCancel
        ConfirmLoading=@IsLoading
-       Width="800"
+       Width="1200"
        Footer=@GetModalFooter()>
     
     @if (CurrentTask != null)
     {
-        <div class="task-details-container">
+        <AntDesign.Row Gutter="16" style="min-height:400px; max-height:60vh; overflow:hidden;">
+            <AntDesign.Col xs="24" sm="24" md="8" lg="8" xl="8" style="height:100%; overflow:auto;">
+                <div style="padding-right:8px;">
+                    @if (IsEditing)
+                    {
+                        <TaskEditMode FormModel=@FormModel
+                                      States=@States
+                                      BoardMembers=@BoardMembers
+                                      AllUsers=@AllUsers
+                                      CanManageTask=@CanManageTask
+                                      DueDateString=@DueDateString
+                                      OnFormSubmit=@HandleSubmit
+                                      OnFormSubmitFailed=@HandleSubmitFailed />
+                    }
+                    else
+                    {
+                        <TaskViewMode Task=@CurrentTask
+                                      States=@States
+                                      AllUsers=@AllUsers />
 
-            @if (IsEditing)
-            {
-                <TaskEditMode FormModel=@FormModel
-                              States=@States
-                              BoardMembers=@BoardMembers
-                              AllUsers=@AllUsers
-                              CanManageTask=@CanManageTask
-                              DueDateString=@DueDateString
-                              OnFormSubmit=@HandleSubmit
-                              OnFormSubmitFailed=@HandleSubmitFailed />
-            }
-            else
-            {
-                <TaskViewMode Task=@CurrentTask
-                              States=@States
-                              AllUsers=@AllUsers />
-
-                <TaskQuickActions States=@States
-                                  CurrentStateId=@CurrentTask.StateId
-                                  IsLoading=@(IsLoading || _internalLoading)
-                                  OnStateChange=@MoveTaskToState />
-            }
-
-            @if (!IsEditing)
-            {
-                <TaskCommentsComponent TaskId=@CurrentTask.Id
-                                     AllUsers=@AllUsers
-                                     CanAddComment=@CanManageTask
-                                     CurrentUserId=@CurrentUserId />
-            }
-        </div>
+                        <TaskQuickActions States=@States
+                                          CurrentStateId=@CurrentTask.StateId
+                                          IsLoading=@(IsLoading || _internalLoading)
+                                          OnStateChange=@MoveTaskToState />
+                    }
+                </div>
+            </AntDesign.Col>
+            <AntDesign.Col xs="24" sm="24" md="16" lg="16" xl="16" style="height:100%; border-left:1px solid #f0f0f0; background:#fafafa; overflow:auto;">
+                @if (!IsEditing)
+                {
+                    <div style="padding: 16px 8px 16px 16px; min-height:100%;">
+                        <TaskCommentsComponent TaskId=@CurrentTask.Id
+                                             AllUsers=@AllUsers
+                                             CanAddComment=@CanManageTask
+                                             CurrentUserId=@CurrentUserId />
+                    </div>
+                }
+            </AntDesign.Col>
+        </AntDesign.Row>
     }
     else
     {
