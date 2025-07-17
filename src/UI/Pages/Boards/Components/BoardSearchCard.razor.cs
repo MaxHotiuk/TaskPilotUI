@@ -94,21 +94,6 @@ public partial class BoardSearchCard
             actions.Add(builder =>
             {
                 builder.OpenElement(0, "div");
-                builder.AddAttribute(1, "class", "board-action-btn board-action-edit");
-                builder.AddAttribute(2, "title", "Edit Board");
-                builder.AddAttribute(3, "onclick", EventCallback.Factory.Create(this, HandleEditClick));
-                builder.OpenComponent(4, typeof(Icon));
-                builder.AddAttribute(5, "Type", "edit");
-                builder.CloseComponent();
-                builder.OpenElement(6, "span");
-                builder.AddContent(7, "Edit");
-                builder.CloseElement();
-                builder.CloseElement();
-            });
-
-            actions.Add(builder =>
-            {
-                builder.OpenElement(0, "div");
                 builder.AddAttribute(1, "class", "board-action-btn board-action-delete");
                 builder.AddAttribute(2, "title", "Delete Board");
                 builder.AddAttribute(3, "onclick", EventCallback.Factory.Create(this, HandleDeleteClick));

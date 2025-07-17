@@ -1,7 +1,7 @@
 @using AntDesign
 @using UI.Models.Board
 
-<Card Hoverable=@true
+<Card Hoverable=@false
     Class="board-search-card"
     Actions=@(IsArchived ? Array.Empty<RenderFragment>() : GetCardActions())>
     <ChildContent>
