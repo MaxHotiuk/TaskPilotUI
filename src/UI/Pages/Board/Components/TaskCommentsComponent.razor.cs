@@ -1,3 +1,4 @@
+using UI.Interfaces.SignalR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using AntDesign;
@@ -12,6 +13,7 @@ namespace UI.Pages.Board.Components;
 
 public partial class TaskCommentsComponent : ComponentBase
 {
+    [Inject] private ISignalRService SignalRService { get; set; } = default!;
     [Inject] private IAttachmentService AttachmentService { get; set; } = default!;
     [Inject] private IMessageService Message { get; set; } = default!;
     [Parameter] public string TaskId { get; set; } = string.Empty;
@@ -49,6 +51,76 @@ public partial class TaskCommentsComponent : ComponentBase
     {
         await LoadComments(isInitial: true);
         await PreloadAvatarsForComments();
+
+        if (!string.IsNullOrEmpty(TaskId))
+        {
+            await SignalRService.ConnectAsync();
+            await SignalRService.JoinTaskGroupAsync(TaskId);
+
+            SignalRService.OnTaskUpdated(async payloadObj =>
+            {
+                try
+                {
+                    var payload = payloadObj as System.Text.Json.JsonElement?;
+                    string? action = null;
+                    string? commentId = null;
+                    if (payload != null)
+                    {
+                        if (payload.Value.TryGetProperty("action", out var actionProp))
+                        {
+                            action = actionProp.GetString();
+                        }
+                        if (payload.Value.TryGetProperty("commentId", out var commentIdProp))
+                        {
+                            commentId = commentIdProp.GetString();
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(commentId) && (action == "commentCreated" || action == "commentUpdated"))
+                    {
+                        var comment = await CommentService.GetByIdAsync(commentId);
+                        if (comment != null && comment.TaskId == TaskId)
+                        {
+                            await InvokeAsync(async () =>
+                            {
+                                if (action == "commentCreated")
+                                {
+                                    if (!Comments.Any(c => c.Id == comment.Id))
+                                    {
+                                        Comments.Insert(0, comment);
+                                    }
+                                }
+                                else if (action == "commentUpdated")
+                                {
+                                    var idx = Comments.FindIndex(c => c.Id == comment.Id);
+                                    if (idx >= 0)
+                                    {
+                                        Comments[idx] = comment;
+                                    }
+                                }
+                                TotalComments = Comments.Count;
+                                await PreloadAvatarsForComments();
+                                StateHasChanged();
+                            });
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(commentId) && action == "commentDeleted")
+                    {
+                        await InvokeAsync(() =>
+                        {
+                            var idx = Comments.FindIndex(c => c.Id == commentId);
+                            if (idx >= 0)
+                            {
+                                Comments.RemoveAt(idx);
+                            }
+                            TotalComments = Comments.Count;
+                            StateHasChanged();
+                            return Task.CompletedTask;
+                        });
+                    }
+                }
+                catch { }
+            });
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -480,6 +552,11 @@ public partial class TaskCommentsComponent : ComponentBase
 
     public void Dispose()
     {
+        // Leave SignalR group for this task
+        if (!string.IsNullOrEmpty(TaskId))
+        {
+            _ = SignalRService.LeaveTaskGroupAsync(TaskId);
+        }
         _searchTimer?.Dispose();
     }
     

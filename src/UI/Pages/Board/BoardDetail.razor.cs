@@ -1,3 +1,4 @@
+using UI.Interfaces.SignalR;
 using Microsoft.AspNetCore.Components;
 using UI.Models.Board;
 using UI.Models.Task;
@@ -13,6 +14,7 @@ namespace UI.Pages.Board;
 
 public partial class BoardDetail : ComponentBase, IDisposable
 {
+    [Inject] private ISignalRService SignalRService { get; set; } = default!;
     [Parameter] public string BoardId { get; set; } = string.Empty;
     [CascadingParameter] public IGlobalLoadingService LoadingService { get; set; } = default!;
     
@@ -57,6 +59,14 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         await LoadCurrentUser();
         await LoadBoardDetail();
+
+        await SignalRService.ConnectAsync();
+        await SignalRService.JoinBoardGroupAsync(BoardId);
+
+        SignalRService.OnBoardUpdated(async payload =>
+        {
+            await InvokeAsync(async () => await LoadBoardDetail());
+        });
     }
 
     public void Dispose()
@@ -65,6 +75,9 @@ public partial class BoardDetail : ComponentBase, IDisposable
         {
             LoadingService.OnLoadingChanged -= StateHasChanged;
         }
+
+        _ = SignalRService.LeaveBoardGroupAsync(BoardId);
+        _ = SignalRService.DisconnectAsync();
     }
 
     private async Task LoadCurrentUser()
