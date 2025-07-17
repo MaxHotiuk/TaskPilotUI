@@ -1,0 +1,149 @@
+@page "/board/{BoardId}/call"
+@using AntDesign
+@inherits TaskPilotUI.UI.Pages.Board.BoardCallPage
+
+<PageTitle>Board Call - @BoardId</PageTitle>
+
+<div class="board-call-container">
+    <!-- Header Section -->
+    <div class="call-header">
+        <Title Level="2" Style="margin: 0; color: #1890ff;">Board Call</Title>
+        <div class="call-status">
+            @if (!_connectionReady)
+            {
+                <Tag Color=@TagColor.Orange Style="border-radius: 0;">
+                    <Icon Type="loading" /> Connecting...
+                </Tag>
+            }
+            else if (_inCall)
+            {
+                <Tag Color=@TagColor.Green Style="border-radius: 0;">
+                    <Icon Type="phone" /> In Call (@_remoteUsers.Count users)
+                </Tag>
+            }
+            else
+            {
+                <Tag Color=@TagColor.Blue Style="border-radius: 0;">
+                    <Icon Type="check-circle" /> Ready
+                </Tag>
+            }
+        </div>
+    </div>
+
+    <Divider Style="margin: 20px 0;" />
+
+    <!-- Call Controls Section -->
+    <div class="call-controls">
+        <Space Size=@SpaceSize.Middle Wrap>
+            <Button 
+                Type="@(_inCall ? ButtonType.Default : ButtonType.Primary)" 
+                Size=@ButtonSize.Large
+                Icon="@(_inCall ? "check" : "phone")"
+                Disabled="@(!_connectionReady || _inCall)"
+                OnClick="StartCall"
+                Style="border-radius: 0; min-width: 140px;">
+                @(_inCall ? "Connected" : "Start Call")
+            </Button>
+            
+            <Button 
+                Type="@(_cameraOn ? ButtonType.Primary : ButtonType.Default)" 
+                Size=@ButtonSize.Large
+                Icon="video-camera"
+                Disabled="@(!_connectionReady)"
+                OnClick="ToggleCamera"
+                Style="border-radius: 0; min-width: 130px;">
+                @(_cameraOn ? "Camera On" : "Camera Off")
+            </Button>
+            
+            <Button 
+                Type="@(_micOn ? ButtonType.Primary : ButtonType.Default)" 
+                Size=@ButtonSize.Large
+                Icon="@(_micOn ? "audio" : "audio-muted")"
+                Disabled="@(!_connectionReady)"
+                OnClick="ToggleMic"
+                Style="border-radius: 0; min-width: 120px;">
+                @(_micOn ? "Mic On" : "Mic Off")
+            </Button>
+            
+            <Button 
+                Type="@ButtonType.Primary" 
+                Danger 
+                Size=@ButtonSize.Large
+                Icon="phone"
+                Disabled="@(!_inCall)"
+                OnClick="HangUp"
+                Style="border-radius: 0; min-width: 120px;">
+                Hang Up
+            </Button>
+        </Space>
+    </div>
+
+    <!-- Videos Section -->
+    <div class="videos-section">
+        <Card Title="Video Conference" Style="border-radius: 0;" BodyStyle="padding: 20px;">
+            <div class="videos-grid">
+                <!-- Local Video -->
+                <Card 
+                    Class="video-card local-video" 
+                    Style="border-radius: 0; border: 3px solid #1890ff;"
+                    BodyStyle="padding: 0; position: relative;">
+                    <video id="localVideo" autoplay playsinline muted class="video-element"></video>
+                    <div class="video-overlay">
+                        <div class="video-info">
+                            <Text Strong Style="color: white;">You</Text>
+                            <div class="video-indicators">
+                                @if (!_cameraOn) 
+                                { 
+                                    <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
+                                        <Icon Type="video-camera" /> OFF
+                                    </Tag>
+                                }
+                                @if (!_micOn) 
+                                { 
+                                    <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
+                                        <Icon Type="audio-muted" /> OFF
+                                    </Tag>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Remote Videos -->
+                @foreach (var user in _remoteUsers)
+                {
+                    <Card 
+                        Class="video-card remote-video" 
+                        Style="border-radius: 0; border: 2px solid #52c41a;"
+                        BodyStyle="padding: 0; position: relative;">
+                        <video id="@user.VideoId" autoplay playsinline class="video-element"></video>
+                        <div class="video-overlay">
+                            <div class="video-info">
+                                <Text Strong Style="color: white;">@user.DisplayName</Text>
+                                <div class="video-indicators">
+                                    <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
+                                        <Icon Type="check-circle" /> ONLINE
+                                    </Tag>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                }
+
+                <!-- Empty slots for visual consistency -->
+                @for (int i = _remoteUsers.Count; i < 3; i++)
+                {
+                    <Card 
+                        Class="video-card empty-slot" 
+                        Style="border-radius: 0; border: 2px dashed #d9d9d9; background: #fafafa;"
+                        BodyStyle="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                        <div class="empty-content">
+                            <Icon Type="user-add" Style="font-size: 48px; color: #bfbfbf; margin-bottom: 16px;" />
+                            <Text Type=@TextElementType.Secondary Style="font-size: 16px;">Waiting for users...</Text>
+                        </div>
+                    </Card>
+                }
+            </div>
+        </Card>
+    </div>
+</div>
