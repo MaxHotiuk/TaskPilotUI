@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Components;
 using Refit;
+using UI.Interfaces.SignalR;
 using System.Text.Json;
 using UI.Handlers;
 using UI.Interfaces.Api;
@@ -86,6 +88,14 @@ namespace UI.Extensions
             services.AddSingleton<IGlobalLoadingService, GlobalLoadingService>();
             services.AddScoped<IAttachmentService, AttachmentService>();
             services.AddScoped<IAvatarService, AvatarService>();
+
+            services.AddScoped<ISignalRService, SignalRService>(sp =>
+            {
+                var navigationManager = sp.GetRequiredService<NavigationManager>();
+                var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SignalRService>>();
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                return new SignalRService(navigationManager, logger, configuration);
+            });
 
             return services;
         }
