@@ -78,72 +78,130 @@
         </Space>
     </div>
 
-    <!-- Videos Section -->
-    <div class="videos-section">
-        <Card Title="Video Conference" Style="border-radius: 0;" BodyStyle="padding: 20px;">
-            <div class="videos-grid">
-                <!-- Local Video -->
-                <Card 
-                    Class="video-card local-video" 
-                    Style="border-radius: 0; border: 3px solid #1890ff;"
-                    BodyStyle="padding: 0; position: relative;">
-                    <video id="localVideo" autoplay playsinline muted class="video-element"></video>
-                    <div class="video-overlay">
-                        <div class="video-info">
-                            <Text Strong Style="color: white;">You</Text>
-                            <div class="video-indicators">
-                                @if (!_cameraOn) 
-                                { 
-                                    <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
-                                        <Icon Type="video-camera" /> OFF
-                                    </Tag>
-                                }
-                                @if (!_micOn) 
-                                { 
-                                    <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
-                                        <Icon Type="audio-muted" /> OFF
-                                    </Tag>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
-                <!-- Remote Videos -->
-                @foreach (var user in _remoteUsers)
-                {
+    <!-- Videos Section - Only show when not in call or when in call -->
+    @if (!_inCall)
+    {
+        <!-- Pre-call state - only show local video -->
+        <div class="videos-section">
+            <Card Title="Video Preview" Style="border-radius: 0;" BodyStyle="padding: 20px;">
+                <div class="videos-grid single-video">
+                    <!-- Local Video -->
                     <Card 
-                        Class="video-card remote-video" 
-                        Style="border-radius: 0; border: 2px solid #52c41a;"
+                        Class="video-card local-video" 
+                        Style="border-radius: 0; border: 3px solid #1890ff;"
                         BodyStyle="padding: 0; position: relative;">
-                        <video id="@user.VideoId" autoplay playsinline class="video-element"></video>
+                        <video id="localVideo" autoplay playsinline muted class="video-element"></video>
                         <div class="video-overlay">
                             <div class="video-info">
-                                <Text Strong Style="color: white;">@user.DisplayName</Text>
+                                <Text Strong Style="color: white;">You (Preview)</Text>
                                 <div class="video-indicators">
-                                    <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
-                                        <Icon Type="check-circle" /> ONLINE
-                                    </Tag>
+                                    @if (!_cameraOn) 
+                                    { 
+                                        <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
+                                            <Icon Type="video-camera" /> OFF
+                                        </Tag>
+                                    }
+                                    @if (!_micOn) 
+                                    { 
+                                        <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
+                                            <Icon Type="audio-muted" /> OFF
+                                        </Tag>
+                                    }
                                 </div>
                             </div>
                         </div>
                     </Card>
-                }
-
-                <!-- Empty slots for visual consistency -->
-                @for (int i = _remoteUsers.Count; i < 3; i++)
-                {
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <Text Type=@TextElementType.Secondary Style="font-size: 16px;">Click "Start Call" to begin the video conference</Text>
+                </div>
+            </Card>
+        </div>
+    }
+    else
+    {
+        <!-- In-call state - show all videos -->
+        <div class="videos-section">
+            <Card Title="Video Conference" Style="border-radius: 0;" BodyStyle="padding: 20px;">
+                <div class="videos-grid">
+                    <!-- Local Video -->
                     <Card 
-                        Class="video-card empty-slot" 
-                        Style="border-radius: 0; border: 2px dashed #d9d9d9; background: #fafafa;"
-                        BodyStyle="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 200px;">
-                        <div class="empty-content">
-                            <Icon Type="user-add" Style="font-size: 48px; color: #bfbfbf; margin-bottom: 16px;" />
-                            <Text Type=@TextElementType.Secondary Style="font-size: 16px;">Waiting for users...</Text>
+                        Class="video-card local-video" 
+                        Style="border-radius: 0; border: 3px solid #1890ff;"
+                        BodyStyle="padding: 0; position: relative;">
+                        <video id="localVideo" autoplay playsinline muted class="video-element"></video>
+                        <div class="video-overlay">
+                            <div class="video-info">
+                                <Text Strong Style="color: white;">You</Text>
+                                <div class="video-indicators">
+                                    @if (!_cameraOn) 
+                                    { 
+                                        <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
+                                            <Icon Type="video-camera" /> OFF
+                                        </Tag>
+                                    }
+                                    @if (!_micOn) 
+                                    { 
+                                        <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
+                                            <Icon Type="audio-muted" /> OFF
+                                        </Tag>
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </Card>
-                }
-            </div>
-        </Card>
-    </div>
+
+                    <!-- Remote Videos -->
+                    @foreach (var user in _remoteUsers)
+                    {
+                        <Card 
+                            Class="video-card remote-video" 
+                            Style="border-radius: 0; border: 2px solid #52c41a;"
+                            BodyStyle="padding: 0; position: relative;">
+                            <video id="@user.VideoId" autoplay playsinline class="video-element"></video>
+                            <div class="video-overlay">
+                                <div class="video-info">
+                                    <Text Strong Style="color: white;">@user.DisplayName</Text>
+                                    <div class="video-indicators">
+                                        @if (user.ConnectionStatus == "connecting")
+                                        {
+                                            <Tag Color=@TagColor.Orange Style="border-radius: 0; margin-left: 8px;">
+                                                <Icon Type="loading" /> CONNECTING
+                                            </Tag>
+                                        }
+                                        else if (user.ConnectionStatus == "connected")
+                                        {
+                                            <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
+                                                <Icon Type="check-circle" /> ONLINE
+                                            </Tag>
+                                        }
+                                        else
+                                        {
+                                            <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
+                                                <Icon Type="disconnect" /> RETRY
+                                            </Tag>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    }
+
+                    <!-- Empty slots for visual consistency -->
+                    @for (int i = _remoteUsers.Count; i < 3; i++)
+                    {
+                        <Card 
+                            Class="video-card empty-slot" 
+                            Style="border-radius: 0; border: 2px dashed #d9d9d9; background: #fafafa;"
+                            BodyStyle="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                            <div class="empty-content">
+                                <Icon Type="user-add" Style="font-size: 48px; color: #bfbfbf; margin-bottom: 16px;" />
+                                <Text Type=@TextElementType.Secondary Style="font-size: 16px;">Waiting for users...</Text>
+                            </div>
+                        </Card>
+                    }
+                </div>
+            </Card>
+        </div>
+    }
 </div>

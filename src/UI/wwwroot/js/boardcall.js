@@ -13,6 +13,8 @@ let joinedBoardGroup = false;
 let inCall = false;
 
 const mediaConstraints = { video: true, audio: true };
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY = 2000; // 2 seconds
 
 window.BoardCallInterop = {
     init: function (board, localVideoId, dotNetRef) {
@@ -83,7 +85,7 @@ window.BoardCallInterop = {
             }
         });
         
-        // Announce leaving before stopping stream
+        // Announce leaving
         if (srConnection && srConnection.state === "Connected") {
             sendSignal({
                 type: 'user-left',
@@ -92,13 +94,22 @@ window.BoardCallInterop = {
             });
         }
         
-        // Don't stop the local stream, just remove it from peer connections
-        // This keeps the camera running for the local video
-        const localVideo = document.querySelector('#localVideo');
-        if (localVideo && localStream) {
-            // Keep the local video running
-            localVideo.srcObject = localStream;
+        // Ensure local video stays visible
+        if (localStream) {
+            const tracks = localStream.getTracks();
+            tracks.forEach(track => {
+                track.enabled = true; // Ensure tracks are enabled
+            });
         }
+    },
+
+    setLocalVideoStream: function (videoId) {
+        const videoElement = document.getElementById(videoId);
+        if (videoElement && localStream) {
+            videoElement.srcObject = localStream;
+            return true;
+        }
+        return false;
     },
 
     toggleCamera: function (on) {
@@ -209,9 +220,8 @@ function handleUserJoined(message) {
         dotNetObjRef.invokeMethodAsync('AddRemoteUser', message.userId, message.displayName);
     }
     
-    // Create peer connection and send offer
-    createPeerConnection(message.userId);
-    createOffer(message.userId);
+    // Create peer connection with retry logic
+    createPeerConnectionWithRetry(message.userId, 0);
 }
 
 function handleUserLeft(message) {
@@ -264,6 +274,8 @@ function handleOffer(message) {
         })
         .catch(err => {
             console.error('[BoardCallInterop] Error handling offer:', err);
+            // Retry connection on error
+            setTimeout(() => createPeerConnectionWithRetry(message.userId, 0), RETRY_DELAY);
         });
 }
 
@@ -273,8 +285,15 @@ function handleAnswer(message) {
     const pc = peerConnections[message.userId];
     if (pc && pc.signalingState !== 'stable') {
         pc.setRemoteDescription(new RTCSessionDescription(message.sdp))
+            .then(() => {
+                if (dotNetObjRef) {
+                    dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', message.userId, 'connected');
+                }
+            })
             .catch(err => {
                 console.error('[BoardCallInterop] Error setting remote answer:', err);
+                // Retry connection on error
+                setTimeout(() => createPeerConnectionWithRetry(message.userId, 0), RETRY_DELAY);
             });
     }
 }
@@ -288,6 +307,34 @@ function handleIceCandidate(message) {
             .catch(err => {
                 console.error('[BoardCallInterop] Error adding ICE candidate:', err);
             });
+    }
+}
+
+function createPeerConnectionWithRetry(remoteUserId, attemptNumber) {
+    console.log(`[BoardCallInterop] Creating peer connection for ${remoteUserId} (attempt ${attemptNumber + 1}/${MAX_RETRY_ATTEMPTS})`);
+    
+    try {
+        createPeerConnection(remoteUserId);
+        createOffer(remoteUserId);
+    } catch (err) {
+        console.error(`[BoardCallInterop] Error creating peer connection (attempt ${attemptNumber + 1}):`, err);
+        
+        if (attemptNumber < MAX_RETRY_ATTEMPTS - 1) {
+            // Update UI to show retry status
+            if (dotNetObjRef) {
+                dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'failed');
+            }
+            
+            // Retry after delay
+            setTimeout(() => {
+                createPeerConnectionWithRetry(remoteUserId, attemptNumber + 1);
+            }, RETRY_DELAY * (attemptNumber + 1)); // Exponential backoff
+        } else {
+            console.error(`[BoardCallInterop] Max retry attempts reached for ${remoteUserId}`);
+            if (dotNetObjRef) {
+                dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'failed');
+            }
+        }
     }
 }
 
@@ -319,30 +366,57 @@ function createPeerConnection(remoteUserId) {
         }
     };
     
-    // Handle remote stream
+    // Handle remote stream with retry logic
     pc.ontrack = (event) => {
         console.log('[BoardCallInterop] Received remote track for:', remoteUserId);
         if (event.streams && event.streams[0]) {
             const videoId = `remoteVideo_${remoteUserId}`;
-            setTimeout(() => {
+            
+            // Try to set the stream with multiple attempts
+            const setStreamWithRetry = (attempt = 0) => {
                 const videoElement = document.getElementById(videoId);
                 if (videoElement) {
                     videoElement.srcObject = event.streams[0];
                     console.log('[BoardCallInterop] Set remote stream for:', videoId);
+                    
+                    // Update connection status to connected
+                    if (dotNetObjRef) {
+                        dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'connected');
+                    }
+                } else if (attempt < 10) { // Retry for up to 5 seconds
+                    console.log(`[BoardCallInterop] Video element not found yet, retrying... (${attempt + 1}/10)`);
+                    setTimeout(() => setStreamWithRetry(attempt + 1), 500);
                 } else {
-                    console.warn('[BoardCallInterop] Remote video element not found:', videoId);
+                    console.warn('[BoardCallInterop] Remote video element not found after retries:', videoId);
                 }
-            }, 100);
+            };
+            
+            setStreamWithRetry();
         }
     };
     
     // Handle connection state changes
     pc.onconnectionstatechange = () => {
         console.log('[BoardCallInterop] Connection state for', remoteUserId, ':', pc.connectionState);
-        if (pc.connectionState === 'disconnected' || 
-            pc.connectionState === 'failed' || 
-            pc.connectionState === 'closed') {
-            handleUserLeft({ userId: remoteUserId });
+        
+        if (dotNetObjRef) {
+            switch (pc.connectionState) {
+                case 'connecting':
+                    dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'connecting');
+                    break;
+                case 'connected':
+                    dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'connected');
+                    break;
+                case 'disconnected':
+                case 'failed':
+                    dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'failed');
+                    // Attempt to reconnect
+                    setTimeout(() => createPeerConnectionWithRetry(remoteUserId, 0), RETRY_DELAY);
+                    break;
+                case 'closed':
+                    handleUserLeft({ userId: remoteUserId });
+                    break;
+            }
         }
     };
 }
@@ -365,5 +439,7 @@ function createOffer(remoteUserId) {
         })
         .catch(err => {
             console.error('[BoardCallInterop] Error creating offer:', err);
+            // Retry creating offer
+            setTimeout(() => createOffer(remoteUserId), RETRY_DELAY);
         });
 }
