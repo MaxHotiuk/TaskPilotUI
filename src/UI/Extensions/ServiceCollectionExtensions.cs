@@ -63,6 +63,10 @@ namespace UI.Extensions
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
 
+            services.AddRefitClient<IChatApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+
             services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.microsoft.com"));
 
@@ -88,6 +92,7 @@ namespace UI.Extensions
             services.AddSingleton<IGlobalLoadingService, GlobalLoadingService>();
             services.AddScoped<IAttachmentService, AttachmentService>();
             services.AddScoped<IAvatarService, AvatarService>();
+            services.AddScoped<IChatService, ChatService>();
 
             services.AddScoped<ISignalRService, SignalRService>(sp =>
             {
