@@ -1,0 +1,283 @@
+.board-call-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #ffffff;
+    min-height: 100vh;
+}
+
+.call-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.call-status {
+    display: flex;
+    align-items: center;
+}
+
+.call-controls {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.videos-section {
+    width: 100%;
+}
+
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+/* Special handling for single video (pre-call state) */
+.videos-grid.single-video {
+    grid-template-columns: minmax(300px, 600px);
+    justify-content: center;
+}
+
+.video-card {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.video-element {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: #000000;
+    border-radius: 8px;
+}
+
+.video-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 16px;
+    border-radius: 0 0 8px 8px;
+}
+
+.video-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.video-indicators {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.empty-content {
+    text-align: center;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fafafa;
+    border: 2px dashed #d9d9d9;
+    border-radius: 8px;
+}
+
+/* Local video specific styling */
+.local-video {
+    border: 3px solid #1890ff !important;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Remote video specific styling */
+.remote-video {
+    border: 2px solid #52c41a !important;
+    box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+/* Screen sharing indicator */
+.video-card.screen-sharing .video-overlay {
+    background: linear-gradient(transparent, rgba(87, 52, 211, 0.8));
+}
+
+.video-card.screen-sharing {
+    border-color: #5734d3 !important;
+    box-shadow: 0 0 0 2px rgba(87, 52, 211, 0.2);
+}
+
+/* Enhanced video indicators */
+.video-indicators .ant-tag {
+    margin: 0 2px;
+    font-size: 11px;
+    line-height: 1.2;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Connection status indicators */
+.connection-connecting {
+    border-color: #faad14 !important;
+    box-shadow: 0 0 0 2px rgba(250, 173, 20, 0.2);
+}
+
+.connection-failed {
+    border-color: #ff4d4f !important;
+    box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .board-call-container {
+        padding: 16px;
+    }
+    
+    .call-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    
+    .videos-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .videos-grid.single-video {
+        grid-template-columns: 1fr;
+    }
+    
+    .call-controls .ant-space {
+        width: 100%;
+    }
+    
+    .call-controls .ant-btn {
+        flex: 1;
+        min-width: auto;
+    }
+    
+    .video-card {
+        aspect-ratio: 4/3;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .video-indicators {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .call-controls .ant-space-item {
+        width: 100%;
+    }
+    
+    .call-controls .ant-btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
+
+/* Animation for connection states */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.connection-connecting {
+    animation: pulse 2s infinite;
+}
+
+/* Hover effects for better interactivity */
+.video-card:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease-in-out;
+}
+
+.video-card:hover .video-overlay {
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+}
+
+/* Full screen mode support */
+.video-card.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+    aspect-ratio: auto;
+}
+
+.video-card.fullscreen .video-element {
+    object-fit: contain;
+}
+
+/* Screen sharing specific styles */
+.screen-share-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(87, 52, 211, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Video quality indicators */
+.video-quality-indicator {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+}
+
+/* Muted state styling */
+.video-card.muted .video-element {
+    filter: grayscale(20%);
+}
+
+/* Camera off state */
+.video-card.camera-off .video-element {
+    background: #1f1f1f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-card.camera-off::before {
+    content: "Camera Off";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #999;
+    font-size: 16px;
+    z-index: 1;
+}

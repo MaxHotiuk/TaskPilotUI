@@ -17,4 +17,7 @@ public interface IUserApi
 
     [Get("/api/users")]
     Task<List<UserDto>> GetAllAsync();
+
+    [Get("/api/users/{id}")]
+    Task<UserDto> GetByIdAsync(Guid id);
 }

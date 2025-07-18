@@ -33,11 +33,15 @@ public interface IBoardService
     Task<IEnumerable<BoardDto>> GetArchivedBoardsByOwnerAsync(
         Guid ownerId,
         CancellationToken cancellationToken = default);
-        
+
     Task<IEnumerable<BoardSearchDto>> GetArchivedBoardsRangeForUserAsync(
         Guid userId,
         string searchTerm,
         int page,
         int pageSize,
+        CancellationToken cancellationToken = default);
+        
+    Task<BoardDto> GetByIdAsync(
+        Guid id,
         CancellationToken cancellationToken = default);
 }

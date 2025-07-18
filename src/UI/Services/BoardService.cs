@@ -269,7 +269,7 @@ public class BoardService : IBoardService
             return [];
         }
     }
-    
+
     public async Task<IEnumerable<BoardSearchDto>> GetArchivedBoardsRangeForUserAsync(
         Guid userId,
         string searchTerm,
@@ -281,7 +281,7 @@ public class BoardService : IBoardService
 
         var filteredBoards = string.IsNullOrWhiteSpace(searchTerm)
             ? archivedBoards
-            : archivedBoards.Where(b => 
+            : archivedBoards.Where(b =>
             (!string.IsNullOrEmpty(b.Name) && b.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
             (!string.IsNullOrEmpty(b.Description) && b.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
 
@@ -300,5 +300,12 @@ public class BoardService : IBoardService
             NumberOfMembers = 0,
             NumberOfTasks = 0
         });
+    }
+    
+    public async Task<BoardDto> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return await _boardApi.GetByIdAsync(id, cancellationToken);
     }
 }

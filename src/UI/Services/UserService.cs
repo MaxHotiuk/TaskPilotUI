@@ -51,7 +51,7 @@ public class UserService : IUserService
         if (string.IsNullOrEmpty(userId))
             return null;
 
-        if (_userCache.TryGetValue(userId, out var cachedUser) && 
+        if (_userCache.TryGetValue(userId, out var cachedUser) &&
             DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
         {
             return cachedUser;
@@ -59,8 +59,17 @@ public class UserService : IUserService
 
         try
         {
-            var allUsers = await GetAllUsersAsync();
-            return allUsers.FirstOrDefault(u => u.Id == userId);
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                _logger.LogWarning("Invalid userId format: {UserId}", userId);
+                return null;
+            }
+            var user = await _userApi.GetByIdAsync(userGuid);
+            if (user != null)
+            {
+                _userCache[userId] = user;
+            }
+            return user;
         }
         catch (Exception ex)
         {

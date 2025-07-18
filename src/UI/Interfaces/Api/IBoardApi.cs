@@ -52,4 +52,9 @@ public interface IBoardApi
     Task<IEnumerable<BoardDto>> GetArchivedBoardsByOwnerAsync(
         Guid ownerId,
         CancellationToken cancellationToken = default);
+    
+    [Get("/api/boards/{id}")]
+    Task<BoardDto> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
 }
