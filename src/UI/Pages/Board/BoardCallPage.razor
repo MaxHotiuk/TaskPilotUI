@@ -66,6 +66,16 @@
             </Button>
             
             <Button 
+                Type="@(_screenSharing ? ButtonType.Primary : ButtonType.Default)" 
+                Size=@ButtonSize.Large
+                Icon="@(_screenSharing ? "desktop" : "laptop")"
+                Disabled="@(!_connectionReady)"
+                OnClick="ToggleScreenShare"
+                Style="border-radius: 0; min-width: 140px;">
+                @(_screenSharing ? "Stop Share" : "Share Screen")
+            </Button>
+            
+            <Button 
                 Type="@ButtonType.Primary" 
                 Danger 
                 Size=@ButtonSize.Large
@@ -107,6 +117,12 @@
                                             <Icon Type="audio-muted" /> OFF
                                         </Tag>
                                     }
+                                    @if (_screenSharing) 
+                                    { 
+                                        <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
+                                            <Icon Type="desktop" /> SCREEN
+                                        </Tag>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -146,6 +162,12 @@
                                             <Icon Type="audio-muted" /> OFF
                                         </Tag>
                                     }
+                                    @if (_screenSharing) 
+                                    { 
+                                        <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
+                                            <Icon Type="desktop" /> SCREEN
+                                        </Tag>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -181,22 +203,14 @@
                                                 <Icon Type="disconnect" /> RETRY
                                             </Tag>
                                         }
+                                        @if (user.IsScreenSharing)
+                                        {
+                                            <Tag Color=@TagColor.Purple Style="border-radius: 0; margin-left: 8px;">
+                                                <Icon Type="desktop" /> SCREEN
+                                            </Tag>
+                                        }
                                     </div>
                                 </div>
-                            </div>
-                        </Card>
-                    }
-
-                    <!-- Empty slots for visual consistency -->
-                    @for (int i = _remoteUsers.Count; i < 3; i++)
-                    {
-                        <Card 
-                            Class="video-card empty-slot" 
-                            Style="border-radius: 0; border: 2px dashed #d9d9d9; background: #fafafa;"
-                            BodyStyle="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 200px;">
-                            <div class="empty-content">
-                                <Icon Type="user-add" Style="font-size: 48px; color: #bfbfbf; margin-bottom: 16px;" />
-                                <Text Type=@TextElementType.Secondary Style="font-size: 16px;">Waiting for users...</Text>
                             </div>
                         </Card>
                     }

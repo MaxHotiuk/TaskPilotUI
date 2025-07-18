@@ -1,7 +1,8 @@
 // wwwroot/js/boardcall.js
-// Multi-user WebRTC + SignalR for board calls
+// Multi-user WebRTC + SignalR for board calls with screen sharing
 
 let localStream = null;
+let screenStream = null;
 let peerConnections = {};
 let boardId = null;
 let userId = null;
@@ -9,6 +10,7 @@ let srConnection = null;
 let dotNetObjRef = null;
 let cameraOn = true;
 let micOn = true;
+let screenSharing = false;
 let joinedBoardGroup = false;
 let inCall = false;
 
@@ -77,6 +79,11 @@ window.BoardCallInterop = {
         console.log('[BoardCallInterop] Hanging up');
         inCall = false;
         
+        // Stop screen sharing if active
+        if (screenSharing) {
+            stopScreenShare();
+        }
+        
         // Close all peer connections
         Object.keys(peerConnections).forEach(remoteUserId => {
             if (peerConnections[remoteUserId]) {
@@ -129,6 +136,15 @@ window.BoardCallInterop = {
             localStream.getAudioTracks().forEach(track => {
                 track.enabled = micOn;
             });
+        }
+    },
+
+    toggleScreenShare: function () {
+        console.log('[BoardCallInterop] Toggle screen share, current state:', screenSharing);
+        if (screenSharing) {
+            stopScreenShare();
+        } else {
+            startScreenShare();
         }
     }
 };
@@ -204,6 +220,12 @@ function onSignalReceived(data) {
             case 'ice-candidate':
                 handleIceCandidate(message);
                 break;
+            case 'screen-share-started':
+                handleScreenShareStarted(message);
+                break;
+            case 'screen-share-stopped':
+                handleScreenShareStopped(message);
+                break;
             default:
                 console.warn('[BoardCallInterop] Unknown message type:', message.type);
         }
@@ -250,6 +272,29 @@ function handleRequestUsers(message) {
             displayName: `User ${userId.slice(-4)}`,
             board: boardId
         });
+        
+        // Also announce screen sharing status if active
+        if (screenSharing) {
+            sendSignal({
+                type: 'screen-share-started',
+                userId: userId,
+                board: boardId
+            });
+        }
+    }
+}
+
+function handleScreenShareStarted(message) {
+    console.log('[BoardCallInterop] User started screen sharing:', message.userId);
+    if (dotNetObjRef) {
+        dotNetObjRef.invokeMethodAsync('UpdateUserScreenShareStatus', message.userId, true);
+    }
+}
+
+function handleScreenShareStopped(message) {
+    console.log('[BoardCallInterop] User stopped screen sharing:', message.userId);
+    if (dotNetObjRef) {
+        dotNetObjRef.invokeMethodAsync('UpdateUserScreenShareStatus', message.userId, false);
     }
 }
 
@@ -310,6 +355,112 @@ function handleIceCandidate(message) {
     }
 }
 
+function startScreenShare() {
+    console.log('[BoardCallInterop] Starting screen share');
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        console.error('[BoardCallInterop] Screen sharing not supported');
+        return;
+    }
+    
+    navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true
+    })
+    .then(stream => {
+        screenStream = stream;
+        screenSharing = true;
+        
+        // Update local video element to show screen share
+        const localVideo = document.getElementById('localVideo');
+        if (localVideo) {
+            localVideo.srcObject = screenStream;
+        }
+        
+        // Replace video track in all peer connections
+        const videoTrack = screenStream.getVideoTracks()[0];
+        Object.keys(peerConnections).forEach(remoteUserId => {
+            const pc = peerConnections[remoteUserId];
+            const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+            if (sender) {
+                sender.replaceTrack(videoTrack);
+            }
+        });
+        
+        // Handle screen share ending
+        videoTrack.onended = () => {
+            console.log('[BoardCallInterop] Screen share ended by user');
+            stopScreenShare();
+        };
+        
+        // Notify other users
+        sendSignal({
+            type: 'screen-share-started',
+            userId: userId,
+            board: boardId
+        });
+        
+        // Notify C# component
+        if (dotNetObjRef) {
+            dotNetObjRef.invokeMethodAsync('OnScreenShareStatusChanged', true);
+        }
+        
+        console.log('[BoardCallInterop] Screen share started successfully');
+    })
+    .catch(err => {
+        console.error('[BoardCallInterop] Error starting screen share:', err);
+        screenSharing = false;
+        
+        // Notify C# component of failure
+        if (dotNetObjRef) {
+            dotNetObjRef.invokeMethodAsync('OnScreenShareStatusChanged', false);
+        }
+    });
+}
+
+function stopScreenShare() {
+    console.log('[BoardCallInterop] Stopping screen share');
+    
+    if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+    }
+    
+    screenSharing = false;
+    
+    // Restore camera stream
+    const localVideo = document.getElementById('localVideo');
+    if (localVideo && localStream) {
+        localVideo.srcObject = localStream;
+    }
+    
+    // Replace screen track with camera track in all peer connections
+    if (localStream) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        Object.keys(peerConnections).forEach(remoteUserId => {
+            const pc = peerConnections[remoteUserId];
+            const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+            if (sender && videoTrack) {
+                sender.replaceTrack(videoTrack);
+            }
+        });
+    }
+    
+    // Notify other users
+    sendSignal({
+        type: 'screen-share-stopped',
+        userId: userId,
+        board: boardId
+    });
+    
+    // Notify C# component
+    if (dotNetObjRef) {
+        dotNetObjRef.invokeMethodAsync('OnScreenShareStatusChanged', false);
+    }
+    
+    console.log('[BoardCallInterop] Screen share stopped');
+}
+
 function createPeerConnectionWithRetry(remoteUserId, attemptNumber) {
     console.log(`[BoardCallInterop] Creating peer connection for ${remoteUserId} (attempt ${attemptNumber + 1}/${MAX_RETRY_ATTEMPTS})`);
     
@@ -347,10 +498,11 @@ function createPeerConnection(remoteUserId) {
     
     peerConnections[remoteUserId] = pc;
     
-    // Add local stream tracks
-    if (localStream) {
-        localStream.getTracks().forEach(track => {
-            pc.addTrack(track, localStream);
+    // Add local stream tracks (camera or screen)
+    const streamToAdd = screenSharing ? screenStream : localStream;
+    if (streamToAdd) {
+        streamToAdd.getTracks().forEach(track => {
+            pc.addTrack(track, streamToAdd);
         });
     }
     

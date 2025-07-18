@@ -14,6 +14,7 @@ namespace TaskPilotUI.UI.Pages.Board
         protected bool _inCall = false;
         protected bool _cameraOn = true;
         protected bool _micOn = true;
+        protected bool _screenSharing = false;
         protected bool _connectionReady = false;
         protected DotNetObjectReference<BoardCallPage>? _objRef;
         protected List<RemoteUser> _remoteUsers = new();
@@ -58,6 +59,14 @@ namespace TaskPilotUI.UI.Pages.Board
         }
 
         [JSInvokable]
+        public Task OnScreenShareStatusChanged(bool isSharing)
+        {
+            _screenSharing = isSharing;
+            InvokeAsync(StateHasChanged);
+            return Task.CompletedTask;
+        }
+
+        [JSInvokable]
         public Task AddRemoteUser(string userId, string displayName)
         {
             if (_remoteUsers.All(u => u.UserId != userId))
@@ -67,7 +76,8 @@ namespace TaskPilotUI.UI.Pages.Board
                     UserId = userId,
                     DisplayName = displayName,
                     VideoId = $"remoteVideo_{userId}",
-                    ConnectionStatus = "connecting"
+                    ConnectionStatus = "connecting",
+                    IsScreenSharing = false
                 });
                 InvokeAsync(StateHasChanged);
             }
@@ -93,6 +103,18 @@ namespace TaskPilotUI.UI.Pages.Board
             if (user != null)
             {
                 user.ConnectionStatus = status;
+                InvokeAsync(StateHasChanged);
+            }
+            return Task.CompletedTask;
+        }
+
+        [JSInvokable]
+        public Task UpdateUserScreenShareStatus(string userId, bool isScreenSharing)
+        {
+            var user = _remoteUsers.FirstOrDefault(u => u.UserId == userId);
+            if (user != null)
+            {
+                user.IsScreenSharing = isScreenSharing;
                 InvokeAsync(StateHasChanged);
             }
             return Task.CompletedTask;
@@ -124,6 +146,7 @@ namespace TaskPilotUI.UI.Pages.Board
                     await JS.InvokeVoidAsync("BoardCallInterop.hangUp");
                 }
                 _inCall = false;
+                _screenSharing = false;
                 _remoteUsers.Clear();
                 
                 StateHasChanged();
@@ -169,6 +192,22 @@ namespace TaskPilotUI.UI.Pages.Board
             catch (Exception ex)
             {
                 Console.WriteLine($"Error toggling mic: {ex.Message}");
+            }
+        }
+
+        protected async Task ToggleScreenShare()
+        {
+            try
+            {
+                if (JS != null)
+                {
+                    await JS.InvokeVoidAsync("BoardCallInterop.toggleScreenShare");
+                }
+                // Note: The actual state change will be handled by the OnScreenShareStatusChanged callback
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error toggling screen share: {ex.Message}");
             }
         }
 
@@ -221,6 +260,7 @@ namespace TaskPilotUI.UI.Pages.Board
             public string? DisplayName { get; set; }
             public string? VideoId { get; set; }
             public string ConnectionStatus { get; set; } = "connecting"; // connecting, connected, failed
+            public bool IsScreenSharing { get; set; } = false;
         }
     }
 }
