@@ -1,6 +1,3 @@
-// wwwroot/js/boardcall.js
-// Multi-user WebRTC + SignalR for board calls with screen sharing
-
 let localStream = null;
 let screenStream = null;
 let peerConnections = {};
@@ -19,13 +16,11 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 2000; // 2 seconds
 
 window.BoardCallInterop = {
-    init: function (board, localVideoId, dotNetRef) {
-        console.log('[BoardCallInterop] Initializing for board:', board);
+    init: function (board, localVideoId, dotNetRef, realUserId) {
         boardId = board;
         dotNetObjRef = dotNetRef;
-        userId = generateUserId();
-        
-        // Initialize SignalR connection
+        userId = realUserId;
+
         srConnection = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5071/webrtc")
             .configureLogging(signalR.LogLevel.Information)
@@ -34,19 +29,16 @@ window.BoardCallInterop = {
         srConnection.onclose(startSignalR);
         srConnection.on("Receive", onSignalReceived);
         
-        // Get local video element
         const localVideo = document.getElementById(localVideoId);
         if (!localVideo) {
             console.error('[BoardCallInterop] Local video element not found:', localVideoId);
             return;
         }
         
-        // Start media capture and SignalR connection
         navigator.mediaDevices.getUserMedia(mediaConstraints)
             .then(stream => {
                 localStream = stream;
                 localVideo.srcObject = stream;
-                console.log('[BoardCallInterop] Local stream acquired');
                 startSignalR();
             })
             .catch(err => {
@@ -55,10 +47,8 @@ window.BoardCallInterop = {
     },
 
     startCall: function () {
-        console.log('[BoardCallInterop] Starting call');
         inCall = true;
         ensureJoinedBoardGroup().then(() => {
-            // Announce presence to other users
             sendSignal({
                 type: 'user-joined',
                 userId: userId,
@@ -66,7 +56,6 @@ window.BoardCallInterop = {
                 board: boardId
             });
             
-            // Also request existing users to announce themselves
             sendSignal({
                 type: 'request-users',
                 userId: userId,
@@ -76,15 +65,12 @@ window.BoardCallInterop = {
     },
 
     hangUp: function () {
-        console.log('[BoardCallInterop] Hanging up');
         inCall = false;
         
-        // Stop screen sharing if active
         if (screenSharing) {
             stopScreenShare();
         }
         
-        // Close all peer connections
         Object.keys(peerConnections).forEach(remoteUserId => {
             if (peerConnections[remoteUserId]) {
                 peerConnections[remoteUserId].close();
@@ -92,7 +78,6 @@ window.BoardCallInterop = {
             }
         });
         
-        // Announce leaving
         if (srConnection && srConnection.state === "Connected") {
             sendSignal({
                 type: 'user-left',
@@ -101,11 +86,10 @@ window.BoardCallInterop = {
             });
         }
         
-        // Ensure local video stays visible
         if (localStream) {
             const tracks = localStream.getTracks();
             tracks.forEach(track => {
-                track.enabled = true; // Ensure tracks are enabled
+                track.enabled = true;
             });
         }
     },
@@ -121,7 +105,6 @@ window.BoardCallInterop = {
 
     toggleCamera: function (on) {
         cameraOn = on;
-        console.log('[BoardCallInterop] Toggle camera:', cameraOn);
         if (localStream) {
             localStream.getVideoTracks().forEach(track => {
                 track.enabled = cameraOn;
@@ -131,7 +114,6 @@ window.BoardCallInterop = {
 
     toggleMic: function (on) {
         micOn = on;
-        console.log('[BoardCallInterop] Toggle mic:', micOn);
         if (localStream) {
             localStream.getAudioTracks().forEach(track => {
                 track.enabled = micOn;
@@ -140,7 +122,7 @@ window.BoardCallInterop = {
     },
 
     toggleScreenShare: function () {
-        console.log('[BoardCallInterop] Toggle screen share, current state:', screenSharing);
+
         if (screenSharing) {
             stopScreenShare();
         } else {
@@ -149,15 +131,11 @@ window.BoardCallInterop = {
     }
 };
 
-function generateUserId() {
-    return 'user-' + Math.random().toString(36).substr(2, 9);
-}
-
 function startSignalR() {
     if (!srConnection) return;
     
     srConnection.start().then(() => {
-        console.log('[BoardCallInterop] SignalR Connected');
+
         ensureJoinedBoardGroup();
         if (dotNetObjRef) {
             dotNetObjRef.invokeMethodAsync('OnWebRtcConnected');
@@ -175,7 +153,7 @@ function ensureJoinedBoardGroup() {
     
     return srConnection.invoke("JoinBoardGroup", boardId).then(() => {
         joinedBoardGroup = true;
-        console.log('[BoardCallInterop] Joined board group:', boardId);
+
     }).catch(err => {
         console.error('[BoardCallInterop] Failed to join board group:', err);
     });
@@ -192,14 +170,8 @@ function sendSignal(message) {
 function onSignalReceived(data) {
     try {
         const message = JSON.parse(data);
-        
-        // Only handle messages for this board
         if (message.board !== boardId) return;
-        
-        // Don't handle our own messages
         if (message.userId === userId) return;
-        
-        console.log('[BoardCallInterop] Received message:', message.type, 'from', message.userId);
         
         switch (message.type) {
             case 'user-joined':
@@ -235,36 +207,28 @@ function onSignalReceived(data) {
 }
 
 function handleUserJoined(message) {
-    console.log('[BoardCallInterop] User joined:', message.userId);
     
-    // Add user to UI
     if (dotNetObjRef) {
         dotNetObjRef.invokeMethodAsync('AddRemoteUser', message.userId, message.displayName);
     }
     
-    // Create peer connection with retry logic
     createPeerConnectionWithRetry(message.userId, 0);
 }
 
 function handleUserLeft(message) {
-    console.log('[BoardCallInterop] User left:', message.userId);
     
-    // Close peer connection
     if (peerConnections[message.userId]) {
         peerConnections[message.userId].close();
         delete peerConnections[message.userId];
     }
     
-    // Remove user from UI
     if (dotNetObjRef) {
         dotNetObjRef.invokeMethodAsync('RemoveRemoteUser', message.userId);
     }
 }
 
 function handleRequestUsers(message) {
-    console.log('[BoardCallInterop] User requesting existing users:', message.userId);
     
-    // If we're in a call, announce our presence to the new user
     if (inCall) {
         sendSignal({
             type: 'user-joined',
@@ -273,7 +237,6 @@ function handleRequestUsers(message) {
             board: boardId
         });
         
-        // Also announce screen sharing status if active
         if (screenSharing) {
             sendSignal({
                 type: 'screen-share-started',
@@ -285,21 +248,18 @@ function handleRequestUsers(message) {
 }
 
 function handleScreenShareStarted(message) {
-    console.log('[BoardCallInterop] User started screen sharing:', message.userId);
     if (dotNetObjRef) {
         dotNetObjRef.invokeMethodAsync('UpdateUserScreenShareStatus', message.userId, true);
     }
 }
 
 function handleScreenShareStopped(message) {
-    console.log('[BoardCallInterop] User stopped screen sharing:', message.userId);
     if (dotNetObjRef) {
         dotNetObjRef.invokeMethodAsync('UpdateUserScreenShareStatus', message.userId, false);
     }
 }
 
 function handleOffer(message) {
-    console.log('[BoardCallInterop] Received offer from:', message.userId);
     
     if (!peerConnections[message.userId]) {
         createPeerConnection(message.userId);
@@ -319,13 +279,11 @@ function handleOffer(message) {
         })
         .catch(err => {
             console.error('[BoardCallInterop] Error handling offer:', err);
-            // Retry connection on error
             setTimeout(() => createPeerConnectionWithRetry(message.userId, 0), RETRY_DELAY);
         });
 }
 
 function handleAnswer(message) {
-    console.log('[BoardCallInterop] Received answer from:', message.userId);
     
     const pc = peerConnections[message.userId];
     if (pc && pc.signalingState !== 'stable') {
@@ -337,14 +295,12 @@ function handleAnswer(message) {
             })
             .catch(err => {
                 console.error('[BoardCallInterop] Error setting remote answer:', err);
-                // Retry connection on error
                 setTimeout(() => createPeerConnectionWithRetry(message.userId, 0), RETRY_DELAY);
             });
     }
 }
 
 function handleIceCandidate(message) {
-    console.log('[BoardCallInterop] Received ICE candidate from:', message.userId);
     
     const pc = peerConnections[message.userId];
     if (pc) {
@@ -356,7 +312,6 @@ function handleIceCandidate(message) {
 }
 
 function startScreenShare() {
-    console.log('[BoardCallInterop] Starting screen share');
     
     if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
         console.error('[BoardCallInterop] Screen sharing not supported');
@@ -371,13 +326,11 @@ function startScreenShare() {
         screenStream = stream;
         screenSharing = true;
         
-        // Update local video element to show screen share
         const localVideo = document.getElementById('localVideo');
         if (localVideo) {
             localVideo.srcObject = screenStream;
         }
         
-        // Replace video track in all peer connections
         const videoTrack = screenStream.getVideoTracks()[0];
         Object.keys(peerConnections).forEach(remoteUserId => {
             const pc = peerConnections[remoteUserId];
@@ -387,31 +340,25 @@ function startScreenShare() {
             }
         });
         
-        // Handle screen share ending
         videoTrack.onended = () => {
-            console.log('[BoardCallInterop] Screen share ended by user');
             stopScreenShare();
         };
         
-        // Notify other users
         sendSignal({
             type: 'screen-share-started',
             userId: userId,
             board: boardId
         });
         
-        // Notify C# component
         if (dotNetObjRef) {
             dotNetObjRef.invokeMethodAsync('OnScreenShareStatusChanged', true);
         }
         
-        console.log('[BoardCallInterop] Screen share started successfully');
     })
     .catch(err => {
         console.error('[BoardCallInterop] Error starting screen share:', err);
         screenSharing = false;
         
-        // Notify C# component of failure
         if (dotNetObjRef) {
             dotNetObjRef.invokeMethodAsync('OnScreenShareStatusChanged', false);
         }
@@ -419,7 +366,6 @@ function startScreenShare() {
 }
 
 function stopScreenShare() {
-    console.log('[BoardCallInterop] Stopping screen share');
     
     if (screenStream) {
         screenStream.getTracks().forEach(track => track.stop());
@@ -428,13 +374,11 @@ function stopScreenShare() {
     
     screenSharing = false;
     
-    // Restore camera stream
     const localVideo = document.getElementById('localVideo');
     if (localVideo && localStream) {
         localVideo.srcObject = localStream;
     }
     
-    // Replace screen track with camera track in all peer connections
     if (localStream) {
         const videoTrack = localStream.getVideoTracks()[0];
         Object.keys(peerConnections).forEach(remoteUserId => {
@@ -446,23 +390,19 @@ function stopScreenShare() {
         });
     }
     
-    // Notify other users
     sendSignal({
         type: 'screen-share-stopped',
         userId: userId,
         board: boardId
     });
     
-    // Notify C# component
     if (dotNetObjRef) {
         dotNetObjRef.invokeMethodAsync('OnScreenShareStatusChanged', false);
     }
     
-    console.log('[BoardCallInterop] Screen share stopped');
 }
 
 function createPeerConnectionWithRetry(remoteUserId, attemptNumber) {
-    console.log(`[BoardCallInterop] Creating peer connection for ${remoteUserId} (attempt ${attemptNumber + 1}/${MAX_RETRY_ATTEMPTS})`);
     
     try {
         createPeerConnection(remoteUserId);
@@ -471,15 +411,13 @@ function createPeerConnectionWithRetry(remoteUserId, attemptNumber) {
         console.error(`[BoardCallInterop] Error creating peer connection (attempt ${attemptNumber + 1}):`, err);
         
         if (attemptNumber < MAX_RETRY_ATTEMPTS - 1) {
-            // Update UI to show retry status
             if (dotNetObjRef) {
                 dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'failed');
             }
             
-            // Retry after delay
             setTimeout(() => {
                 createPeerConnectionWithRetry(remoteUserId, attemptNumber + 1);
-            }, RETRY_DELAY * (attemptNumber + 1)); // Exponential backoff
+            }, RETRY_DELAY * (attemptNumber + 1));
         } else {
             console.error(`[BoardCallInterop] Max retry attempts reached for ${remoteUserId}`);
             if (dotNetObjRef) {
@@ -490,7 +428,6 @@ function createPeerConnectionWithRetry(remoteUserId, attemptNumber) {
 }
 
 function createPeerConnection(remoteUserId) {
-    console.log('[BoardCallInterop] Creating peer connection for:', remoteUserId);
     
     const pc = new RTCPeerConnection({
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -498,7 +435,6 @@ function createPeerConnection(remoteUserId) {
     
     peerConnections[remoteUserId] = pc;
     
-    // Add local stream tracks (camera or screen)
     const streamToAdd = screenSharing ? screenStream : localStream;
     if (streamToAdd) {
         streamToAdd.getTracks().forEach(track => {
@@ -506,7 +442,6 @@ function createPeerConnection(remoteUserId) {
         });
     }
     
-    // Handle ICE candidates
     pc.onicecandidate = (event) => {
         if (event.candidate) {
             sendSignal({
@@ -518,25 +453,19 @@ function createPeerConnection(remoteUserId) {
         }
     };
     
-    // Handle remote stream with retry logic
     pc.ontrack = (event) => {
-        console.log('[BoardCallInterop] Received remote track for:', remoteUserId);
         if (event.streams && event.streams[0]) {
             const videoId = `remoteVideo_${remoteUserId}`;
             
-            // Try to set the stream with multiple attempts
             const setStreamWithRetry = (attempt = 0) => {
                 const videoElement = document.getElementById(videoId);
                 if (videoElement) {
                     videoElement.srcObject = event.streams[0];
-                    console.log('[BoardCallInterop] Set remote stream for:', videoId);
                     
-                    // Update connection status to connected
                     if (dotNetObjRef) {
                         dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'connected');
                     }
-                } else if (attempt < 10) { // Retry for up to 5 seconds
-                    console.log(`[BoardCallInterop] Video element not found yet, retrying... (${attempt + 1}/10)`);
+                } else if (attempt < 10) {
                     setTimeout(() => setStreamWithRetry(attempt + 1), 500);
                 } else {
                     console.warn('[BoardCallInterop] Remote video element not found after retries:', videoId);
@@ -547,9 +476,7 @@ function createPeerConnection(remoteUserId) {
         }
     };
     
-    // Handle connection state changes
     pc.onconnectionstatechange = () => {
-        console.log('[BoardCallInterop] Connection state for', remoteUserId, ':', pc.connectionState);
         
         if (dotNetObjRef) {
             switch (pc.connectionState) {
@@ -562,7 +489,6 @@ function createPeerConnection(remoteUserId) {
                 case 'disconnected':
                 case 'failed':
                     dotNetObjRef.invokeMethodAsync('UpdateUserConnectionStatus', remoteUserId, 'failed');
-                    // Attempt to reconnect
                     setTimeout(() => createPeerConnectionWithRetry(remoteUserId, 0), RETRY_DELAY);
                     break;
                 case 'closed':
@@ -577,7 +503,6 @@ function createOffer(remoteUserId) {
     const pc = peerConnections[remoteUserId];
     if (!pc) return;
     
-    console.log('[BoardCallInterop] Creating offer for:', remoteUserId);
     
     pc.createOffer()
         .then(offer => pc.setLocalDescription(offer))
@@ -591,7 +516,6 @@ function createOffer(remoteUserId) {
         })
         .catch(err => {
             console.error('[BoardCallInterop] Error creating offer:', err);
-            // Retry creating offer
             setTimeout(() => createOffer(remoteUserId), RETRY_DELAY);
         });
 }

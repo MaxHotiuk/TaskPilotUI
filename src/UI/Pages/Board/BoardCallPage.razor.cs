@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using UI.Interfaces.Services;
+using UI.Models.User;
 
 namespace TaskPilotUI.UI.Pages.Board
 {
@@ -16,19 +14,36 @@ namespace TaskPilotUI.UI.Pages.Board
         protected bool _micOn = true;
         protected bool _screenSharing = false;
         protected bool _connectionReady = false;
+        protected bool _forbidden = false;
         protected DotNetObjectReference<BoardCallPage>? _objRef;
         protected List<RemoteUser> _remoteUsers = new();
 
+        [Inject] protected IAuthService AuthService { get; set; } = default!;
+        [Inject] protected IUserService UserService { get; set; } = default!;
+        [Inject] protected IBoardService BoardService { get; set; } = default!;
         [Inject] protected IJSRuntime? JS { get; set; }
+        [Inject] protected NavigationManager NavigationManager { get; set; } = default!;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            if (_forbidden)
+            {
+                return;
+            }
+
             if (firstRender && !string.IsNullOrEmpty(BoardId) && JS != null)
             {
                 try
                 {
+                    var user = await AuthService.GetCurrentUserAsync();
+                    if (user == null)
+                    {
+                        Console.WriteLine("User not authenticated.");
+                        return;
+                    }
+
                     _objRef = DotNetObjectReference.Create(this);
-                    await JS.InvokeVoidAsync("BoardCallInterop.init", BoardId, "localVideo", _objRef);
+                    await JS.InvokeVoidAsync("BoardCallInterop.init", BoardId, "localVideo", _objRef, user.Id);
                 }
                 catch (Exception ex)
                 {
@@ -40,12 +55,26 @@ namespace TaskPilotUI.UI.Pages.Board
             {
                 try
                 {
-                    await Task.Delay(50); // Small delay to ensure DOM is ready
+                    await Task.Delay(50);
                     await JS.InvokeVoidAsync("BoardCallInterop.setLocalVideoStream", "localVideo");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error ensuring local video after render: {ex.Message}");
+                }
+            }
+        }
+
+        protected override async Task OnInitializedAsync()
+        {
+            if (!string.IsNullOrEmpty(BoardId))
+            {
+                var board = await BoardService.GetByIdAsync(BoardId);
+                if (board == null)
+                {
+                    _forbidden = true;
+                    NavigationManager.NavigateTo("/forbidden");
+                    return;
                 }
             }
         }
@@ -67,21 +96,33 @@ namespace TaskPilotUI.UI.Pages.Board
         }
 
         [JSInvokable]
-        public Task AddRemoteUser(string userId, string displayName)
+        public async Task AddRemoteUser(string userId, string displayName)
         {
             if (_remoteUsers.All(u => u.UserId != userId))
             {
+                string resolvedDisplayName = displayName;
+                try
+                {
+                    var user = await UserService.GetByIdAsync(userId);
+                    if (user != null && !string.IsNullOrEmpty(user.Username))
+                    {
+                        resolvedDisplayName = user.Username;
+                    }
+                }
+                catch
+                {
+                }
+
                 _remoteUsers.Add(new RemoteUser
                 {
                     UserId = userId,
-                    DisplayName = displayName,
+                    DisplayName = resolvedDisplayName,
                     VideoId = $"remoteVideo_{userId}",
                     ConnectionStatus = "connecting",
                     IsScreenSharing = false
                 });
-                InvokeAsync(StateHasChanged);
+                await InvokeAsync(StateHasChanged);
             }
-            return Task.CompletedTask;
         }
 
         [JSInvokable]
@@ -151,7 +192,6 @@ namespace TaskPilotUI.UI.Pages.Board
                 
                 StateHasChanged();
                 
-                // Give the DOM time to update and then ensure local video is properly restored
                 await Task.Delay(200);
                 await RestoreLocalVideo();
             }
@@ -203,7 +243,6 @@ namespace TaskPilotUI.UI.Pages.Board
                 {
                     await JS.InvokeVoidAsync("BoardCallInterop.toggleScreenShare");
                 }
-                // Note: The actual state change will be handled by the OnScreenShareStatusChanged callback
             }
             catch (Exception ex)
             {
@@ -211,17 +250,14 @@ namespace TaskPilotUI.UI.Pages.Board
             }
         }
 
-        // Enhanced method to restore local video stream
         private async Task RestoreLocalVideo()
         {
             try
             {
                 if (JS != null)
                 {
-                    // Use the globally available setLocalVideoStream function
                     await JS.InvokeVoidAsync("BoardCallInterop.setLocalVideoStream", "localVideo");
                     
-                    // Also ensure the camera state is properly applied
                     await JS.InvokeVoidAsync("BoardCallInterop.toggleCamera", _cameraOn);
                     
                     Console.WriteLine("Local video stream restored successfully");
@@ -233,7 +269,6 @@ namespace TaskPilotUI.UI.Pages.Board
             }
         }
 
-        // Method to ensure local video is visible (can be called anytime)
         protected async Task EnsureLocalVideoVisible()
         {
             try
@@ -252,15 +287,6 @@ namespace TaskPilotUI.UI.Pages.Board
         public void Dispose()
         {
             _objRef?.Dispose();
-        }
-
-        public class RemoteUser
-        {
-            public string? UserId { get; set; }
-            public string? DisplayName { get; set; }
-            public string? VideoId { get; set; }
-            public string ConnectionStatus { get; set; } = "connecting"; // connecting, connected, failed
-            public bool IsScreenSharing { get; set; } = false;
         }
     }
 }
