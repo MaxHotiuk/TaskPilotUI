@@ -31,6 +31,13 @@ namespace UI.Layouts
                     Key = "profile",
                     Icon = "user",
                 },
+                new MenuDataItem
+                {
+                    Path = "/ai-assistant",
+                    Name = "Ask AI",
+                    Key = "aiAssistant",
+                    Icon = "robot"
+                }
             };
             return Task.CompletedTask;
         }
