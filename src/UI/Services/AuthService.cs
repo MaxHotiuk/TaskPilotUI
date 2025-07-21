@@ -20,6 +20,9 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private AuthState _authState = new();
+    private System.Timers.Timer? _tokenRefreshTimer;
+    private DateTime? _tokenExpiry;
+    private DateTime? _tokenIssuedAt;
 
     public AuthState AuthState => _authState;
     public event Action? OnAuthStateChanged;
@@ -40,6 +43,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        InitializeTokenRefreshTimer();
     }
 
     public async Task<bool> IsAuthenticatedAsync()
@@ -144,6 +148,8 @@ public class AuthService : IAuthService
         if (!string.IsNullOrEmpty(token))
         {
             _authState.AccessToken = token;
+            SetTokenTimes(token);
+            StartTokenRefreshTimer(token);
         }
     }
 
@@ -176,10 +182,10 @@ public class AuthService : IAuthService
         try
         {
             _logger.LogDebug("Starting HandleCallbackAsync with state: {State}", state);
-            
+
             var storedState = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "auth_state");
             _logger.LogDebug("Stored state: {StoredState}", storedState);
-            
+
             if (storedState != state)
             {
                 _logger.LogWarning("Invalid state parameter. Expected: {StoredState}, Received: {State}", storedState, state);
@@ -187,16 +193,16 @@ public class AuthService : IAuthService
             }
 
             var config = GetAuthConfig();
-            _logger.LogDebug("Auth config - ClientId: {ClientId}, TenantId: {TenantId}, RedirectUri: {RedirectUri}", 
+            _logger.LogDebug("Auth config - ClientId: {ClientId}, TenantId: {TenantId}, RedirectUri: {RedirectUri}",
                 config.ClientId, config.TenantId, config.RedirectUri);
-            
+
             var codeVerifier = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "code_verifier");
             if (string.IsNullOrEmpty(codeVerifier))
             {
                 _logger.LogWarning("No code verifier found in storage");
                 return false;
             }
-            
+
             var tokenRequest = new Dictionary<string, string>
             {
                 {"grant_type", "authorization_code"},
@@ -209,7 +215,7 @@ public class AuthService : IAuthService
             // Create a new HttpClient for the Azure AD token endpoint
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.BaseAddress = new Uri($"https://login.microsoftonline.com/{config.TenantId}");
-            
+
             var tokenApi = RestService.For<IAzureAdTokenApi>(httpClient);
             var tokenResponse = await tokenApi.GetTokenAsync(tokenRequest);
 
@@ -219,8 +225,17 @@ public class AuthService : IAuthService
             {
                 var accessToken = accessTokenElement.GetString();
                 _logger.LogDebug("Successfully received access token (length: {TokenLength})", accessToken?.Length ?? 0);
-                
                 await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "access_token", accessToken);
+                SetTokenTimes(accessToken!);
+                if (tokenResponse.TryGetProperty("refresh_token", out var newRefreshTokenElement))
+                {
+                    var newRefreshToken = newRefreshTokenElement.GetString();
+                    if (!string.IsNullOrEmpty(newRefreshToken))
+                    {
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "refresh_token", newRefreshToken);
+                        StartTokenRefreshTimer(accessToken!);
+                    }
+                }
                 
                 _logger.LogDebug("Attempting to get current user");
                 var user = await GetCurrentUserAsync();
@@ -266,11 +281,10 @@ public class AuthService : IAuthService
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "access_token");
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state");
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "code_verifier");
-        
         _authState.IsAuthenticated = false;
         _authState.User = null;
         _authState.AccessToken = null;
-        
+        StopTokenRefreshTimer();
         OnAuthStateChanged?.Invoke();
     }
 
@@ -381,6 +395,139 @@ public class AuthService : IAuthService
                 .TrimEnd('=')
                 .Replace('+', '-')
                 .Replace('/', '_');
+        }
+    }
+
+    private void InitializeTokenRefreshTimer()
+    {
+        _tokenRefreshTimer = null;
+    }
+
+    private void StartTokenRefreshTimer(string token)
+    {
+        SetTokenTimes(token);
+        if (_tokenIssuedAt == null || _tokenExpiry == null)
+            return;
+        var ttl = _tokenExpiry.Value - _tokenIssuedAt.Value;
+        var halfTtl = ttl.TotalSeconds / 2;
+        var refreshTime = _tokenIssuedAt.Value.AddSeconds(halfTtl);
+        var interval = (refreshTime - DateTime.UtcNow).TotalMilliseconds;
+        if (interval <= 0)
+        {
+            _ = RefreshTokenAsync();
+            return;
+        }
+        StopTokenRefreshTimer();
+        _tokenRefreshTimer = new System.Timers.Timer(interval);
+        _tokenRefreshTimer.Elapsed += async (s, e) =>
+        {
+            _tokenRefreshTimer?.Stop();
+            await RefreshTokenAsync();
+        };
+        _tokenRefreshTimer.AutoReset = false;
+        _tokenRefreshTimer.Start();
+    }
+
+    private void StopTokenRefreshTimer()
+    {
+        if (_tokenRefreshTimer != null)
+        {
+            _tokenRefreshTimer.Stop();
+            _tokenRefreshTimer.Dispose();
+            _tokenRefreshTimer = null;
+        }
+    }
+
+    private void SetTokenTimes(string token)
+    {
+        try
+        {
+            var parts = token.Split('.');
+            if (parts.Length < 2) return;
+            var payload = parts[1];
+            var padLength = 4 - (payload.Length % 4);
+            if (padLength < 4) payload += new string('=', padLength);
+            var bytes = Convert.FromBase64String(payload.Replace('-', '+').Replace('_', '/'));
+            var json = System.Text.Encoding.UTF8.GetString(bytes);
+            var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("iat", out var iat))
+                _tokenIssuedAt = DateTimeOffset.FromUnixTimeSeconds(iat.GetInt64()).UtcDateTime;
+            if (root.TryGetProperty("exp", out var exp))
+                _tokenExpiry = DateTimeOffset.FromUnixTimeSeconds(exp.GetInt64()).UtcDateTime;
+        }
+        catch { _tokenIssuedAt = null; _tokenExpiry = null; }
+    }
+
+    private async Task RefreshTokenAsync()
+    {
+        _logger.LogInformation("Refreshing access token after half TTL expired");
+        
+        try
+        {
+            var refreshToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "refresh_token");
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                _logger.LogWarning("No refresh_token found in localStorage. User may need to re-authenticate.");
+                
+                StopTokenRefreshTimer();
+                return;
+            }
+
+            var config = GetAuthConfig();
+            var tokenRequest = new Dictionary<string, string>
+            {
+                {"grant_type", "refresh_token"},
+                {"client_id", config.ClientId},
+                {"refresh_token", refreshToken},
+                {"redirect_uri", config.RedirectUri},
+                {"scope", config.Scope}
+            };
+
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri($"https://login.microsoftonline.com/{config.TenantId}");
+            var tokenApi = RestService.For<IAzureAdTokenApi>(httpClient);
+            var tokenResponse = await tokenApi.GetTokenAsync(tokenRequest);
+
+            if (tokenResponse.TryGetProperty("access_token", out var accessTokenElement))
+            {
+                var accessToken = accessTokenElement.GetString();
+                await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "access_token", accessToken);
+                _authState.AccessToken = accessToken;
+                SetTokenTimes(accessToken!);
+                StartTokenRefreshTimer(accessToken!);
+                _logger.LogInformation("Access token refreshed successfully.");
+                
+                OnAuthStateChanged?.Invoke();
+            }
+            else
+            {
+                _logger.LogWarning("Failed to refresh access token: no access_token in response.");
+                
+                StopTokenRefreshTimer();
+            }
+
+            if (tokenResponse.TryGetProperty("refresh_token", out var newRefreshTokenElement))
+            {
+                var newRefreshToken = newRefreshTokenElement.GetString();
+                if (!string.IsNullOrEmpty(newRefreshToken))
+                {
+                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "refresh_token", newRefreshToken);
+                    
+                }
+            }
+        }
+        catch (ApiException ex)
+        {
+            _logger.LogWarning("Token refresh failed: {StatusCode} - {Content}", ex.StatusCode, ex.Content);
+            
+            StopTokenRefreshTimer();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error refreshing access token");
+            
+            StopTokenRefreshTimer();
         }
     }
 }
