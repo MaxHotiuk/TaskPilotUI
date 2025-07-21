@@ -1,0 +1,69 @@
+@page "/board/{BoardId}"
+@using AntDesign
+@using UI.Models.Board
+@using UI.Models.Task
+@using UI.Models.State
+@using UI.Models.Member
+@using UI.Models.User
+@using UI.Pages.Board.Components
+@using UI.Interfaces.Services
+
+<BoardHeader BoardDetail=@_boardDetail
+             IsLoading=@IsLoading
+             OnBack=@GoBack
+             OnShowMembers=@ShowMembersModal
+             OnRefresh=@RefreshBoard
+             OnCreateTask=@ShowCreateTaskModal
+             OnArchive=@ShowArchiveBoardModal
+             CurrentUserId=@(_currentUser?.Id)
+             OnManageStates=@ShowManageStatesModal />
+
+<BoardColumns BoardDetail=@_boardDetail
+              IsLoading=@IsLoading
+              OnTaskClick=@ShowTaskDetails
+              OnGoBack=@GoBack />
+
+<MembersModal IsVisible=@_showMembersModal
+              BoardDetail=@_boardDetail
+              CanManageMembers=@(CanManageMembers())
+              CurrentUserId=@(_currentUser?.Id)
+              OnCancel=@(() => _showMembersModal = false)
+              OnAddMember=@ShowAddMemberModal
+              OnChangeRole=@HandleChangeRole
+              OnRemoveMember=@HandleRemoveMember />
+
+<AddMemberModal IsVisible=@_showAddMemberModal
+                IsLoading=@_isAddingMember
+                FormModel=@_addMemberForm
+                ExistingMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+                BoardOwnerId=@(_boardDetail?.OwnerId)
+                OnOk=@AddMember
+                OnCancel=@(() => { _showAddMemberModal = false; ResetAddMemberForm(); }) />
+
+<ManageStatesModal IsVisible=@_showManageStatesModal
+                   BoardId=@BoardId
+                   OnCancel=@(() => _showManageStatesModal = false) />
+
+<AddTaskModal IsVisible=@_showAddTaskModal
+              IsLoading=@_isAddingTask
+              FormModel=@_addTaskForm
+              States=@(_boardDetail?.States ?? new List<StateDto>())
+              BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+              BoardId=@BoardId
+              OnOk=@AddTask
+              OnCancel=@(() => { _showAddTaskModal = false; ResetAddTaskForm(); }) />
+
+<TaskDetailsModal IsVisible=@_showTaskDetailsModal
+                  IsLoading=@_isTaskDetailsLoading
+                  CurrentTask=@_selectedTask
+                  States=@(_boardDetail?.States ?? new List<StateDto>())
+                  BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+                  CanManageTask=@(HasBoardAccess())
+                  OnTaskUpdated=@HandleTaskUpdated
+                  OnTaskDeleted=@HandleTaskDeleted
+                  OnCancel=@(() => { _showTaskDetailsModal = false; _selectedTask = null; }) />
+
+<ArchiveBoardModal IsVisible=@_showArchiveBoardModal
+                       IsLoading=@_isArchivingBoard
+                       OnOk=@ArchiveBoard
+                       OnCancel=@(() => _showArchiveBoardModal = false) />

@@ -1,0 +1,38 @@
+@using UI.Models.Attachment
+@using AntDesign
+
+@if (IsLoading)
+{
+    <div class="loading-attachments">Loading attachments...</div>
+}
+else if (Attachments?.Any() == true)
+{
+    <div class="attachments-container">
+        <span class="attachments-label">Attachments:</span>
+        <ul class="attachments-list">
+            @foreach (var att in Attachments)
+            {
+                <li class="attachment-item">
+                    @if (IsImage(att.FileName))
+                    {
+                        <span class="attachment-image-preview" @onclick=@(() => ShowImagePreview(att.Url))>
+                            <img src=@att.Url alt=@att.FileName class="attachment-image" />
+                            <span class="attachment-filename">@att.FileName</span>
+                        </span>
+                    }
+                    else
+                    {
+                        <a href=@att.Url target="_blank" rel="noopener" class="attachment-link">📎 @att.FileName</a>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+<Modal Title="Attachment Preview" Visible=@IsPreviewVisible OnCancel="ClosePreview" Footer="null" Width="800">
+    @if (!string.IsNullOrEmpty(PreviewImageUrl))
+    {
+        <img src=@PreviewImageUrl alt="Preview" class="attachment-modal-image" />
+    }
+</Modal>

@@ -8,21 +8,43 @@ namespace UI.Layouts
 {
     public partial class BasicLayout : LayoutComponentBase, IDisposable
     {
-        private MenuDataItem[] _menuData;
+        private MenuDataItem[] _menuData = Array.Empty<MenuDataItem>();
+        private bool collapsed;
 
-        [Inject] private ReuseTabsService TabService { get; set; }
+        [Inject] private ReuseTabsService TabService { get; set; } = default!;
 
-        protected override async Task OnInitializedAsync()
+        public LinkItem[] Links => Array.Empty<LinkItem>();
+        protected override Task OnInitializedAsync()
         {
             _menuData = new[] {
                 new MenuDataItem
                 {
                     Path = "/",
-                    Name = "welcome",
-                    Key = "welcome",
-                    Icon = "smile",
+                    Name = "boards",
+                    Key = "boards",
+                    Icon = "appstore",
+                },
+                new MenuDataItem
+                {
+                    Path = "/profile",
+                    Name = "profile",
+                    Key = "profile",
+                    Icon = "user",
+                },
+                new MenuDataItem
+                {
+                    Path = "/ai-assistant",
+                    Name = "Ask AI",
+                    Key = "aiAssistant",
+                    Icon = "robot"
                 }
             };
+            return Task.CompletedTask;
+        }
+
+        void Toggle()
+        {
+            collapsed = !collapsed;
         }
 
         void Reload()
@@ -34,6 +56,5 @@ namespace UI.Layouts
         {
             
         }
-
     }
 }

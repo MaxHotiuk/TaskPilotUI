@@ -1,0 +1,35 @@
+.members-list {
+    background: #fff;
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.member-info {
+    color: #666;
+    font-size: 12px;
+}
+
+.member-email {
+    color: #888;
+    font-size: 11px;
+    font-style: italic;
+}
+
+.no-members {
+    text-align: center;
+    padding: 20px;
+}
+
+.loading-members {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #666;
+}

@@ -1,0 +1,50 @@
+.manage-states-header {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ant-table {
+    background: #fff;
+}
+
+.ant-table-thead > tr > th {
+    background: #fafafa;
+    font-weight: 500;
+}
+
+.ant-table-tbody > tr > td {
+    vertical-align: middle;
+}
+
+.ant-btn[icon="delete"] {
+    color: #ff4d4f;
+}
+
+.order-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.order-controls .ant-btn {
+    padding: 0;
+    width: 24px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+}
+
+.order-controls .ant-btn:hover:not(:disabled) {
+    background: #f0f0f0;
+    color: #1890ff;
+}
+
+.order-controls .ant-btn:disabled {
+    color: #d9d9d9;
+    cursor: not-allowed;
+}

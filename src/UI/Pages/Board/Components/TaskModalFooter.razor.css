@@ -1,0 +1,22 @@
+/* Task Modal Footer Styles */
+.task-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.task-modal-footer .ant-btn {
+    border-radius: 6px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .task-modal-footer {
+        flex-direction: column;
+    }
+    
+    .task-modal-footer .ant-btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}

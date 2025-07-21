@@ -1,0 +1,35 @@
+@page "/ai-assistant"
+@using UI.Interfaces.Services
+@using UI.Models.Chat
+@using AntDesign
+
+<PageContainer Title="AI Assistant for TaskPilot">
+    <Card Title="Ask TaskPilot AI" Style="max-width: 600px; margin: 0 auto;">
+        <div style="margin-bottom: 16px;">
+            <TextArea @bind-Value="_question" Rows="4" Placeholder="Ask any question about TaskPilot..." AllowClear="true" />
+        </div>
+        <div style="text-align: right;">
+            <Button Type=@ButtonType.Primary OnClick="AskAiAsync" Loading="_isLoading" Disabled="string.IsNullOrWhiteSpace(_question)">
+                Ask
+            </Button>
+        </div>
+        @if (_error != null)
+        {
+            <Alert Type=@AlertType.Error Message="Error" Description="@_error" ShowIcon="true" Closable="true" OnClose="@(() => _error = string.Empty)" Style="margin-top: 16px;" />
+        }
+        @if (_response != null)
+        {
+            <Card Title="AI Response" Style="margin-top: 24px;">
+                <Paragraph>@_response.Response</Paragraph>
+            </Card>
+        }
+        @if (_isLoading)
+        {
+            <div style="text-align: center; margin-top: 24px;">
+                <Spin Size=@SpinSize.Large Tip="Thinking...">
+                    <div style="height: 60px;"></div>
+                </Spin>
+            </div>
+        }
+    </Card>
+</PageContainer>

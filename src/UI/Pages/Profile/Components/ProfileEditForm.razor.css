@@ -1,0 +1,73 @@
+.profile-edit-card {
+    height: fit-content;
+}
+
+.form-section {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: #fafafa;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+}
+
+.section-title {
+    margin-bottom: 20px !important;
+    color: #262626;
+    font-weight: 600;
+}
+
+.form-help-text {
+    margin-top: 8px;
+    color: #8c8c8c;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-actions {
+    padding: 24px;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    border-radius: 0 0 8px 8px;
+    margin: -24px -24px 0;
+}
+
+.ant-form-item {
+    margin-bottom: 20px;
+}
+
+.ant-form-item-label > label {
+    font-weight: 500;
+    color: #262626;
+}
+
+.ant-input-lg {
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    transition: all 0.3s ease;
+}
+
+.ant-input-lg:focus {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.ant-btn-lg {
+    border-radius: 8px;
+    font-weight: 500;
+    height: 44px;
+    padding: 0 24px;
+}
+
+.ant-btn-primary {
+    background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
+}
+
+.ant-btn-primary:hover {
+    background: linear-gradient(135deg, #4096ff 0%, #1677ff 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 119, 255, 0.4);
+}

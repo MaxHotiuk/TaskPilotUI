@@ -1,0 +1,26 @@
+@using AntDesign
+@using UI.Interfaces.Services
+@implements IDisposable
+@inject IGlobalLoadingService LoadingService
+
+@if (LoadingService.IsLoading)
+{
+    <div class="global-loading-overlay">
+        <div class="global-loading-container">
+            <AntDesign.Spin Size=@SpinSize.Large />
+            <div class="global-loading-text">Loading...</div>
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        LoadingService.OnLoadingChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        LoadingService.OnLoadingChanged -= StateHasChanged;
+    }
+}

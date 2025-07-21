@@ -1,41 +1,98 @@
-﻿@page "/"
+﻿@page "/welcome"
+@using UI.Interfaces.Services
+@using UI.Models
+@using AntDesign
 
-<PageContainer Title="Welcome">
-    <Card>
-        <Alert
-            Message="AntDesign.Templates have been published to nuget, you can download and use them directly."
-            Type="@AlertType.Success"
-            ShowIcon="true"
-            Banner
-            Style="margin: -12px; margin-bottom: 24px"/>
-        <Text Strong>
-            <a target="_blank" rel="noopener noreferrer" href="https://www.nuget.org/packages/AntDesign.Templates">
-                Use .NET CLI to install the latest template quickly.
-            </a>
-        </Text>
-        <pre class="pre"><code><Text Copyable> dotnet new --install AntDesign.Templates::0.1.0-*</Text></code></pre>
-        <Text
-            Strong
-            Style="margin-bottom: 12px">
-            <a target="_blank" rel="noopener noreferrer" href="https://github.com/ant-design-blazor/ant-design-pro-blazor">
-                Create an empty blazor WebAssembly project
-            </a>
-        </Text>
-        <pre class="pre"><code><Text Copyable> dotnet new antdesign --host=wasm</Text></code></pre>
-        <Text
-            Strong
-            Style="margin-bottom: 12px">
-            <a target="_blank" rel="noopener noreferrer" href="https://github.com/ant-design-blazor/ant-design-pro-blazor">
-                Create a blazor webassembly project with all pages.
-            </a>
-        </Text>
-        <pre class="pre"><code><Text Copyable> dotnet new antdesign --host=wasm --full</Text></code></pre>
-    </Card>
-    <p style="text-align: center; margin-top: 24px;">
-        Want to add more pages? Please refer to
-        <a href="https://github.com/ant-design-blazor/ant-design-pro-blazor" target="_blank" rel="noopener noreferrer">
-            ant-design-pro-blazor project
-        </a>
-        .
-    </p>
+<PageContainer Title="Welcome to TaskPilot">
+    @if (IsLoading)
+    {
+        <Card>
+            <div style="text-align: center; padding: 40px;">
+                <Spin Size=@SpinSize.Large Tip="Loading user information...">
+                    <div style="height: 100px;"></div>
+                </Spin>
+            </div>
+        </Card>
+    }
+    else if (_currentUser != null)
+    {
+        <Card Title="Dashboard">
+            <div style="margin-bottom: 24px;">
+                <Alert
+                    Message="Welcome back!"
+                    Description=@($"You are successfully logged in as {_currentUser.Username}")
+                    Type=@AlertType.Success
+                    ShowIcon=@true
+                    Banner
+                    Style="margin-bottom: 24px"/>
+            </div>
+            
+            <Row Gutter="16">
+                <AntDesign.Col Span="24" Md="12">
+                    <Card Title="User Information" Size=@CardSize.Small>
+                        <div style="margin-bottom: 16px;">
+                            <Text Strong>Username: </Text>
+                            <Text>@_currentUser.Username</Text>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <Text Strong>Email: </Text>
+                            <Text>@_currentUser.Email</Text>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <Text Strong>Role: </Text>
+                            <Tag Color=@(_currentUser.Role == "Admin" ? "red" : "blue")>@_currentUser.Role</Tag>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <Text Strong>Member Since: </Text>
+                            <span>@GetFormattedDate(_currentUser.CreatedAt)</span>
+                        </div>
+                    </Card>
+                </AntDesign.Col>
+                
+                <AntDesign.Col Span="24" Md="12">
+                    <Card Title="Quick Actions" Size=@CardSize.Small>
+                        <Space Direction=@SpaceDirection.Vertical style="width: 100%;" gap="16">
+                            <Button Type=@ButtonType.Primary Icon="plus" Size=@ButtonSize.Large Block="true">
+                                Create New Board
+                            </Button>
+                            <Button Icon="team" Size=@ButtonSize.Large Block="true">
+                                View My Boards
+                            </Button>
+                            <Button Icon="user" Size=@ButtonSize.Large Block="true">
+                                Profile Settings
+                            </Button>
+                        </Space>
+                    </Card>
+                </AntDesign.Col>
+            </Row>
+        </Card>
+        
+        <Card Title="Recent Activity" Style="margin-top: 24px;">
+            <div style="text-align: center; padding: 40px;">
+                <Icon Type="inbox" style="font-size: 48px; color: #ccc; margin-bottom: 16px;" />
+                <p style="color: #999;">No recent activity to show</p>
+            </div>
+        </Card>
+        
+        <div style="margin-top: 24px; text-align: right;">
+            <Button Type=@ButtonType.Default OnClick="HandleLogout">
+                Logout
+            </Button>
+        </div>
+    }
+    else
+    {
+        <Card>
+            <div style="text-align: center; padding: 40px;">
+                <Avatar Size=@AvatarSize.Large Icon="user" style="margin-bottom: 16px;" />
+                <Title Level="3">Welcome to TaskPilot</Title>
+                <Paragraph>
+                    Please sign in to access your boards and manage your tasks.
+                </Paragraph>
+                <Button Type=@ButtonType.Primary Size=@ButtonSize.Large OnClick="NavigateToLogin">
+                    Sign In
+                </Button>
+            </div>
+        </Card>
+    }
 </PageContainer>

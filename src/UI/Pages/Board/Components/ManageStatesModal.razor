@@ -1,0 +1,46 @@
+@using AntDesign
+@using UI.Models.State
+
+<Modal Title="Manage States"
+       Visible=@IsVisible
+       OnCancel=@OnCancel
+       Footer="null"
+       Width="600">
+    <div class="manage-states-header">
+        <Button Type=@ButtonType.Primary Icon="plus" OnClick=@ShowAddStateModal>Add State</Button>
+    </div>
+    <Table DataSource=@States RowKey=@(state => state.Id) Bordered Size=@TableSize.Middle>
+        <AntDesign.Column TData=@StateDto Title="Order" Width="80">
+            <Template>
+                <div class="order-controls">
+                    <Button Size=@ButtonSize.Small 
+                            Icon="up" 
+                            Type=@ButtonType.Text
+                            Disabled=@(IsFirstState(context))
+                            OnClick=@(() => MoveStateUp(context)) />
+                    <Button Size=@ButtonSize.Small 
+                            Icon="down" 
+                            Type=@ButtonType.Text
+                            Disabled=@(IsLastState(context))
+                            OnClick=@(() => MoveStateDown(context)) />
+                </div>
+            </Template>
+        </AntDesign.Column>
+        <AntDesign.Column TData=@StateDto Title="Name">
+            <Template>
+                <AntDesign.Input TValue="string" @bind-Value=@context.Name MaxLength="50" Size=@InputSize.Small OnBlur=@(() => OnNameChanged(context)) />
+            </Template>
+        </AntDesign.Column>
+        <AntDesign.Column TData=@StateDto Title="Actions" Width="120">
+            <Template>
+                <Button Danger Size=@ButtonSize.Small Icon="delete" OnClick=@(() => OnDeleteState(context))>Delete</Button>
+            </Template>
+        </AntDesign.Column>
+    </Table>
+    <AddStateModal IsVisible=@_showAddStateModal
+                   IsLoading=@_isAddingState
+                   FormModel=@_addStateForm
+                   NextOrder=@_nextOrder
+                   OnOk=@(async () => await AddState())
+                   OnCancel=@(() => { _showAddStateModal = false; ResetAddStateForm(); }) />
+</Modal>

@@ -1,0 +1,245 @@
+@using AntDesign
+@using UI.Models.Comment
+@using UI.Models.User
+@using UI.Interfaces.Services
+@using UI.Pages.Board.Components
+
+<div class="task-comments-container">
+    <div class="comments-header">
+        <div class="comments-search">
+            <Search Placeholder="Search comments..." 
+                   @bind-Value=@SearchTerm
+                   OnSearch=@OnSearchComments
+                   OnPressEnter=@OnSearchComments
+                   AllowClear=@true
+                   Size=InputSize.Small
+                   Style="width: 250px;" />
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="comments-loading">
+            <Spin Size=SpinSize.Small Tip="Loading comments...">
+                <div style="height: 100px;"></div>
+            </Spin>
+        </div>
+    }
+    else
+    {
+        <div class="task-comments-flex-container">
+            <div class="task-comments-flex-content">
+                <div class="comments-list task-comments-list-scroll">
+                    @if (Comments?.Any() == true)
+                    {
+                        @foreach (var comment in Comments)
+                        {
+                            <div class="comment-item" key="@comment.Id">
+                                <div class="comment-header">
+                                    <div class="comment-author">
+                                        @if (IsAvatarLoading(comment.AuthorId))
+                                        {
+                                            <Avatar Size=AvatarSize.Small>
+                                                @GetAuthorInitials(comment.AuthorId)
+                                            </Avatar>
+                                        }
+                                        else
+                                        {
+                                            var avatarUrl = GetAvatarUrl(comment.AuthorId);
+                                            if (!string.IsNullOrEmpty(avatarUrl))
+                                            {
+                                                <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                                            }
+                                            else
+                                            {
+                                                <Avatar Size=AvatarSize.Small>
+                                                    @GetAuthorInitials(comment.AuthorId)
+                                                </Avatar>
+                                            }
+                                        }
+                                        <span class="author-name">@GetAuthorName(comment.AuthorId)</span>
+                                    </div>
+                                    <div class="comment-meta">
+                                        <span class="comment-date">@FormatDate(comment.CreatedAt)</span>
+                                        @if (CanEditComment(comment))
+                                        {
+                                            <Dropdown Trigger=@(new AntDesign.Trigger[] { AntDesign.Trigger.Click })>
+                                                <Overlay>
+                                                    <Menu>
+                                                        <MenuItem OnClick=@(() => StartEditComment(comment))>
+                                                            <Icon Type="edit" /> Edit
+                                                        </MenuItem>
+                                                        <MenuItem OnClick=@(() => DeleteComment(comment.Id)) Danger="true">
+                                                            <Icon Type="delete" /> Delete
+                                                        </MenuItem>
+                                                    </Menu>
+                                                </Overlay>
+                                                <ChildContent>
+                                                    <Button Type=@ButtonType.Text Size=@ButtonSize.Small Icon="more">
+                                                    </Button>
+                                                </ChildContent>
+                                            </Dropdown>
+                                        }
+                                    </div>
+                                </div>
+                                
+                                @if (EditingCommentId == comment.Id)
+                                {
+                                    <div class="comment-edit-form">
+                                        <TextArea @bind-Value=EditingContent
+                                                 Rows="3" 
+                                                 Placeholder="Edit your comment..."
+                                                 MaxLength="1000"
+                                                 ShowCount=@true />
+                                        <div class="comment-edit-actions">
+                                            <Button Size=@ButtonSize.Small 
+                                                   OnClick=@CancelEditComment
+                                                   Type=@ButtonType.Default>
+                                                Cancel
+                                            </Button>
+                                            <Button Size=@ButtonSize.Small
+                                                   OnClick=@(() => SaveEditComment(comment.Id))
+                                                   Type=@ButtonType.Primary
+                                                   Loading=@IsUpdating
+                                                   Disabled=@(string.IsNullOrWhiteSpace(EditingContent))>
+                                                Save
+                                            </Button>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="comment-content">
+                                        @((MarkupString)FormatCommentContent(comment.Content))
+                                    </div>
+                                    <CommentAttachments CommentId="@comment.Id" />
+                                }
+                            </div>
+                        }
+
+                        @if (HasMoreComments)
+                        {
+                            <div class="load-more-section">
+                            <Button Type=@ButtonType.Default
+                                   Size=@ButtonSize.Small
+                                   Loading=@IsLoadingMore
+                                   OnClick=@LoadMoreComments
+                                   Block="true"
+                                   class="load-more-btn">
+                                    @if (IsLoadingMore)
+                                    {
+                                        <span>Loading more comments...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Load more comments</span>
+                                    }
+                                </Button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="no-comments">
+                            <Empty>
+                                <DescriptionTemplate>
+                                    @if (IsSearching)
+                                    {
+                                        <span>No comments found matching "@SearchTerm"</span>
+                                    }
+                                    else
+                                    {
+                                        <span>No comments yet. Be the first to comment on this task</span>
+                                    }
+                                </DescriptionTemplate>
+                            </Empty>
+                        </div>
+                    }
+                </div>
+            </div>
+            @if (CanAddComment)
+            {
+                <div class="add-comment-section" style="padding: 8px 0 0 0;">
+                    <div class="add-comment-form enhanced-add-comment-form" style="padding: 8px 12px; border-radius: 6px; background: #fafbfc; box-shadow: none;">
+                        <div class="comment-input-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            @if (IsAvatarLoading(CurrentUserId!))
+                            {
+                                <Avatar Size=AvatarSize.Small />
+                            }
+                            else
+                            {
+                                var avatarUrl = GetAvatarUrl(CurrentUserId!);
+                                if (!string.IsNullOrEmpty(avatarUrl))
+                                {
+                                    <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                                }
+                                else
+                                {
+                                    <Avatar Size=AvatarSize.Small />
+                                }
+                            }
+                            <span class="current-user-name" style="font-size: 13px; font-weight: 500;">@GetCurrentUserName()</span>
+                        </div>
+
+                        <div class="comment-textarea-wrapper" style="margin-bottom: 4px;">
+                            <TextArea @bind-Value=NewCommentContent
+                                     Rows="2"
+                                     Placeholder="Add a comment..."
+                                     MaxLength="1000"
+                                     ShowCount=@false
+                                     @onkeydown=@HandleKeyDown
+                                     class="comment-textarea"
+                                     style="font-size: 13px; padding: 4px 8px; min-height: 32px;" />
+                        </div>
+
+                        <div class="attachment-row" style="margin-bottom: 4px; gap: 4px; display: flex; flex-wrap: wrap; align-items: center;">
+                            <label class="attachment-upload-label" style="margin-bottom: 0;">
+                                <InputFile OnChange=@OnAttachmentsSelected multiple style="display: none;" />
+                                <span class="avatar-upload-btn attachment-btn" style="font-size: 13px; padding: 2px 6px;">
+                                    <Icon Type="paper-clip" /> Attach
+                                </span>
+                            </label>
+                            @if (SelectedAttachmentNames != null && SelectedAttachmentNames.Any())
+                            {
+                                @for (int i = 0; i < SelectedAttachmentNames.Count; i++)
+                                {
+                                    var name = SelectedAttachmentNames[i];
+                                    var displayName = name?.Length > 8 ? name.Substring(0, 8) + "..." : name;
+                                    var currentIndex = i;
+                                    <span class="attachment-badge" style="font-size: 12px; padding: 1px 4px; margin-right: 2px;">
+                                        📎 @displayName
+                                        <Button Size=@ButtonSize.Small Type=@ButtonType.Text OnClick=@(() => RemoveAttachmentAt(currentIndex)) style="padding: 0 2px;">
+                                            <Icon Type="close" />
+                                        </Button>
+                                    </span>
+                                }
+                                <Button Size=@ButtonSize.Small OnClick=@ClearAttachments Type=@ButtonType.Text class="remove-attachment-btn" style="font-size: 12px; padding: 0 4px;">Remove All</Button>
+                            }
+                        </div>
+
+                        <div class="comment-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                            <Text Type=@TextElementType.Secondary Style="font-size: 11px;">Ctrl+Enter to post</Text>
+                            <div>
+                                <Button Size=@ButtonSize.Small
+                                       OnClick=@ClearNewComment
+                                       Type=@ButtonType.Default
+                                       Disabled=@(string.IsNullOrWhiteSpace(NewCommentContent))
+                                       style="font-size: 12px; padding: 0 8px; height: 24px;">
+                                    Clear
+                                </Button>
+                                <Button Size=@ButtonSize.Small
+                                       OnClick=@AddComment
+                                       Type=@ButtonType.Primary
+                                       Loading=@IsAdding
+                                       Disabled=@(string.IsNullOrWhiteSpace(NewCommentContent))
+                                       style="font-size: 12px; padding: 0 8px; height: 24px; margin-left: 4px;">
+                                    Comment
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

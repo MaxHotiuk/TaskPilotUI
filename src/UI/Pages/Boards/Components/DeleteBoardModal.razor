@@ -1,0 +1,34 @@
+@using AntDesign
+@using UI.Models.Board
+
+@if (SelectedBoard != null)
+{
+    <Modal Title=@($"Delete Board: {SelectedBoard.Name}")
+           Visible=@Visible
+           OnOk=@ConfirmDelete
+           OnCancel=@CancelDelete
+           OkText='"Delete"'
+           CancelText='"Cancel"'
+           ConfirmLoading=@IsDeleting>
+        
+        <Alert Type=@AlertType.Warning
+               ShowIcon=@true
+               Style="margin-bottom: 16px;">
+            <MessageTemplate>
+                <strong>Warning:</strong> This action cannot be undone.
+            </MessageTemplate>
+            <ChildContent>
+                Deleting this board will permanently remove all tasks, comments, and associated data.
+                Please type the board name to confirm.
+            </ChildContent>
+        </Alert>
+        
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                Type board name to confirm:
+            </label>
+            <Input @bind-Value=@DeleteConfirmation
+                   Placeholder=@SelectedBoard.Name />
+        </div>
+    </Modal>
+}

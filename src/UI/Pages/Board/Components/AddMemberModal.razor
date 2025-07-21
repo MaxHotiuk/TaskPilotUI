@@ -1,0 +1,60 @@
+@using AntDesign
+@using UI.Models.Member
+@using UI.Models.User
+
+<Modal Title="Add Board Members"
+       Visible=@IsVisible
+       OnOk=@OnOk
+       OnCancel=@OnCancel
+       ConfirmLoading=@IsLoading
+       Width="600">
+    <Form Model=@FormModel Layout=@FormLayout.Vertical>
+        <FormItem Label="Search Users">
+            <div style="position: relative;">
+                <Input @bind-Value=@SearchText
+                       @oninput=@OnSearchInput
+                       Placeholder="Type email or username to search users..."
+                       Style="width: 100%;" />
+                
+                @if (SearchResults.Any() && !string.IsNullOrWhiteSpace(SearchText))
+                {
+                    <div class="user-search-dropdown">
+                        @foreach (var user in SearchResults)
+                        {
+                            <div @onclick=@(() => SelectUser(user)) class="user-search-item">
+                                <div style="font-weight: 500;">@user.Username</div>
+                                <div style="font-size: 12px; color: #999;">@user.Email</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </FormItem>
+        
+        @if (FormModel.SelectedUsers.Any())
+        {
+            <FormItem Label="Selected Users">
+                <div class="selected-users-container">
+                    @foreach (var user in FormModel.SelectedUsers)
+                    {
+                        <Tag Closable="true" OnClose=@(() => RemoveUser(user))>
+                            <div class="user-tag">
+                                <span class="username">@user.Username</span>
+                                <span class="email">(@user.Email)</span>
+                            </div>
+                        </Tag>
+                    }
+                </div>
+            </FormItem>
+        }
+        
+        <FormItem Label="Role">
+            <Select @bind-Value=@FormModel.Role TItemValue="string" TItem="string" Style="width: 100%;" Placeholder="Select role">
+                <SelectOptions>
+                    <SelectOption TItemValue="string" TItem="string" Value=@("Member") Label="Member" />
+                    <SelectOption TItemValue="string" TItem="string" Value=@("Owner") Label="Owner" />
+                </SelectOptions>
+            </Select>
+        </FormItem>
+    </Form>
+</Modal>

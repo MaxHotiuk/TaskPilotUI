@@ -1,0 +1,102 @@
+@using AntDesign
+@using UI.Models.Board
+@using UI.Models.Member
+@using UI.Models.User
+
+<Modal Title="Board Members"
+       Visible=@IsVisible
+       OnCancel=@OnCancel
+       Footer="null"
+       Width="800">
+    <div style="margin-bottom: 16px;">
+        <Button Type=@ButtonType.Primary
+                Icon="plus"
+                OnClick="OnAddMember">
+            Add Member
+        </Button>
+    </div>
+    
+    @if (BoardDetail?.Members.Any() == true)
+    {
+        @if (!_usersLoaded)
+        {
+            <div class="loading-members">
+                <Spin />
+                <span style="margin-left: 8px;">Loading member details...</span>
+            </div>
+        }
+        else
+        {
+            <div class="members-list">
+            @foreach (var member in BoardDetail.Members)
+            {
+                <div class="member-item">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        @if (IsAvatarLoading(member.UserId))
+                        {
+                            <Avatar Size=AvatarSize.Small>
+                                @GetMemberInitials(member.UserId)
+                            </Avatar>
+                        }
+                        else
+                        {
+                            var avatarUrl = GetAvatarUrl(member.UserId);
+                            if (!string.IsNullOrEmpty(avatarUrl))
+                            {
+                                <Avatar Size=AvatarSize.Small Src=@avatarUrl />
+                            }
+                            else
+                            {
+                                <Avatar Size=AvatarSize.Small>
+                                    @GetMemberInitials(member.UserId)
+                                </Avatar>
+                            }
+                        }
+                        <div>
+                            <strong>@GetMemberName(member.UserId)</strong>
+                            @if (!string.IsNullOrEmpty(GetMemberEmail(member.UserId)))
+                            {
+                                <div class="member-email">@GetMemberEmail(member.UserId)</div>
+                            }
+                            <div class="member-info">
+                                @member.Role • Joined @FormatDate(member.CreatedAt)
+                            </div>
+                        </div>
+                    </div>
+                    @if (CanManageMembers && member.UserId != CurrentUserId)
+                    {
+                        <Space>
+                            <SpaceItem>
+                                <Button Size=@ButtonSize.Small 
+                                        OnClick=@(() => OnChangeRole.InvokeAsync((member, "Member")))>
+                                    Make Member
+                                </Button>
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Button Size=@ButtonSize.Small 
+                                        OnClick=@(() => OnChangeRole.InvokeAsync((member, "Owner")))>
+                                    Make Owner
+                                </Button>
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Button Danger 
+                                        Size=@ButtonSize.Small 
+                                        Icon="delete"
+                                        OnClick=@(() => OnRemoveMember.InvokeAsync(member))>
+                                    Remove
+                                </Button>
+                            </SpaceItem>
+                        </Space>
+                    }
+                </div>
+            }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="no-members">
+            <p>No members found</p>
+        </div>
+    }
+</Modal>

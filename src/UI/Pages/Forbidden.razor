@@ -1,0 +1,10 @@
+@page "/forbidden"
+
+<div style="display: flex; justify-content: center; align-items: center; height: 80vh;">
+    <Result Status="ResultStatus.Error" Title="403 Forbidden" SubTitle="Sorry, you are not authorized to access this page.">
+        <Extra>
+            <Button Type="ButtonType.Primary" OnClick="@(() => NavigationManager.NavigateTo("/"))">Back Home</Button>
+        </Extra>
+    </Result>
+</div>
+@inject NavigationManager NavigationManager

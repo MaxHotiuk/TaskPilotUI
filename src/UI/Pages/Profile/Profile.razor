@@ -1,0 +1,27 @@
+@page "/profile"
+@using UI.Pages.Profile.Components
+@using UI.Components.Shared
+@using AntDesign
+
+<PageHeader Title="Profile">
+    <PageHeaderContent>
+        <Space>
+            <SpaceItem>
+                <Text>
+                    Manage your profile settings and preferences.
+                </Text>
+            </SpaceItem>
+        </Space>
+    </PageHeaderContent>
+</PageHeader>
+<div class="profile-container">
+    <Row Gutter="24">
+        <AntDesign.Col Span="8">
+            <ProfileCard />
+            <LogoutComponent />
+        </AntDesign.Col>
+        <AntDesign.Col Span="16">
+            <ProfileEditForm />
+        </AntDesign.Col>
+    </Row>
+</div>

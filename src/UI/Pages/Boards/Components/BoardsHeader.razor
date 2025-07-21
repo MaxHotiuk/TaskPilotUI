@@ -1,0 +1,62 @@
+@using AntDesign
+
+<div class="page-header-search">
+    <Row Gutter="24" Justify=@RowJustify.SpaceBetween Align=@RowAlign.Middle>
+        <AntDesign.Col Xs="24" Sm="24" Md="12" Lg="14" Xl="16">
+            <div class="search-section">
+                <Input Size=@InputSize.Large
+                       Placeholder="Search your boards..." 
+                       @bind-Value=@SearchTerm
+                       @oninput=@OnSearchChanged
+                       AllowClear=@true
+                       Style="border-radius: 8px;" />
+            </div>
+        </AntDesign.Col>
+        <AntDesign.Col Xs="24" Sm="24" Md="12" Lg="10" Xl="8">
+            <div class="filter-section">
+                <Space Size=@SpaceSize.Small Wrap=@true>
+                    <SpaceItem>
+                        <Text Type=@TextElementType.Secondary Style="margin-right: 8px; font-weight: 500;">
+                            Show:
+                        </Text>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type=@(FilterType == "all" ? ButtonType.Primary : ButtonType.Text) 
+                                OnClick=@(() => OnFilterChanged.InvokeAsync("all"))
+                                Size=@ButtonSize.Small
+                                Style="border-radius: 6px;">
+                            All Boards
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type=@(FilterType == "owner" ? ButtonType.Primary : ButtonType.Text)
+                                OnClick=@(() => OnFilterChanged.InvokeAsync("owner"))
+                                Size=@ButtonSize.Small
+                                Style="border-radius: 6px;">
+                            <Icon Type="crown" Style="margin-right: 4px;" />
+                            Owner
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type=@(FilterType == "member" ? ButtonType.Primary : ButtonType.Text) 
+                                OnClick=@(() => OnFilterChanged.InvokeAsync("member"))
+                                Size=@ButtonSize.Small
+                                Style="border-radius: 6px;">
+                            <Icon Type="team" Style="margin-right: 4px;" />
+                            Member
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type=@(FilterType == "archived" ? ButtonType.Primary : ButtonType.Text)
+                                OnClick=@(() => OnFilterChanged.InvokeAsync("archived"))
+                                Size=@ButtonSize.Small
+                                Style="border-radius: 6px;">
+                            <Icon Type="inbox" Style="margin-right: 4px;" />
+                            Archived
+                        </Button>
+                    </SpaceItem>
+                </Space>
+            </div>
+        </AntDesign.Col>
+    </Row>
+</div>

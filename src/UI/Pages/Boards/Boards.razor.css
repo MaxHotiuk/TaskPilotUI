@@ -1,0 +1,275 @@
+.boards-content {
+    padding: 0 24px 24px;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.page-header-search {
+    padding: 16px 0;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 16px;
+}
+
+.search-section {
+    display: flex;
+    align-items: center;
+}
+
+.search-section .ant-input-affix-wrapper {
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e8e8e8;
+    transition: all 0.3s ease;
+}
+
+.search-section .ant-input-affix-wrapper:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+.search-section .ant-input-affix-wrapper-focused {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+}
+
+.search-section .ant-input {
+    font-size: 15px;
+    padding: 8px 12px;
+}
+
+.search-section .ant-input::placeholder {
+    color: #bfbfbf;
+    font-style: italic;
+}
+
+.filter-section {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.filter-section .ant-btn {
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.filter-section .ant-btn:not(.ant-btn-primary):hover {
+    background-color: #f0f8ff;
+    border-color: #1890ff;
+    color: #1890ff;
+}
+
+.filter-section .ant-btn-text {
+    color: #666;
+    border: 1px solid transparent;
+}
+
+.filter-section .ant-btn-text:hover {
+    color: #1890ff;
+    background: rgba(24, 144, 255, 0.06);
+    border-color: rgba(24, 144, 255, 0.2);
+}
+
+.filter-section .ant-btn-primary {
+    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    border: none;
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+}
+
+.filter-section .ant-btn-primary:hover {
+    background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+    box-shadow: 0 4px 8px rgba(24, 144, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.boards-grid-container {
+    position: relative;
+}
+
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 32px;
+    padding: 24px 0;
+}
+
+.load-more-container .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.load-more-container .ant-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.loading-more-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 0;
+}
+
+.empty-state-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.empty-state-container .ant-empty {
+    margin: 0;
+}
+
+.empty-state-container .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.empty-state-container .ant-btn-primary {
+    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+.empty-state-container .ant-btn-primary:hover {
+    background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Board grid improvements */
+.ant-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.ant-col {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* Responsive grid improvements */
+@media (max-width: 1400px) {
+    .boards-content {
+        padding: 0 20px 20px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .boards-content {
+        padding: 0 16px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .boards-content {
+        padding: 0 16px 16px;
+    }
+    
+    .page-header-search {
+        padding: 12px 0;
+    }
+    
+    .search-section {
+        margin-bottom: 16px;
+    }
+    
+    .search-section .ant-input-affix-wrapper {
+        max-width: 100%;
+    }
+    
+    .filter-section {
+        justify-content: flex-start;
+    }
+    
+    .filter-section .ant-space {
+        flex-wrap: wrap;
+    }
+    
+    .load-more-container {
+        margin-top: 20px;
+        padding: 16px 0;
+    }
+    
+    .loading-more-container {
+        padding: 16px 0;
+    }
+    
+    .ant-col {
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .ant-col {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .boards-content {
+        padding: 0 12px 12px;
+    }
+    
+    .page-header-search {
+        padding: 8px 0;
+    }
+    
+    .filter-section .ant-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+        height: auto;
+    }
+    
+    .load-more-container {
+        margin-top: 16px;
+        padding: 12px 0;
+    }
+    
+    .loading-more-container {
+        padding: 12px 0;
+    }
+    
+    .ant-col {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+}
+
+/* Smooth transitions for all interactive elements */
+.page-header-search *,
+.boards-grid-container *,
+.load-more-container *,
+.empty-state-container * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading state improvements */
+.ant-spin-container {
+    transition: opacity 0.3s ease;
+}
+
+.ant-spin-blur {
+    opacity: 0.7;
+}
+
+/* Enhance button hover effects */
+.ant-btn:hover {
+    transform: translateY(-1px);
+}
+
+.ant-btn:active {
+    transform: translateY(0);
+}
