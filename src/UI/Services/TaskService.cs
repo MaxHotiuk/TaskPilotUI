@@ -72,4 +72,16 @@ public class TaskService : ITaskService
             throw new Exception($"Failed to delete task: {ex.Message}", ex);
         }
     }
+
+    public async Task<List<TaskCalendarItemDto>> GetForCalendarMonthAsync(Guid userId, DateTime dayInMonth)
+    {
+        try
+        {
+            return await _boardTaskApi.GetForCalendarMonthAsync(userId, dayInMonth);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get tasks for calendar month: {ex.Message}", ex);
+        }
+    }
 }
