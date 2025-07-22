@@ -16,12 +16,12 @@
     <PageHeaderExtra>
         <Space>
             <SpaceItem>
-                <Button Type="@ButtonType.Primary" Icon="check" OnClick="MarkAllAsReadAsync" Disabled="@(!notifications.Any(n => !n.IsRead))">
+                <Button Type=@ButtonType.Primary Icon="check" OnClick=@MarkAllAsReadAsync Disabled=@(!notifications.Any(n => !n.IsRead))>
                     Mark All as Read
                 </Button>
             </SpaceItem>
             <SpaceItem>
-                <Button Icon="reload" OnClick="RefreshNotificationsAsync" Loading="@isLoading">
+                <Button Icon="reload" OnClick=@RefreshNotificationsAsync Loading=@isLoading>
                     Refresh
                 </Button>
             </SpaceItem>
@@ -45,19 +45,19 @@
     }
     else
     {
-        <AntList DataSource="notifications"
-                ItemLayout="@ListItemLayout.Horizontal"
+        <AntList DataSource=@notifications
+                ItemLayout=@ListItemLayout.Horizontal
                 Size=@ListSize.Large>
             <ChildContent Context="notification">
-                <ListItem Actions="@GetNotificationActions(notification)">
+                <ListItem Actions=@GetNotificationActions(notification)>
                     <ListItemMeta>
                         <AvatarTemplate>
-                            <Avatar Icon="@GetNotificationIcon(notification.Type)" 
-                                   Style="@($"background-color: {GetNotificationColor(notification.Type)}")"/>
+                            <Avatar Icon=@GetNotificationIcon(notification.Type)
+                                   Style=@($"background-color: {GetNotificationColor(notification.Type)}")/>
                         </AvatarTemplate>
                         <TitleTemplate>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="@(notification.IsRead ? "" : "font-weight: bold;")">
+                                <span style=@(notification.IsRead ? "" : "font-weight: bold;")>
                                     @GetNotificationTitle(notification.Type)
                                 </span>
                                 @if (!notification.IsRead)
@@ -67,7 +67,7 @@
                             </div>
                         </TitleTemplate>
                         <DescriptionTemplate>
-                            <div style="@(notification.IsRead ? "color: rgba(0,0,0,0.45)" : "")">
+                            <div style=@(notification.IsRead ? "color: rgba(0,0,0,0.45)" : "")>
                                 @notification.Text
                             </div>
                             <div style="color: rgba(0,0,0,0.45); font-size: 12px; margin-top: 4px;">
@@ -82,7 +82,7 @@
         @if (hasMoreNotifications)
         {
             <div style="text-align: center; margin-top: 16px;">
-                <Button OnClick="LoadMoreNotificationsAsync" Loading="@isLoadingMore" Disabled="@isLoadingMore">
+                <Button OnClick=@LoadMoreNotificationsAsync Loading=@isLoadingMore Disabled=@isLoadingMore>
                     Load More
                 </Button>
             </div>

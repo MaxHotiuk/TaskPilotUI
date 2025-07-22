@@ -24,11 +24,11 @@
     </RightContentRender>
     <ChildContent>
         <NotificationToast 
-            IsVisible="@showNotification"
-            Message="@notificationMessage"
-            NotificationType="@notificationType"
-            OnClick="@(() => Navigation.NavigateTo("/notifications"))"
-            OnClose="@HideNotification" />
+            IsVisible=@showNotification
+            Message=@notificationMessage
+            NotificationType=@notificationType
+            OnClick=@(() => Navigation.NavigateTo("/notifications"))
+            OnClose=@HideNotification />
         @Body
     </ChildContent>
     <FooterRender>

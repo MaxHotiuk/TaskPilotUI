@@ -2,7 +2,7 @@
 @using Notification = UI.Models.Notification.Notification
 @using NotificationType = UI.Models.Notification.NotificationType
 
-<div class="notification-toast @(IsVisible ? "show" : "hide")" @onclick="OnClick">
+<div class="notification-toast @(IsVisible ? "show" : "hide")" @onclick=@OnClick>
     <div class="notification-content">
         <div class="notification-icon">
             @switch (NotificationType)
@@ -25,7 +25,7 @@
             <div class="notification-title">New Notification</div>
             <div class="notification-message">@Message</div>
         </div>
-        <div class="notification-close" @onclick:stopPropagation="true" @onclick="OnClose">
+        <div class="notification-close" @onclick:stopPropagation="true" @onclick=@OnClose>
             <Icon Type="close" />
         </div>
     </div>
