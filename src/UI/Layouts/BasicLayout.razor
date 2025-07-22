@@ -1,5 +1,9 @@
 ﻿@namespace UI.Layouts
+@using UI.Interfaces.SignalR
+@using UI.Components.Shared
 @inherits LayoutComponentBase
+@inject INotificationSignalRService NotificationSignalRService
+@inject NavigationManager Navigation
 
 <AntDesign.ProLayout.BasicLayout 
     Logo="@("pro_icon.svg")"
@@ -19,6 +23,12 @@
     <RightContentRender>
     </RightContentRender>
     <ChildContent>
+        <NotificationToast 
+            IsVisible="@showNotification"
+            Message="@notificationMessage"
+            NotificationType="@notificationType"
+            OnClick="@(() => Navigation.NavigateTo("/notifications"))"
+            OnClose="@HideNotification" />
         @Body
     </ChildContent>
     <FooterRender>

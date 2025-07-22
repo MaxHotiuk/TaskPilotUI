@@ -102,7 +102,9 @@ namespace UI.Extensions
             {
                 var config = sp.GetRequiredService<IConfiguration>();
                 var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<NotificationSignalRService>>();
-                return new NotificationSignalRService(logger, config);
+                var messageService = sp.GetRequiredService<IMessageService>();
+                var navigationManager = sp.GetRequiredService<NavigationManager>();
+                return new NotificationSignalRService(logger, config, messageService, navigationManager);
             });
 
             services.AddScoped<ISignalRService, SignalRService>(sp =>
