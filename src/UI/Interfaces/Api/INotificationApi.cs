@@ -7,6 +7,13 @@ public interface INotificationApi
     [Get("/api/notifications/{userId}")]
     Task<IEnumerable<Notification>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    [Get("/api/notifications/{userId}/range")]
+    Task<IEnumerable<Notification>> GetByUserIdWithRangeAsync(
+        Guid userId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
     [Delete("/api/notifications/{id}")]
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 

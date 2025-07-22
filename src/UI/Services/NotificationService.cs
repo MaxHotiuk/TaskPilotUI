@@ -18,6 +18,15 @@ public class NotificationService : INotificationService
         return await _notificationApi.GetByUserIdAsync(userId, cancellationToken);
     }
 
+    public async Task<IEnumerable<Notification>> GetByUserIdWithRangeAsync(
+        Guid userId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        return await _notificationApi.GetByUserIdWithRangeAsync(userId, page, pageSize, cancellationToken);
+    }
+
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await _notificationApi.DeleteAsync(id, cancellationToken);

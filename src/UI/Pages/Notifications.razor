@@ -79,13 +79,32 @@
             </ChildContent>
         </AntList>
 
-        @if (notifications.Count >= 20)
+        @if (hasMoreNotifications)
         {
             <div style="text-align: center; margin-top: 16px;">
-                <Button OnClick="LoadMoreNotificationsAsync" Loading="@isLoadingMore">
+                <Button OnClick="LoadMoreNotificationsAsync" Loading="@isLoadingMore" Disabled="@isLoadingMore">
                     Load More
                 </Button>
             </div>
         }
     }
 </div>
+
+@code {
+    private RenderFragment[] GetNotificationActions(Notification notification)
+    {
+        var actions = new List<RenderFragment>();
+
+        if (!notification.IsRead)
+        {
+            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => MarkAsReadAsync(notification.Id))">Mark as read</Button>);
+        }
+        if (notification.BoardId.HasValue)
+        {
+            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => NavigateToItem(notification))">View</Button>);
+        }
+        actions.Add(@<Popconfirm Title="Are you sure you want to delete this notification?" OnConfirm="@(() => DeleteAsync(notification.Id))" OkText="Yes" CancelText="No"><Button Size="@ButtonSize.Small" Type="@ButtonType.Link" Danger="true" Icon="delete">Delete</Button></Popconfirm>);
+
+        return actions.ToArray();
+    }
+}

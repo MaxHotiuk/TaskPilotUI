@@ -12,7 +12,10 @@ public partial class Notifications : ComponentBase
     private List<Notification> notifications = new();
     private bool isLoading = true;
     private bool isLoadingMore = false;
+    private bool hasMoreNotifications = true;
     private Guid currentUserId;
+    private int currentPage = 1;
+    private const int pageSize = 7;
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,7 +54,9 @@ public partial class Notifications : ComponentBase
             {
                 await InvokeAsync(async () =>
                 {
-                    await LoadNotificationsAsync();
+                    currentPage = 1;
+                    hasMoreNotifications = true;
+                    await LoadNotificationsAsync(isRefresh: true);
                     StateHasChanged();
                 });
             });
@@ -62,12 +67,23 @@ public partial class Notifications : ComponentBase
         }
     }
 
-    private async Task LoadNotificationsAsync()
+    private async Task LoadNotificationsAsync(bool isRefresh = false)
     {
         try
         {
-            var result = await NotificationService.GetByUserIdAsync(currentUserId);
-            notifications = result.OrderByDescending(n => n.CreatedAt).ToList();
+            var result = await NotificationService.GetByUserIdWithRangeAsync(currentUserId, currentPage, pageSize);
+            var notificationsList = result.OrderByDescending(n => n.CreatedAt).ToList();
+            
+            if (isRefresh || currentPage == 1)
+            {
+                notifications = notificationsList;
+            }
+            else
+            {
+                notifications.AddRange(notificationsList);
+            }
+            
+            hasMoreNotifications = notificationsList.Count == pageSize;
         }
         catch (Exception ex)
         {
@@ -78,9 +94,11 @@ public partial class Notifications : ComponentBase
     private async Task RefreshNotificationsAsync()
     {
         isLoading = true;
+        currentPage = 1;
+        hasMoreNotifications = true;
         StateHasChanged();
         
-        await LoadNotificationsAsync();
+        await LoadNotificationsAsync(isRefresh: true);
         
         isLoading = false;
         StateHasChanged();
@@ -88,13 +106,16 @@ public partial class Notifications : ComponentBase
         MessageService.Success("Notifications refreshed");
     }
 
-    private void LoadMoreNotificationsAsync()
+    private async Task LoadMoreNotificationsAsync()
     {
+        if (!hasMoreNotifications || isLoadingMore)
+            return;
+            
         isLoadingMore = true;
         StateHasChanged();
         
-        // Implement pagination logic here if your API supports it
-        // For now, this is a placeholder
+        currentPage++;
+        await LoadNotificationsAsync();
         
         isLoadingMore = false;
         StateHasChanged();
@@ -112,8 +133,6 @@ public partial class Notifications : ComponentBase
                 notification.IsRead = true;
                 StateHasChanged();
             }
-            
-            MessageService.Success("Notification marked as read");
         }
         catch (Exception ex)
         {
@@ -143,11 +162,11 @@ public partial class Notifications : ComponentBase
         try
         {
             await NotificationService.DeleteAsync(notificationId);
-            
+
             notifications.RemoveAll(n => n.Id == notificationId);
             StateHasChanged();
-            
-            MessageService.Success("Notification deleted");
+            await RefreshNotificationsAsync();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -157,13 +176,10 @@ public partial class Notifications : ComponentBase
 
     private void NavigateToItem(Notification notification)
     {
-        if (notification.TaskId.HasValue)
+        if (notification.BoardId.HasValue)
         {
-            Navigation.NavigateTo($"/tasks/{notification.TaskId}");
-        }
-        else if (notification.BoardId.HasValue)
-        {
-            Navigation.NavigateTo($"/boards/{notification.BoardId}");
+            Navigation.NavigateTo($"/board/{notification.BoardId}");
+            MarkAsReadAsync(notification.Id).ConfigureAwait(false);
         }
     }
 
@@ -216,67 +232,5 @@ public partial class Notifications : ComponentBase
                 }
             });
         }
-    }
-
-    private RenderFragment[] GetNotificationActions(Notification notification)
-    {
-        var actions = new List<RenderFragment>();
-
-        if (!notification.IsRead)
-        {
-            actions.Add(builder =>
-            {
-                builder.OpenComponent<Button>(0);
-                builder.AddAttribute(1, "Size", ButtonSize.Small);
-                builder.AddAttribute(2, "Type", ButtonType.Link);
-                builder.AddAttribute(3, "OnClick", EventCallback.Factory.Create(this, () => MarkAsReadAsync(notification.Id)));
-                builder.AddAttribute(4, "ChildContent", (RenderFragment)((builder2) => 
-                {
-                    builder2.AddContent(5, "Mark as read");
-                }));
-                builder.CloseComponent();
-            });
-        }
-
-        if (notification.BoardId.HasValue || notification.TaskId.HasValue)
-        {
-            actions.Add(builder =>
-            {
-                builder.OpenComponent<Button>(0);
-                builder.AddAttribute(1, "Size", ButtonSize.Small);
-                builder.AddAttribute(2, "Type", ButtonType.Link);
-                builder.AddAttribute(3, "OnClick", EventCallback.Factory.Create(this, () => NavigateToItem(notification)));
-                builder.AddAttribute(4, "ChildContent", (RenderFragment)((builder2) => 
-                {
-                    builder2.AddContent(5, "View");
-                }));
-                builder.CloseComponent();
-            });
-        }
-
-        actions.Add(builder =>
-        {
-            builder.OpenComponent<Popconfirm>(0);
-            builder.AddAttribute(1, "Title", "Are you sure you want to delete this notification?");
-            builder.AddAttribute(2, "OnConfirm", EventCallback.Factory.Create(this, () => DeleteAsync(notification.Id)));
-            builder.AddAttribute(3, "OkText", "Yes");
-            builder.AddAttribute(4, "CancelText", "No");
-            builder.AddAttribute(5, "ChildContent", (RenderFragment)((builder2) => 
-            {
-                builder2.OpenComponent<Button>(6);
-                builder2.AddAttribute(7, "Size", ButtonSize.Small);
-                builder2.AddAttribute(8, "Type", ButtonType.Link);
-                builder2.AddAttribute(9, "Danger", true);
-                builder2.AddAttribute(10, "Icon", "delete");
-                builder2.AddAttribute(11, "ChildContent", (RenderFragment)((builder3) => 
-                {
-                    builder3.AddContent(12, "Delete");
-                }));
-                builder2.CloseComponent();
-            }));
-            builder.CloseComponent();
-        });
-
-        return actions.ToArray();
     }
 }
