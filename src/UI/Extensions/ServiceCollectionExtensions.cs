@@ -67,6 +67,10 @@ namespace UI.Extensions
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
 
+            services.AddRefitClient<INotificationApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+
             services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.microsoft.com"));
 
@@ -93,6 +97,13 @@ namespace UI.Extensions
             services.AddScoped<IAttachmentService, AttachmentService>();
             services.AddScoped<IAvatarService, AvatarService>();
             services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<Interfaces.Services.INotificationService, Services.NotificationService>();
+            services.AddScoped<INotificationSignalRService>(sp =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+                var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<NotificationSignalRService>>();
+                return new NotificationSignalRService(logger, config);
+            });
 
             services.AddScoped<ISignalRService, SignalRService>(sp =>
             {

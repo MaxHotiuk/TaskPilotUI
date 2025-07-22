@@ -1,0 +1,320 @@
+@page "/notifications"
+@using Notification = UI.Models.Notification.Notification
+@using NotificationType = UI.Models.Notification.NotificationType
+@using UI.Interfaces.Services
+@using UI.Interfaces.SignalR
+@using AntDesign
+@using System.Security.Claims
+@inject UI.Interfaces.Services.INotificationService NotificationService
+@inject UI.Interfaces.SignalR.INotificationSignalRService NotificationSignalRService
+@inject IAuthService AuthService
+@inject MessageService MessageService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageHeader Title="Notifications">
+    <PageHeaderExtra>
+        <Space>
+            <SpaceItem>
+                <Button Type="@ButtonType.Primary" Icon="check" OnClick="MarkAllAsReadAsync" Disabled="@(!notifications.Any(n => !n.IsRead))">
+                    Mark All as Read
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Icon="reload" OnClick="RefreshNotificationsAsync" Loading="@isLoading">
+                    Refresh
+                </Button>
+            </SpaceItem>
+        </Space>
+    </PageHeaderExtra>
+</PageHeader>
+
+<div style="padding: 24px; background: #fff; min-height: 280px;">
+    @if (isLoading && !notifications.Any())
+    {
+        <div style="text-align: center; padding: 50px;">
+            <Spin Size=@SpinSize.Large />
+            <div style="margin-top: 16px;">Loading notifications...</div>
+        </div>
+    }
+    else if (!notifications.Any())
+    {
+        <Empty Description=@("No notifications found")>
+            <Icon Type="bell" Style="font-size: 64px; color: #d9d9d9;" />
+        </Empty>
+    }
+    else
+    {
+        <AntList DataSource="notifications"
+                ItemLayout="@ListItemLayout.Horizontal"
+                Size=@ListSize.Large>
+            <ChildContent Context="notification">
+                <ListItem Actions="@GetNotificationActions(notification)">
+                    <ListItemMeta>
+                        <AvatarTemplate>
+                            <Avatar Icon="@GetNotificationIcon(notification.Type)" 
+                                   Style="@($"background-color: {GetNotificationColor(notification.Type)}")"/>
+                        </AvatarTemplate>
+                        <TitleTemplate>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="@(notification.IsRead ? "" : "font-weight: bold;")">
+                                    @GetNotificationTitle(notification.Type)
+                                </span>
+                                @if (!notification.IsRead)
+                                {
+                                    <Badge Status=@BadgeStatus.Processing />
+                                }
+                            </div>
+                        </TitleTemplate>
+                        <DescriptionTemplate>
+                            <div style="@(notification.IsRead ? "color: rgba(0,0,0,0.45)" : "")">
+                                @notification.Text
+                            </div>
+                            <div style="color: rgba(0,0,0,0.45); font-size: 12px; margin-top: 4px;">
+                                @notification.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")
+                            </div>
+                        </DescriptionTemplate>
+                    </ListItemMeta>
+                </ListItem>
+            </ChildContent>
+        </AntList>
+
+        @if (notifications.Count >= 20)
+        {
+            <div style="text-align: center; margin-top: 16px;">
+                <Button OnClick="LoadMoreNotificationsAsync" Loading="@isLoadingMore">
+                    Load More
+                </Button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<Notification> notifications = new();
+    private bool isLoading = true;
+    private bool isLoadingMore = false;
+    private Guid currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetCurrentUserIdAsync();
+        
+        if (currentUserId != Guid.Empty)
+        {
+            await ConnectToSignalRAsync();
+            await LoadNotificationsAsync();
+        }
+        
+        isLoading = false;
+    }
+
+    private async Task GetCurrentUserIdAsync()
+    {
+        var user = await AuthService.GetCurrentUserAsync();
+        if (user != null && Guid.TryParse(user.Id?.ToString(), out var parsedId) && parsedId != Guid.Empty)
+        {
+            currentUserId = parsedId;
+            return;
+        }
+    }
+
+    private async Task ConnectToSignalRAsync()
+    {
+        try
+        {
+            if (!NotificationSignalRService.IsConnected)
+            {
+                await NotificationSignalRService.ConnectAsync();
+                await NotificationSignalRService.JoinUserGroupAsync(currentUserId.ToString());
+            }
+
+            NotificationSignalRService.OnNotificationReceived(async (notification) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadNotificationsAsync();
+                    StateHasChanged();
+                });
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to connect to notification service: {ex.Message}");
+        }
+    }
+
+    private async Task LoadNotificationsAsync()
+    {
+        try
+        {
+            var result = await NotificationService.GetNotificationsByUserIdAsync(currentUserId);
+            notifications = result.OrderByDescending(n => n.CreatedAt).ToList();
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to load notifications: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshNotificationsAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+        
+        await LoadNotificationsAsync();
+        
+        isLoading = false;
+        StateHasChanged();
+        
+        MessageService.Success("Notifications refreshed");
+    }
+
+    private void LoadMoreNotificationsAsync()
+    {
+        isLoadingMore = true;
+        StateHasChanged();
+        
+        // Implement pagination logic here if your API supports it
+        // For now, this is a placeholder
+        
+        isLoadingMore = false;
+        StateHasChanged();
+    }
+
+    private async Task MarkAsReadAsync(Guid notificationId)
+    {
+        try
+        {
+            await NotificationService.MarkNotificationAsReadAsync(notificationId);
+            
+            var notification = notifications.FirstOrDefault(n => n.Id == notificationId);
+            if (notification != null)
+            {
+                notification.IsRead = true;
+                StateHasChanged();
+            }
+            
+            MessageService.Success("Notification marked as read");
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to mark notification as read: {ex.Message}");
+        }
+    }
+
+    private async Task MarkAllAsReadAsync()
+    {
+        try
+        {
+            await NotificationService.MarkAllNotificationsAsReadAsync(currentUserId);
+            
+            notifications.ForEach(n => n.IsRead = true);
+            StateHasChanged();
+            
+            MessageService.Success("All notifications marked as read");
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to mark all notifications as read: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteNotificationAsync(Guid notificationId)
+    {
+        try
+        {
+            await NotificationService.DeleteNotificationAsync(notificationId);
+            
+            notifications.RemoveAll(n => n.Id == notificationId);
+            StateHasChanged();
+            
+            MessageService.Success("Notification deleted");
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to delete notification: {ex.Message}");
+        }
+    }
+
+    private void NavigateToItem(Notification notification)
+    {
+        if (notification.TaskId.HasValue)
+        {
+            Navigation.NavigateTo($"/tasks/{notification.TaskId}");
+        }
+        else if (notification.BoardId.HasValue)
+        {
+            Navigation.NavigateTo($"/boards/{notification.BoardId}");
+        }
+    }
+
+    private string GetNotificationIcon(NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.AddedToBoard => "team",
+            NotificationType.AssignedToTask => "file-text",
+            NotificationType.CommentedOnTask => "message",
+            _ => "bell"
+        };
+    }
+
+    private string GetNotificationColor(NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.AddedToBoard => "#52c41a",
+            NotificationType.AssignedToTask => "#1890ff",
+            NotificationType.CommentedOnTask => "#fa8c16",
+            _ => "#d9d9d9"
+        };
+    }
+
+    private string GetNotificationTitle(NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.AddedToBoard => "Added to Board",
+            NotificationType.AssignedToTask => "Task Assignment",
+            NotificationType.CommentedOnTask => "New Comment",
+            _ => "Notification"
+        };
+    }
+
+    public void Dispose()
+    {
+        if (currentUserId != Guid.Empty)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await NotificationSignalRService.LeaveUserGroupAsync(currentUserId.ToString());
+                    await NotificationSignalRService.DisconnectAsync();
+                }
+                catch
+                {
+                    // Ignore disposal errors
+                }
+            });
+        }
+    }
+
+    private RenderFragment[] GetNotificationActions(Notification notification)
+    {
+        var actions = new List<RenderFragment>();
+
+        if (!notification.IsRead)
+        {
+            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => MarkAsReadAsync(notification.Id))">Mark as read</Button>);
+        }
+        if (notification.BoardId.HasValue || notification.TaskId.HasValue)
+        {
+            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => NavigateToItem(notification))">View</Button>);
+        }
+        actions.Add(@<Popconfirm Title="Are you sure you want to delete this notification?" OnConfirm="@(() => DeleteNotificationAsync(notification.Id))" OkText="Yes" CancelText="No"><Button Size="@ButtonSize.Small" Type="@ButtonType.Link" Danger="true" Icon="delete">Delete</Button></Popconfirm>);
+
+        return actions.ToArray();
+    }
+}
