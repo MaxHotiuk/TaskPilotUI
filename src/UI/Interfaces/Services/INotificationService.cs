@@ -4,9 +4,9 @@ namespace UI.Interfaces.Services;
 
 public interface INotificationService
 {
-    Task<IEnumerable<Notification>> GetNotificationsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
-    Task DeleteNotificationAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<int> GetUnreadNotificationsCountAsync(Guid userId, CancellationToken cancellationToken = default);
-    Task MarkAllNotificationsAsReadAsync(Guid userId, CancellationToken cancellationToken = default);
-    Task MarkNotificationAsReadAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Notification>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<int> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task MarkAsReadAsync(Guid id, CancellationToken cancellationToken = default);
 }

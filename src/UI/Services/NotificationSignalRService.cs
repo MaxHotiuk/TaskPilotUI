@@ -12,7 +12,6 @@ namespace UI.Services
         private readonly ILogger<NotificationSignalRService> _logger;
         private readonly string _apiBaseUrl;
         private readonly IMessageService _messageService;
-        private readonly NavigationManager _navigationManager;
         private HubConnection? _hubConnection;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
@@ -20,13 +19,11 @@ namespace UI.Services
         public NotificationSignalRService(
             ILogger<NotificationSignalRService> logger, 
             IConfiguration configuration,
-            IMessageService messageService,
-            NavigationManager navigationManager)
+            IMessageService messageService)
         {
             _logger = logger;
             _apiBaseUrl = configuration["Api:BaseUrl"] ?? throw new InvalidOperationException("API Base URL is not configured.");
             _messageService = messageService;
-            _navigationManager = navigationManager;
         }
 
         public async Task ConnectAsync()
@@ -42,18 +39,14 @@ namespace UI.Services
                 .WithAutomaticReconnect()
                 .Build();
 
-            // Set up the notification handler
             SetupNotificationHandler();
 
             try
             {
                 await _hubConnection.StartAsync();
-                _logger.LogInformation("Connected to notification hub successfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Failed to connect to notification hub");
-                throw;
             }
         }
 
@@ -64,11 +57,9 @@ namespace UI.Services
                 try
                 {
                     ShowNotificationMessage(notification);
-                    _logger.LogInformation($"Notification displayed for user: {notification.UserId}");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    _logger.LogError(ex, "Error displaying notification");
                 }
             });
         }
@@ -81,7 +72,7 @@ namespace UI.Services
             var config = new MessageConfig()
             {
                 Content = notificationText,
-                Duration = 5, // Show for 5 seconds
+                Duration = 5,
                 Icon = iconType
             };
 
@@ -155,11 +146,9 @@ namespace UI.Services
                     await _hubConnection.StopAsync();
                     await _hubConnection.DisposeAsync();
                     _hubConnection = null;
-                    _logger.LogInformation("Disconnected from notification hub");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    _logger.LogError(ex, "Error occurred while disconnecting from notification hub");
                     throw;
                 }
             }
@@ -172,11 +161,9 @@ namespace UI.Services
                 try
                 {
                     await _hubConnection.InvokeAsync("JoinUserGroup", userId);
-                    _logger.LogInformation($"Joined user group for user {userId}");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    _logger.LogError(ex, $"Failed to join user group for user {userId}");
                     throw;
                 }
             }
@@ -189,11 +176,9 @@ namespace UI.Services
                 try
                 {
                     await _hubConnection.InvokeAsync("LeaveUserGroup", userId);
-                    _logger.LogInformation($"Left user group for user {userId}");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    _logger.LogError(ex, $"Failed to leave user group for user {userId}");
                     throw;
                 }
             }
@@ -212,11 +197,9 @@ namespace UI.Services
                 {
                     await _hubConnection.DisposeAsync();
                     _hubConnection = null;
-                    _logger.LogInformation("NotificationSignalRService disposed");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    _logger.LogError(ex, "Error occurred while disposing NotificationSignalRService");
                 }
             }
         }

@@ -1,5 +1,4 @@
 using UI.Interfaces.Api;
-using UI.Interfaces.Services;
 using INotificationService = UI.Interfaces.Services.INotificationService;
 using Notification = UI.Models.Notification.Notification;
 
@@ -14,28 +13,28 @@ public class NotificationService : INotificationService
         _notificationApi = notificationApi;
     }
 
-    public async Task<IEnumerable<Notification>> GetNotificationsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Notification>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _notificationApi.GetNotificationsByUserIdAsync(userId, cancellationToken);
+        return await _notificationApi.GetByUserIdAsync(userId, cancellationToken);
     }
 
-    public async Task DeleteNotificationAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await _notificationApi.DeleteNotificationAsync(id, cancellationToken);
+        await _notificationApi.DeleteAsync(id, cancellationToken);
     }
 
-    public async Task<int> GetUnreadNotificationsCountAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<int> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _notificationApi.GetUnreadNotificationsCountAsync(userId, cancellationToken);
+        return await _notificationApi.GetUnreadCountAsync(userId, cancellationToken);
     }
 
-    public async Task MarkAllNotificationsAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        await _notificationApi.MarkAllNotificationsAsReadAsync(userId, cancellationToken);
+        await _notificationApi.MarkAllAsReadAsync(userId, cancellationToken);
     }
 
-    public async Task MarkNotificationAsReadAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task MarkAsReadAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await _notificationApi.MarkNotificationAsReadAsync(id, cancellationToken);
+        await _notificationApi.MarkAsReadAsync(id, cancellationToken);
     }
 }
