@@ -9,4 +9,5 @@ public interface ITaskService
     Task<string> CreateAsync(CreateTaskRequest request);
     Task UpdateAsync(string taskId, UpdateTaskRequest request);
     Task DeleteAsync(string taskId);
+    Task<List<TaskCalendarItemDto>> GetForCalendarMonthAsync(Guid userId, DateTime dayInMonth);
 }

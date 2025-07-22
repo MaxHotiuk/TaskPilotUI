@@ -26,14 +26,14 @@ namespace UI.Layouts
                 new MenuDataItem
                 {
                     Path = "/",
-                    Name = "boards",
+                    Name = "Boards",
                     Key = "boards",
                     Icon = "appstore",
                 },
                 new MenuDataItem
                 {
                     Path = "/profile",
-                    Name = "profile",
+                    Name = "Profile",
                     Key = "profile",
                     Icon = "user",
                 },
@@ -47,9 +47,16 @@ namespace UI.Layouts
                 new MenuDataItem
                 {
                     Path = "/notifications",
-                    Name = "notifications",
+                    Name = "Notifications",
                     Key = "notifications",
                     Icon = "bell"
+                },
+                new MenuDataItem
+                {
+                    Path = "/calendar",
+                    Name = "Calendar",
+                    Key = "calendar",
+                    Icon = "calendar"
                 }
             };
 
