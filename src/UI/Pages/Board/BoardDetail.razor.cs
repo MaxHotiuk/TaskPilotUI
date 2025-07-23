@@ -36,6 +36,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private bool _showTaskDetailsModal = false;
     private bool _isTaskDetailsLoading = false;
     private bool _showManageStatesModal = false;
+    private bool _showManageTagsModal = false;
     private TaskItemDto? _selectedTask = null;
     private AddMemberModal.AddMemberForm _addMemberForm = new();
     private CreateStateRequest _addStateForm = new();
@@ -199,6 +200,16 @@ public partial class BoardDetail : ComponentBase, IDisposable
             return;
         }
         _showManageStatesModal = true;
+    }
+
+    private void ShowManageTagsModal()
+    {
+        if (!CanManageStates())
+        {
+            Message.Warning("Only board owners and members can manage tags");
+            return;
+        }
+        _showManageTagsModal = true;
     }
 
     private void ShowArchiveBoardModal()

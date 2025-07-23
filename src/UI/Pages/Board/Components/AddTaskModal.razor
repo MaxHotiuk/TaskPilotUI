@@ -83,5 +83,17 @@
             </Select>
         </FormItem>
 
+        <FormItem Label="Tag">
+            <Select @bind-Value=@FormModel.TagId TItemValue="int?" TItem="int?" Style="width: 100%;" Placeholder="Select tag (optional)">
+                <SelectOptions>
+                    <SelectOption TItemValue="int?" TItem="int?" Value=null Label="No tag" />
+                    @foreach (var tag in Tags)
+                    {
+                        <SelectOption TItemValue="int?" TItem="int?" Value=@tag.Id Label=@tag.Name />
+                    }
+                </SelectOptions>
+            </Select>
+        </FormItem>
+
     </Form>
 </Modal>

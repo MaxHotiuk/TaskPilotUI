@@ -70,6 +70,10 @@ namespace UI.Extensions
             services.AddRefitClient<INotificationApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
+            
+            services.AddRefitClient<ITagApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
 
             services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.microsoft.com"));
@@ -92,6 +96,7 @@ namespace UI.Extensions
             services.AddScoped<ITaskService, TaskService>();
             services.AddScoped<ITaskStateService, TaskStateService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<ITagService, TagService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddSingleton<IGlobalLoadingService, GlobalLoadingService>();
             services.AddScoped<IAttachmentService, AttachmentService>();

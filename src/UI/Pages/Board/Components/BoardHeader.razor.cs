@@ -14,6 +14,7 @@ public partial class BoardHeader : ComponentBase
     [Parameter] public EventCallback OnRefresh { get; set; }
     [Parameter] public EventCallback OnCreateTask { get; set; }
     [Parameter] public EventCallback OnManageStates { get; set; }
+    [Parameter] public EventCallback OnManageTags { get; set; }
     [Parameter] public string? CurrentUserId { get; set; }
     [Parameter] public EventCallback OnArchive { get; set; }
 

@@ -11,6 +11,7 @@ public class BoardService : IBoardService
     private readonly IBoardApi _boardApi;
     private readonly IBoardMemberService _boardMemberService;
     private readonly ITaskService _taskService;
+    private readonly ITagService _tagService;
     private readonly ITaskStateService _taskStateService;
     private readonly IAuthService _authService;
     private readonly ILocalStorageService _localStorage;
@@ -22,6 +23,7 @@ public class BoardService : IBoardService
         IBoardApi boardApi,
         IBoardMemberService boardMemberService,
         ITaskService taskService,
+        ITagService tagService,
         ITaskStateService taskStateService,
         IAuthService authService,
         ILocalStorageService localStorage)
@@ -30,6 +32,7 @@ public class BoardService : IBoardService
         _boardApi = boardApi;
         _boardMemberService = boardMemberService;
         _taskService = taskService;
+        _tagService = tagService;
         _taskStateService = taskStateService;
         _authService = authService;
         _localStorage = localStorage;
@@ -169,6 +172,7 @@ public class BoardService : IBoardService
             var members = await _boardMemberService.GetBoardMembersAsync(boardId);
             var tasks = await _taskService.GetBoardTasksAsync(boardId);
             var states = await _taskStateService.GetBoardStatesAsync(boardId);
+            var tags = await _tagService.GetByBoardIdAsync(Guid.Parse(boardId));
 
             return new BoardDetailDto
             {
@@ -180,6 +184,7 @@ public class BoardService : IBoardService
                 UpdatedAt = board.UpdatedAt,
                 Members = members,
                 Tasks = tasks,
+                Tags = tags,
                 States = states
             };
         }

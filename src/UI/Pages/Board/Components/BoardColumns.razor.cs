@@ -97,4 +97,20 @@ public partial class BoardColumns : ComponentBase
             _ => "Unknown"
         };
     }
+    private string GetDueDateColor(string dueDateString)
+    {
+        if (DateTime.TryParse(dueDateString, out var dueDate))
+        {
+            var now = DateTime.Now;
+            var timeDiff = dueDate - now;
+
+            if (timeDiff.TotalDays < 0)
+                return "red"; // Overdue
+            else if (timeDiff.TotalDays <= 3)
+                return "orange"; // Due soon
+            else
+                return "green"; // Good
+        }
+        return "default";
+    }
 }

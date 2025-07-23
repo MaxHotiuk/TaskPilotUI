@@ -10,6 +10,9 @@ using UI.Interfaces.Services;
 
 namespace UI.Pages.Board.Components;
 
+using UI.Models.Tag;
+using UI.Interfaces.Services;
+
 public partial class TaskDetailsModal : ComponentBase
 {
     [Parameter] public bool IsVisible { get; set; }
@@ -18,6 +21,7 @@ public partial class TaskDetailsModal : ComponentBase
     [Parameter] public List<StateDto> States { get; set; } = new();
     [Parameter] public List<BoardMemberDto> BoardMembers { get; set; } = new();
     [Parameter] public bool CanManageTask { get; set; }
+    [Parameter] public List<TagDto> Tags { get; set; } = new();
     [Parameter] public EventCallback<TaskItemDto> OnTaskUpdated { get; set; }
     [Parameter] public EventCallback<string> OnTaskDeleted { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -25,6 +29,7 @@ public partial class TaskDetailsModal : ComponentBase
     [Inject] private IUserService UserService { get; set; } = default!;
     [Inject] private ITaskService TaskService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
+    [Inject] private ITagService TagService { get; set; } = default!;
     [Inject] private NotificationService NotificationService { get; set; } = default!;
 
     private List<UserDto> AllUsers { get; set; } = new();
@@ -39,6 +44,21 @@ public partial class TaskDetailsModal : ComponentBase
     {
         await LoadAllUsers();
         await LoadCurrentUser();
+        await LoadTags();
+    }
+
+    private async Task LoadTags()
+    {
+        if (CurrentTask?.BoardId != null)
+        {
+            var boardGuid = Guid.Parse(CurrentTask.BoardId);
+            var tags = await TagService.GetByBoardIdAsync(boardGuid);
+            Tags = tags.ToList();
+        }
+        else
+        {
+            Tags = new List<TagDto>();
+        }
     }
 
     protected override void OnParametersSet()
@@ -65,6 +85,7 @@ public partial class TaskDetailsModal : ComponentBase
             Title = CurrentTask.Title,
             Description = CurrentTask.Description,
             StateId = CurrentTask.StateId,
+            TagId = CurrentTask.TagId,
             AssigneeId = CurrentTask.AssigneeId,
             DueDate = CurrentTask.DueDate,
             Priority = CurrentTask.Priority
@@ -187,6 +208,7 @@ public partial class TaskDetailsModal : ComponentBase
             CurrentTask.Title = FormModel.Title;
             CurrentTask.Description = FormModel.Description;
             CurrentTask.StateId = FormModel.StateId;
+            CurrentTask.TagId = FormModel.TagId;
             CurrentTask.AssigneeId = FormModel.AssigneeId;
             CurrentTask.DueDate = FormModel.DueDate;
             CurrentTask.Priority = FormModel.Priority;
@@ -273,6 +295,8 @@ public partial class TaskDetailsModal : ComponentBase
                 Title = CurrentTask.Title,
                 Description = CurrentTask.Description,
                 StateId = newStateId,
+                TagId = CurrentTask.TagId,
+                Priority = CurrentTask.Priority,
                 AssigneeId = CurrentTask.AssigneeId,
                 DueDate = CurrentTask.DueDate
             };
