@@ -35,8 +35,6 @@ public partial class TaskDetailsModal : ComponentBase
     private List<UserDto> AllUsers { get; set; } = new();
     private UpdateTaskRequest FormModel { get; set; } = new();
     private bool IsEditing { get; set; } = false;
-    private DateTime? DueDateValue { get; set; }
-    private string DueDateString { get; set; } = string.Empty;
     private bool _internalLoading = false;
     private string? CurrentUserId { get; set; }
 
@@ -64,7 +62,7 @@ public partial class TaskDetailsModal : ComponentBase
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        
+
         if (CurrentTask != null && IsVisible)
         {
             InitializeForm();
@@ -90,17 +88,6 @@ public partial class TaskDetailsModal : ComponentBase
             DueDate = CurrentTask.DueDate,
             Priority = CurrentTask.Priority
         };
-
-        if (!string.IsNullOrEmpty(CurrentTask.DueDate) && DateTime.TryParse(CurrentTask.DueDate, out var dueDate))
-        {
-            DueDateValue = dueDate;
-            DueDateString = dueDate.ToString("yyyy-MM-dd");
-        }
-        else
-        {
-            DueDateValue = null;
-            DueDateString = string.Empty;
-        }
     }
 
     private async Task LoadAllUsers()
@@ -193,16 +180,6 @@ public partial class TaskDetailsModal : ComponentBase
             _internalLoading = true;
             StateHasChanged();
 
-            if (!string.IsNullOrWhiteSpace(DueDateString) && DateTime.TryParse(DueDateString, out var dueDate))
-            {
-                FormModel.DueDate = dueDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-            }
-            else
-            {
-                FormModel.DueDate = null;
-            }
-
-            Console.WriteLine($"Saving task with ID: {CurrentTask.Id}, Title: {FormModel.Title}, DueDate: {FormModel.DueDate}");
             await TaskService.UpdateAsync(CurrentTask.Id, FormModel);
 
             CurrentTask.Title = FormModel.Title;

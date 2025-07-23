@@ -26,7 +26,7 @@
 
     <FormItem Label="State" Required>
         <Select @bind-Value=@FormModel.StateId 
-                TItemValue="int" 
+                TItemValue="int"
                 TItem="int" 
                 Style="width: 100%;" 
                 Placeholder="Select state">
@@ -63,7 +63,7 @@
     }
 
     <FormItem Label="Due Date">
-        <Input @bind-Value=@DueDateString
+        <Input @bind-Value=@FormModel.DueDate
                Type=@InputType.Date
                Style="width: 100%;"
                Placeholder="Select due date (optional)" />

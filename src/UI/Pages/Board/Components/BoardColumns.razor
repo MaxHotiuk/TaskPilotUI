@@ -41,12 +41,12 @@
                                               Hoverable>
                                             <Body>
                                                 <div class="task-card">
-                                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                                    <div style="display: flex; align-items: center; justify-content: space-between;">
                                                         <div style="flex: 1; min-width: 0;">
                                                             <Text Strong>@task.Title</Text>
                                                         </div>
                                                         <div style="flex-shrink: 0;">
-                                                            <Tag Color=@GetPriorityColor(task.Priority) Icon="exclamation-circle">
+                                                            <Tag Style="margin-right: 0px !important;" Color=@GetPriorityColor(task.Priority) Icon="exclamation-circle">
                                                                 @GetPriorityLabel(task.Priority)
                                                             </Tag>
                                                         </div>
@@ -80,7 +80,7 @@
                                                             var tag = BoardDetail.Tags.FirstOrDefault(t => t.Id == task.TagId);
                                                             if (tag != null)
                                                             {
-                                                                <Tag Style="margin-left: auto;" Color=@tag.Color>@tag.Name</Tag>
+                                                                <Tag Style="margin-left: auto; margin-right: 0px !important;" Color=@tag.Color>@tag.Name</Tag>
                                                             }
                                                         }
                                                     </div>

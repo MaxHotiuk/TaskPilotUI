@@ -16,7 +16,14 @@ public partial class TaskEditMode : ComponentBase
     [Parameter, EditorRequired] public List<BoardMemberDto> BoardMembers { get; set; } = new();
     [Parameter, EditorRequired] public List<UserDto> AllUsers { get; set; } = new();
     [Parameter, EditorRequired] public bool CanManageTask { get; set; }
-    [Parameter, EditorRequired] public string DueDateString { get; set; } = string.Empty;
     [Parameter, EditorRequired] public EventCallback OnFormSubmit { get; set; }
     [Parameter, EditorRequired] public EventCallback<EditContext> OnFormSubmitFailed { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (FormModel != null && FormModel.DueDate != null && FormModel.DueDate.Length >= 19)
+        {
+            FormModel.DueDate = FormModel.DueDate.Remove(10, 9);
+        }
+    }
 }
