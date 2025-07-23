@@ -29,6 +29,17 @@
                     Delete Task
                 </Button>
             </Popconfirm>
+
+            <Popconfirm Title="Are you sure you want to archive this task?"
+                        OnConfirm=@OnArchive
+                        OkText="Yes"
+                        CancelText="No">
+                <Button Type=@ButtonType.Primary
+                        Danger=@true
+                        Loading=@IsLoading>
+                    Archive Task
+                </Button>
+            </Popconfirm>
         }
     }
 </div>

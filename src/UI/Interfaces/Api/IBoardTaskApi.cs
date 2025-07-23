@@ -16,12 +16,25 @@ public interface IBoardTaskApi
 
     [Put("/api/tasks/{taskId}")]
     Task UpdateAsync(string taskId, [Body] UpdateTaskRequest request);
-    
+
     [Delete("/api/tasks/{taskId}")]
     Task DeleteAsync(string taskId);
-    
+
     [Get("/api/tasks/calendar")]
     Task<List<TaskCalendarItemDto>> GetForCalendarMonthAsync(
         Guid userId,
         DateTime dayInMonth);
+
+    [Post("/api/tasks/{taskId}/archive")]
+    Task ArchiveAsync(Guid taskId);
+
+    [Post("/api/tasks/{taskId}/restore")]
+    Task RestoreAsync(Guid taskId);
+    
+    [Get("/api/tasks/archived")]
+    Task<List<ArchivedTaskDto>> SearchArchivedRangeTaskItemsAsync(
+        int page,
+        int pageSize,
+        string searchTerm,
+        Guid boardId);
 }
