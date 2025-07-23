@@ -5,6 +5,7 @@ using UI.Models.State;
 using UI.Models.Member;
 using UI.Models.User;
 using UI.Interfaces.Services;
+using UI.Models.Tag;
 
 namespace UI.Pages.Board.Components;
 
@@ -14,6 +15,7 @@ public partial class AddTaskModal : ComponentBase
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public CreateTaskRequest FormModel { get; set; } = new();
     [Parameter] public List<StateDto> States { get; set; } = new();
+    [Parameter] public List<TagDto> Tags { get; set; } = new();
     [Parameter] public List<BoardMemberDto> BoardMembers { get; set; } = new();
     [Parameter] public string BoardId { get; set; } = string.Empty;
     [Parameter] public EventCallback OnOk { get; set; }
@@ -43,6 +45,11 @@ public partial class AddTaskModal : ComponentBase
         if (States.Any() && FormModel.StateId == 0)
         {
             FormModel.StateId = States.First().Id;
+        }
+
+        if (Tags.Any() && FormModel.TagId == null)
+        {
+            FormModel.TagId = Tags.First().Id;
         }
 
         if (!IsVisible)
@@ -112,9 +119,10 @@ public partial class AddTaskModal : ComponentBase
         FormModel.Description = null;
         FormModel.AssigneeId = null;
         FormModel.DueDate = null;
+        FormModel.Priority = 2;
         DueDateValue = null;
         DueDateString = string.Empty;
-        
+
         if (States.Any())
         {
             FormModel.StateId = States.First().Id;
@@ -122,6 +130,15 @@ public partial class AddTaskModal : ComponentBase
         else
         {
             FormModel.StateId = 0;
+        }
+
+        if (Tags.Any())
+        {
+            FormModel.TagId = Tags.First().Id;
+        }
+        else
+        {
+            FormModel.TagId = null;
         }
     }
 

@@ -72,5 +72,28 @@
                    Placeholder="Select due date (optional)" />
         </FormItem>
 
+        <FormItem Label="Priority" Required>
+            <Select @bind-Value=@FormModel.Priority TItemValue="int" TItem="int" Style="width: 100%;" Placeholder="Select priority">
+                <SelectOptions>
+                    <SelectOption TItemValue="int" TItem="int" Value="1" Label="Low" />
+                    <SelectOption TItemValue="int" TItem="int" Value="2" Label="Normal" />
+                    <SelectOption TItemValue="int" TItem="int" Value="3" Label="High" />
+                    <SelectOption TItemValue="int" TItem="int" Value="4" Label="Immediate" />
+                </SelectOptions>
+            </Select>
+        </FormItem>
+
+        <FormItem Label="Tag">
+            <Select @bind-Value=@FormModel.TagId TItemValue="int?" TItem="int?" Style="width: 100%;" Placeholder="Select tag (optional)">
+                <SelectOptions>
+                    <SelectOption TItemValue="int?" TItem="int?" Value=null Label="No tag" />
+                    @foreach (var tag in Tags)
+                    {
+                        <SelectOption TItemValue="int?" TItem="int?" Value=@tag.Id Label=@tag.Name />
+                    }
+                </SelectOptions>
+            </Select>
+        </FormItem>
+
     </Form>
 </Modal>

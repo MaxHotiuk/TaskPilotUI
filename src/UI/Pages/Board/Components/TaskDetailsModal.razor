@@ -26,13 +26,15 @@
                                       CanManageTask=@CanManageTask
                                       DueDateString=@DueDateString
                                       OnFormSubmit=@HandleSubmit
-                                      OnFormSubmitFailed=@HandleSubmitFailed />
+                                      OnFormSubmitFailed=@HandleSubmitFailed
+                                      Tags=@Tags />
                     }
                     else
                     {
                         <TaskViewMode Task=@CurrentTask
                                       States=@States
-                                      AllUsers=@AllUsers />
+                                      AllUsers=@AllUsers
+                                      Tags=@Tags />
 
                         <TaskQuickActions States=@States
                                           CurrentStateId=@CurrentTask.StateId
