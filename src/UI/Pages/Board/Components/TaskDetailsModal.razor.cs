@@ -66,7 +66,8 @@ public partial class TaskDetailsModal : ComponentBase
             Description = CurrentTask.Description,
             StateId = CurrentTask.StateId,
             AssigneeId = CurrentTask.AssigneeId,
-            DueDate = CurrentTask.DueDate
+            DueDate = CurrentTask.DueDate,
+            Priority = CurrentTask.Priority
         };
 
         if (!string.IsNullOrEmpty(CurrentTask.DueDate) && DateTime.TryParse(CurrentTask.DueDate, out var dueDate))
@@ -180,6 +181,7 @@ public partial class TaskDetailsModal : ComponentBase
                 FormModel.DueDate = null;
             }
 
+            Console.WriteLine($"Saving task with ID: {CurrentTask.Id}, Title: {FormModel.Title}, DueDate: {FormModel.DueDate}");
             await TaskService.UpdateAsync(CurrentTask.Id, FormModel);
 
             CurrentTask.Title = FormModel.Title;
@@ -187,6 +189,7 @@ public partial class TaskDetailsModal : ComponentBase
             CurrentTask.StateId = FormModel.StateId;
             CurrentTask.AssigneeId = FormModel.AssigneeId;
             CurrentTask.DueDate = FormModel.DueDate;
+            CurrentTask.Priority = FormModel.Priority;
             CurrentTask.UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 
             IsEditing = false;

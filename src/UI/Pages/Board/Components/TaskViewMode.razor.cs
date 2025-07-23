@@ -46,6 +46,30 @@ public partial class TaskViewMode : ComponentBase
         }
     }
 
+    private string GetPriorityLabel(int priority)
+    {
+        return priority switch
+        {
+            1 => "Low",
+            2 => "Normal",
+            3 => "High",
+            4 => "Immediate",
+            _ => "Unknown"
+        };
+    }
+
+    private string GetPriorityColor(int priority)
+    {
+        return priority switch
+        {
+            1 => "default",
+            2 => "blue",
+            3 => "orange",
+            4 => "red",
+            _ => "default"
+        };
+    }
+
     private string GetAssigneeInitials(string assigneeId)
     {
         var user = AllUsers.FirstOrDefault(u => u.Id == assigneeId);

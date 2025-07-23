@@ -41,7 +41,16 @@
                                               Hoverable>
                                             <Body>
                                                 <div class="task-card">
-                                                    <Text Strong>@task.Title</Text>
+                                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                                        <div style="flex: 1; min-width: 0;">
+                                                            <Text Strong>@task.Title</Text>
+                                                        </div>
+                                                        <div style="flex-shrink: 0;">
+                                                            <Tag Color=@GetPriorityColor(task.Priority) Icon="exclamation-circle">
+                                                                @GetPriorityLabel(task.Priority)
+                                                            </Tag>
+                                                        </div>
+                                                    </div>
                                                     @if (!string.IsNullOrEmpty(task.Description))
                                                     {
                                                         <div class="task-title">

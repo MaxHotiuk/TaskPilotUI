@@ -55,6 +55,12 @@
             </div>
 
             <div class="detail-item">
+                <Icon Type="flag" />
+                <span class="label">Priority:</span>
+                <Tag Color=@GetPriorityColor(Task.Priority) Icon="exclamation-circle">@GetPriorityLabel(Task.Priority)</Tag>
+            </div>
+
+            <div class="detail-item">
                 <Icon Type="calendar" />
                 <span class="label">Due:</span>
                 @if (!string.IsNullOrEmpty(Task.DueDate))

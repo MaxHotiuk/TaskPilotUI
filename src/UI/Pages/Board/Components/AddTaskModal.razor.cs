@@ -112,9 +112,10 @@ public partial class AddTaskModal : ComponentBase
         FormModel.Description = null;
         FormModel.AssigneeId = null;
         FormModel.DueDate = null;
+        FormModel.Priority = 2;
         DueDateValue = null;
         DueDateString = string.Empty;
-        
+
         if (States.Any())
         {
             FormModel.StateId = States.First().Id;
