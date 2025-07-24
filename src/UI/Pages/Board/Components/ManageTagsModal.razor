@@ -16,10 +16,9 @@
             </Template>
         </AntDesign.Column>
         <AntDesign.Column TData=@TagDto Title="Color">
-            @* <Template>
-                <AntDesign.Input TValue="string" @bind-Value=@context.Color Placeholder="e.g. green or blue" MaxLength="20" Size=@InputSize.Small />
-            </Template> *@
-            <input type="color" @bind-value=@context.Color />
+            <Template>
+                <input type="color" @bind-value=@context.Color @bind-value:event="onchange" @bind-value:after="() => OnColorChanged(context)" />
+            </Template>
         </AntDesign.Column>
         <AntDesign.Column TData=@TagDto Title="Actions" Width="120">
             <Template>

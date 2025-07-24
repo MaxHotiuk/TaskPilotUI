@@ -15,7 +15,7 @@ public partial class ManageTagsModal : ComponentBase
     public List<TagDto> Tags { get; set; } = new();
     private bool _showAddTagModal;
     private bool _isAddingTag;
-    private CreateTagRequestDto _addTagForm = new CreateTagRequestDto { Color = "#0091ffff" };
+    private CreateTagRequestDto _addTagForm = new CreateTagRequestDto { Color = "#0091ff" };
 
     protected override async Task OnParametersSetAsync()
     {
@@ -38,7 +38,7 @@ public partial class ManageTagsModal : ComponentBase
 
     private void ResetAddTagForm()
     {
-        _addTagForm = new CreateTagRequestDto();
+        _addTagForm = new CreateTagRequestDto { Color = "#039fff" };
     }
 
     private async Task AddTag()
@@ -64,6 +64,8 @@ public partial class ManageTagsModal : ComponentBase
         {
             _isAddingTag = false;
             StateHasChanged();
+            if (OnTagsChanged.HasValue)
+                await OnTagsChanged.Value.InvokeAsync(Tags);
         }
     }
 
@@ -72,9 +74,14 @@ public partial class ManageTagsModal : ComponentBase
         await UpdateTag(tag);
     }
 
+    private async Task OnColorChanged(TagDto tag)
+    {
+        await UpdateTag(tag);
+    }
+
     private async Task UpdateTag(TagDto tag)
     {
-        await TagService.UpdateAsync(Guid.Parse(BoardId), tag.Id, new UpdateTagRequestDto { Name = tag.Name });
+        await TagService.UpdateAsync(Guid.Parse(BoardId), tag.Id, new UpdateTagRequestDto { Name = tag.Name, Color = tag.Color });
         await LoadTagsAsync();
         if (OnTagsChanged.HasValue)
             await OnTagsChanged.Value.InvokeAsync(Tags);
