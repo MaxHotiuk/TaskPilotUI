@@ -10,13 +10,21 @@ namespace UI.Pages.Board.Components;
 
 public partial class TaskViewMode : ComponentBase
 {
-    [Parameter, EditorRequired] public TaskItemDto Task { get; set; } = default!;
+    [Parameter, EditorRequired] public string TaskId { get; set; } = default!;
+    public TaskItemDto Task { get; set; } = default!;
     [Parameter, EditorRequired] public List<StateDto> States { get; set; } = new();
     [Parameter, EditorRequired] public List<UserDto> AllUsers { get; set; } = new();
 
     [Inject] private IAvatarService AvatarService { get; set; } = default!;
+    [Inject] private ITaskService TaskService { get; set; } = default!;
     private ConcurrentDictionary<string, AvatarDto?> _avatarCache = new();
     private ConcurrentDictionary<string, bool> _avatarLoading = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Task = await TaskService.GetByIdAsync(TaskId);
+    }
 
     private async Task LoadAvatarAsync(string userId)
     {

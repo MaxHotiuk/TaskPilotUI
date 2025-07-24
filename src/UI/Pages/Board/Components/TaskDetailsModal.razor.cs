@@ -45,6 +45,11 @@ public partial class TaskDetailsModal : ComponentBase
         await LoadTags();
     }
 
+    private async Task LoadCurrentTask()
+    {
+        CurrentTask = await TaskService.GetByIdAsync(CurrentTask?.Id ?? string.Empty);
+    }
+
     private async Task LoadTags()
     {
         if (CurrentTask?.BoardId != null)
@@ -332,6 +337,10 @@ public partial class TaskDetailsModal : ComponentBase
     private async Task HandleSubmit()
     {
         await SaveChanges();
+        await LoadAllUsers();
+        await LoadCurrentUser();
+        await LoadTags();
+        StateHasChanged();
     }
 
     private void HandleSubmitFailed(EditContext editContext)
