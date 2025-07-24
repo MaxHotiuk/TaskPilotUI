@@ -13,6 +13,7 @@ public partial class Boards : ComponentBase
     [Inject] private IBoardService BoardService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IMessageService MessageBox { get; set; } = default!;
 
     private List<BoardSearchDto> _boards = new();
     private string _searchTerm = string.Empty;
@@ -220,8 +221,10 @@ public partial class Boards : ComponentBase
 
     private async Task ConfirmDelete()
     {
-        if (_selectedBoard == null || _deleteConfirmation != _selectedBoard.Name)
+        if (_selectedBoard == null ||
+            !_deleteConfirmation.Trim().Equals(_selectedBoard.Name?.Trim(), StringComparison.OrdinalIgnoreCase))
         {
+            MessageBox.Error("Delete confirmation does not match board name.");
             return;
         }
 
