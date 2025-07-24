@@ -168,13 +168,8 @@ public partial class TaskDetailsModal : ComponentBase
 
             await HandleCancel();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await NotificationService.Error(new NotificationConfig()
-            {
-                Message = "Error",
-                Description = $"Failed to archive task: {ex.Message}"
-            });
         }
         finally
         {
@@ -233,7 +228,7 @@ public partial class TaskDetailsModal : ComponentBase
 
             IsEditing = false;
 
-            await NotificationService.Success(new NotificationConfig()
+            _ = NotificationService.Success(new NotificationConfig()
             {
                 Message = "Success",
                 Description = "Task updated successfully!"
@@ -244,13 +239,8 @@ public partial class TaskDetailsModal : ComponentBase
                 await OnTaskUpdated.InvokeAsync(CurrentTask);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await NotificationService.Error(new NotificationConfig()
-            {
-                Message = "Error",
-                Description = $"Failed to update task: {ex.Message}"
-            });
         }
         finally
         {
@@ -270,7 +260,7 @@ public partial class TaskDetailsModal : ComponentBase
 
             await TaskService.DeleteAsync(CurrentTask.Id);
 
-            await NotificationService.Success(new NotificationConfig()
+            _ = NotificationService.Success(new NotificationConfig()
             {
                 Message = "Success",
                 Description = "Task deleted successfully!"
@@ -283,13 +273,8 @@ public partial class TaskDetailsModal : ComponentBase
 
             await HandleCancel();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await NotificationService.Error(new NotificationConfig()
-            {
-                Message = "Error",
-                Description = $"Failed to delete task: {ex.Message}"
-            });
         }
         finally
         {
@@ -334,13 +319,8 @@ public partial class TaskDetailsModal : ComponentBase
                 await OnTaskUpdated.InvokeAsync(CurrentTask);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await NotificationService.Error(new NotificationConfig()
-            {
-                Message = "Error",
-                Description = $"Failed to move task: {ex.Message}"
-            });
         }
         finally
         {
