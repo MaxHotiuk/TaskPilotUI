@@ -19,9 +19,10 @@
                    MaxLength="50" />
         </FormItem>
         <FormItem Label="Color">
-            <Input @bind-Value=@FormModel.Color
+            @* <Input @bind-Value=@FormModel.Color
                    Placeholder="Enter tag color (e.g. green or blue)"
-                   MaxLength="20" />
+                   MaxLength="20" /> *@
+            <input type="color" @bind-value=@FormModel.Color />
         </FormItem>
     </Form>
 </Modal>

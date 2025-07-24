@@ -15,7 +15,7 @@ public partial class ManageTagsModal : ComponentBase
     public List<TagDto> Tags { get; set; } = new();
     private bool _showAddTagModal;
     private bool _isAddingTag;
-    private CreateTagRequestDto _addTagForm = new();
+    private CreateTagRequestDto _addTagForm = new CreateTagRequestDto { Color = "#0091ffff" };
 
     protected override async Task OnParametersSetAsync()
     {
