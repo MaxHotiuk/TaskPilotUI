@@ -132,6 +132,7 @@ public partial class TaskDetailsModal : ComponentBase
             builder.AddAttribute(6, "OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await HandleCancel()));
             builder.AddAttribute(7, "OnEdit", EventCallback.Factory.Create<MouseEventArgs>(this, _ => StartEdit()));
             builder.AddAttribute(8, "OnDelete", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DeleteTask()));
+            builder.AddAttribute(9, "OnArchive", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ArchiveTask()));
             builder.CloseComponent();
         };
     }
@@ -141,6 +142,45 @@ public partial class TaskDetailsModal : ComponentBase
         IsEditing = true;
         InitializeForm();
         StateHasChanged();
+    }
+
+    private async Task ArchiveTask()
+    {
+        if (CurrentTask == null) return;
+
+        try
+        {
+            _internalLoading = true;
+            StateHasChanged();
+
+            await TaskService.ArchiveAsync(Guid.Parse(CurrentTask.Id));
+
+            await NotificationService.Success(new NotificationConfig()
+            {
+                Message = "Success",
+                Description = "Task archived successfully!"
+            });
+
+            if (OnTaskUpdated.HasDelegate)
+            {
+                await OnTaskUpdated.InvokeAsync(CurrentTask);
+            }
+
+            await HandleCancel();
+        }
+        catch (Exception ex)
+        {
+            await NotificationService.Error(new NotificationConfig()
+            {
+                Message = "Error",
+                Description = $"Failed to archive task: {ex.Message}"
+            });
+        }
+        finally
+        {
+            _internalLoading = false;
+            StateHasChanged();
+        }
     }
 
     private void CancelEdit()

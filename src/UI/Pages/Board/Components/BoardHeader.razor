@@ -5,11 +5,28 @@
             OnBack="OnBack">
     <PageHeaderExtra>
         <Space>
+            @if (BoardDetail != null && CurrentUserId != null && BoardDetail.OwnerId == CurrentUserId)
+            {
+                <SpaceItem>
+                    <Button Type=@ButtonType.Default
+                            Danger="true"
+                            Icon="delete"
+                            OnClick=@OnArchive>
+                        Archive Board
+                    </Button>
+                </SpaceItem>
+            }
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="container" 
+                        OnClick="OnArchiveTasks">
+                    Archived
+                </Button>
+            </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="team" 
                         OnClick="OnShowMembers">
-                    Members (@(BoardDetail?.Members.Count ?? 0))
                 </Button>
             </SpaceItem>
             <SpaceItem>
@@ -17,47 +34,34 @@
                         Icon="reload" 
                         Loading="IsLoading"
                         OnClick="OnRefresh">
-                    Refresh
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="setting" 
                         OnClick="OnManageStates">
-                    Manage States
+                    States
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="tag"
                         OnClick="OnManageTags">
-                    Manage Tags
-                </Button>
-            </SpaceItem>
-            <SpaceItem>
-                <Button Type=@ButtonType.Primary
-                        Icon="plus" 
-                        OnClick="OnCreateTask">
-                    Add Task
+                    Tags
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Primary
                         Icon="phone"
                         OnClick=@OnCreateCall>
-                    Call
                 </Button>
             </SpaceItem>
-        @if (BoardDetail != null && CurrentUserId != null && BoardDetail.OwnerId == CurrentUserId)
-        {
             <SpaceItem>
                 <Button Type=@ButtonType.Primary
-                        Icon="delete"
-                        OnClick=@OnArchive>
-                    Archive Board
+                        Icon="plus" 
+                        OnClick="OnCreateTask">
                 </Button>
             </SpaceItem>
-        }
         </Space>
     </PageHeaderExtra>
     

@@ -22,4 +22,12 @@ public partial class BoardHeader : ComponentBase
     {
         NavigationManager.NavigateTo($"/board/{BoardDetail?.Id}/call");
     }
+
+    public void OnArchiveTasks()
+    {
+        if (BoardDetail != null)
+        {
+            NavigationManager.NavigateTo($"/board/{BoardDetail.Id}/archive");
+        }
+    }
 }
