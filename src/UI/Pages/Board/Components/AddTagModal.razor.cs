@@ -8,7 +8,7 @@ public partial class AddTagModal : ComponentBase
 {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public bool IsLoading { get; set; }
-    [Parameter] public CreateTagRequestDto FormModel { get; set; } = new();
+    [Parameter, EditorRequired] public CreateTagRequestDto FormModel { get; set; }
     [Parameter] public EventCallback OnOk { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 

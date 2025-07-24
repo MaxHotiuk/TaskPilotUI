@@ -29,7 +29,7 @@
                                 Style="background-color: rgb(58, 143, 234); " />
                         </div>
                     </div>
-                    <div class="task-container">
+                    <div class="task-container" style="max-height: 600px; overflow-y: auto;">
                         @if (GetTasksForState(state.Id).Any())
                         {
                             <div class="task-list">

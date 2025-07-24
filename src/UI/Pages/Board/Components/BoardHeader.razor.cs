@@ -17,6 +17,14 @@ public partial class BoardHeader : ComponentBase
     [Parameter] public EventCallback OnManageTags { get; set; }
     [Parameter] public string? CurrentUserId { get; set; }
     [Parameter] public EventCallback OnArchive { get; set; }
+    [Parameter] public EventCallback OnOnlyMine { get; set; }
+    public bool IsOnlyMine { get; set; } = false;
+
+    public void OnOnlyMineToggle()
+    {
+        IsOnlyMine = !IsOnlyMine;
+        OnOnlyMine.InvokeAsync(IsOnlyMine);
+    }
 
     public void OnCreateCall()
     {
