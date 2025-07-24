@@ -2,6 +2,7 @@ using UI.Models.Board;
 using UI.Interfaces.Services;
 using UI.Interfaces.Api;
 using Refit;
+using UI.Models.Backlog;
 
 namespace UI.Services;
 
@@ -306,11 +307,37 @@ public class BoardService : IBoardService
             NumberOfTasks = 0
         });
     }
-    
+
     public async Task<BoardDto> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
         return await _boardApi.GetByIdAsync(id, cancellationToken);
+    }
+
+    public async Task<IEnumerable<BacklogDto>> SearchBacklogRangeForBoardAsync(
+        Guid boardId,
+        string searchTerm,
+        int page,
+        int pageSize,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _boardApi.SearchBacklogRangeForBoardAsync(
+                boardId,
+                searchTerm,
+                page,
+                pageSize,
+                startDate,
+                endDate,
+                cancellationToken);
+        }
+        catch (Exception)
+        {
+            return [];
+        }
     }
 }

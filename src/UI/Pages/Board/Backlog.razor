@@ -1,0 +1,62 @@
+@page "/board/{boardId}/backlog"
+@using AntDesign
+@using UI.Models.Backlog
+
+
+<PageHeader OnBack=@OnBack>
+    <TitleTemplate>
+        Backlog for "@BoardName"
+    </TitleTemplate>
+    <PageHeaderContent>
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <Input Size=@InputSize.Large
+                   Placeholder="Search backlog..." 
+                   @bind-Value=@SearchTerm
+                   @oninput=@OnSearch
+                   AllowClear=@true
+                   Style="border-radius: 8px; min-width: 220px;" />
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>Start date:</span>
+                <DatePicker 
+                    Size=@InputSize.Large
+                    Value=@StartDate
+                    ValueChanged="@(async (DateOnly? v) => { StartDate = v; await OnDateChanged(); })"
+                    AllowClear="true"
+                    Style="border-radius: 8px; width: 140px;" />
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>End date:</span>
+                <DatePicker 
+                    Size=@InputSize.Large
+                    Value=@EndDate
+                    ValueChanged="@(async (DateOnly? v) => { EndDate = v; await OnDateChanged(); })"
+                    AllowClear="true"
+                    Style="border-radius: 8px; width: 140px;" />
+            </div>
+        </div>
+    </PageHeaderContent>
+</PageHeader>
+
+<Space/>
+
+<Card>
+    <AntList Class="demo-loadmore-list" DataSource=@BacklogItems ItemLayout=ListItemLayout.Horizontal Loading=@InitLoading>
+        <ChildContent Context="item">
+            <ListItem>
+                <ListItemMeta Description=@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")>
+                    <TitleTemplate>
+                        <span>@item.Description</span>
+                    </TitleTemplate>
+                </ListItemMeta>
+            </ListItem>
+        </ChildContent>
+        <LoadMore>
+            @if (!InitLoading && !Loading && HasMore)
+            {
+                <div class="demo-loadmore-btn-content ">
+                    <Button OnClick=@LoadMore>Load more</Button>
+                </div>
+            }
+        </LoadMore>
+    </AntList>
+</Card>

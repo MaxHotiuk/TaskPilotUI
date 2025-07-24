@@ -1,4 +1,5 @@
 using Refit;
+using UI.Models.Backlog;
 using UI.Models.Board;
 
 namespace UI.Interfaces.Api;
@@ -52,9 +53,19 @@ public interface IBoardApi
     Task<IEnumerable<BoardDto>> GetArchivedBoardsByOwnerAsync(
         Guid ownerId,
         CancellationToken cancellationToken = default);
-    
+
     [Get("/api/boards/{id}")]
     Task<BoardDto> GetByIdAsync(
         Guid id,
+        CancellationToken cancellationToken = default);
+    
+    [Get("/api/boards/{boardId}/backlog/search")]
+    Task<IEnumerable<BacklogDto>> SearchBacklogRangeForBoardAsync(
+        [Query] Guid boardId,
+        [Query] string searchTerm,
+        [Query] int page,
+        [Query] int pageSize,
+        [Query] DateOnly startDate,
+        [Query] DateOnly endDate,
         CancellationToken cancellationToken = default);
 }

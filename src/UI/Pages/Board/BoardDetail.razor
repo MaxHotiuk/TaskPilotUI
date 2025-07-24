@@ -49,6 +49,7 @@
 
 <ManageTagsModal IsVisible=@_showManageTagsModal
                  BoardId=@BoardId
+                 OnTagsChanged=@(EventCallback.Factory.Create<List<TagDto>>(this, HandleTagsChanged))
                  OnCancel=@(() => _showManageTagsModal = false) />
 
 <AddTaskModal IsVisible=@_showAddTaskModal

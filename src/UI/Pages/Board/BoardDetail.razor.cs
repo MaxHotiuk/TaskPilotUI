@@ -9,6 +9,7 @@ using UI.Interfaces.Services;
 using UI.Pages.Board.Components;
 using UI.Extensions;
 using AntDesign;
+using UI.Models.Tag;
 
 namespace UI.Pages.Board;
 
@@ -70,7 +71,26 @@ public partial class BoardDetail : ComponentBase, IDisposable
         }
     }
 
-    
+    private async Task LoadBoardDetailOrMine()
+    {
+        if (IsOnlyMine)
+        {
+            await LoadBoardDetailOnlyMine();
+        }
+        else
+        {
+            await LoadBoardDetail();
+        }
+    }
+
+    private void HandleTagsChanged(List<TagDto> tags)
+    {
+        if (_boardDetail != null)
+        {
+            _boardDetail.Tags = tags;
+            StateHasChanged();
+        }
+    }    
 
     protected override async Task OnInitializedAsync()
     {
@@ -215,7 +235,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
     private async Task RefreshBoard()
     {
-        await LoadBoardDetail();
+        await LoadBoardDetailOrMine();
     }
 
     private void GoBack()
@@ -392,7 +412,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             
             _showAddMemberModal = false;
             ResetAddMemberForm();
-            await LoadBoardDetail();
+            await LoadBoardDetailOrMine();
         }
         catch (Exception ex)
         {
@@ -415,7 +435,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             var request = new UpdateBoardMemberRoleRequest { Role = newRole };
             await BoardMemberService.UpdateRoleAsync(BoardId, member.UserId, request);
             Message.Success($"Successfully updated member role to {newRole}");
-            await LoadBoardDetail();
+            await LoadBoardDetailOrMine();
         }
         catch (Exception ex)
         {
@@ -429,7 +449,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
         {
             await BoardMemberService.RemoveAsync(BoardId, member.UserId);
             Message.Success("Successfully removed member from board");
-            await LoadBoardDetail();
+            await LoadBoardDetailOrMine();
         }
         catch (Exception ex)
         {
@@ -516,7 +536,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
             var taskId = await TaskService.CreateAsync(_addTaskForm);
             
-            await LoadBoardDetail();
+            await LoadBoardDetailOrMine();
             
             _showAddTaskModal = false;
             Message.Success($"Task '{_addTaskForm.Title}' created successfully");

@@ -31,11 +31,11 @@ public partial class BoardHeader : ComponentBase
         NavigationManager.NavigateTo($"/board/{BoardDetail?.Id}/call");
     }
 
-    public void OnArchiveTasks()
+    public void OnBacklog()
     {
         if (BoardDetail != null)
         {
-            NavigationManager.NavigateTo($"/board/{BoardDetail.Id}/archive");
+            NavigationManager.NavigateTo($"/board/{BoardDetail.Id}/backlog");
         }
     }
 }

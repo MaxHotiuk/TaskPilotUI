@@ -2,11 +2,11 @@ using AntDesign;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using UI.Interfaces.Services;
-using UI.Models.Task;
+using UI.Models.Backlog;
 
 namespace UI.Pages.Board;
 
-public partial class Archive : ComponentBase
+public partial class Backlog : ComponentBase
 {
     [Parameter] public string BoardId { get; set; } = string.Empty;
 
@@ -16,7 +16,7 @@ public partial class Archive : ComponentBase
     [Inject] public IBoardService BoardService { get; set; } = default!;
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
 
-    public List<ArchivedTaskDto> ArchivedTasks { get; set; } = new();
+    public List<BacklogDto> BacklogItems { get; set; } = new();
     public string SearchTerm { get; set; } = string.Empty;
     public bool InitLoading { get; set; } = true;
     public bool Loading { get; set; } = false;
@@ -25,13 +25,16 @@ public partial class Archive : ComponentBase
     public bool HasMore { get; set; } = true;
     public string BoardName { get; set; } = string.Empty;
 
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (!Guid.TryParse(BoardId, out boardIdGuid))
         {
             boardIdGuid = Guid.Empty;
         }
-        await LoadTasks(reset: true);
+        await LoadBackLog(reset: true);
         if (boardIdGuid != Guid.Empty)
         {
             var board = await BoardService.GetByIdAsync(boardIdGuid);
@@ -49,50 +52,42 @@ public partial class Archive : ComponentBase
         NavigationManager.NavigateTo($"/board/{BoardId}");
     }
 
+
     public async Task OnSearch(ChangeEventArgs args)
     {
         SearchTerm = args.Value?.ToString() ?? string.Empty;
-        await LoadTasks(reset: true);
+        await LoadBackLog(reset: true);
+    }
+
+    public async Task OnDateChanged()
+    {
+        await LoadBackLog(reset: true);
     }
 
     public async Task LoadMore()
     {
         Page++;
-        await LoadTasks(reset: false);
+        await LoadBackLog(reset: false);
     }
 
-    private async Task LoadTasks(bool reset)
+    private async Task LoadBackLog(bool reset)
     {
         Loading = true;
-        var result = await TaskService.SearchArchivedRangeTaskItemsAsync(Page, PageSize, SearchTerm, boardIdGuid);
-        Console.WriteLine($"Loaded {result.Count} tasks for page {Page} with search term '{SearchTerm}'");
+        var result = await BoardService.SearchBacklogRangeForBoardAsync(
+            boardIdGuid,
+            SearchTerm,
+            Page,
+            PageSize,
+            StartDate ?? DateOnly.MinValue,
+            EndDate ?? DateOnly.MaxValue
+        );
+        var resultList = result.ToList();
+        Console.WriteLine($"Loaded {resultList.Count} backlog items for page {Page} with search term '{SearchTerm}', startDate '{StartDate}', endDate '{EndDate}'");
         if (reset)
-            ArchivedTasks = result;
+            BacklogItems = resultList;
         else
-            ArchivedTasks.AddRange(result);
-        HasMore = result.Count == PageSize;
+            BacklogItems.AddRange(resultList);
+        HasMore = resultList.Count == PageSize;
         Loading = false;
-    }
-
-    public RenderFragment[] GetActions(ArchivedTaskDto item)
-    {
-        return
-        [
-            builder =>
-            {
-                builder.OpenComponent<Button>(0);
-                builder.AddAttribute(1, "Type", ButtonType.Link);
-                builder.AddAttribute(2, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, _ => Restore(item.Id)));
-                builder.AddAttribute(3, "ChildContent", (RenderFragment)(b => b.AddContent(4, "Restore")));
-                builder.CloseComponent();
-            }
-        ];
-    }
-
-    public async Task Restore(Guid taskId)
-    {
-        await TaskService.RestoreAsync(taskId);
-        Page = 1;
-        await LoadTasks(reset: true);
     }
 }
