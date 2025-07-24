@@ -62,6 +62,20 @@
                         OnClick="OnCreateTask">
                 </Button>
             </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="user"
+                        OnClick="OnOnlyMineToggle">
+                    @if (IsOnlyMine)
+                    {
+                        <span>My Tasks</span>
+                    }
+                    else
+                    {
+                        <span>All Tasks</span>
+                    }
+                </Button>
+            </SpaceItem>
         </Space>
     </PageHeaderExtra>
     

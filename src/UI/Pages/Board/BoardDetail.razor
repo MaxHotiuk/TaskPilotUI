@@ -18,7 +18,8 @@
              OnArchive=@ShowArchiveBoardModal
              CurrentUserId=@(_currentUser?.Id)
              OnManageStates=@ShowManageStatesModal
-             OnManageTags=@ShowManageTagsModal />
+             OnManageTags=@ShowManageTagsModal
+             OnOnlyMine=@OnOnlyMineToggle />
 
 <BoardColumns BoardDetail=@_boardDetail
               IsLoading=@IsLoading

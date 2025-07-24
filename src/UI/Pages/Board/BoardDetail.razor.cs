@@ -41,6 +41,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private AddMemberModal.AddMemberForm _addMemberForm = new();
     private CreateStateRequest _addStateForm = new();
     private CreateTaskRequest _addTaskForm = new();
+    public bool IsOnlyMine { get; set; } = false;
 
     private bool _showArchiveBoardModal = false;
     private bool _isArchivingBoard = false;
@@ -55,6 +56,21 @@ public partial class BoardDetail : ComponentBase, IDisposable
         }
         base.OnInitialized();
     }
+
+    private async Task OnOnlyMineToggle()
+    {
+        IsOnlyMine = !IsOnlyMine;
+        if (IsOnlyMine)
+        {
+            await LoadBoardDetailOnlyMine();
+        }
+        else
+        {
+            await LoadBoardDetail();
+        }
+    }
+
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,6 +117,49 @@ public partial class BoardDetail : ComponentBase, IDisposable
             }
         }
     }
+    
+    private async Task LoadBoardDetailOnlyMine()
+    {
+        await BoardService.ExecuteWithGlobalLoadingAndErrorHandlingAsync(
+            LoadingService,
+            async service =>
+            {
+                _boardDetail = await service.GetDetailAsync(BoardId);
+
+                if (_boardDetail == null)
+                {
+                    Message.Error("Board not found or access denied");
+                    return;
+                }
+
+                if (!HasBoardAccess())
+                {
+                    Message.Error("You don't have access to this board");
+                    Navigation.NavigateTo("/boards");
+                    return;
+                }
+
+                for (int i = 0; i < _boardDetail.Tasks.Count; i++)
+                {
+                    var task = _boardDetail.Tasks[i];
+                    if (task.AssigneeId != _currentUser?.Id)
+                    {
+                        _boardDetail.Tasks.RemoveAt(i);
+                        i--;
+                    }
+                }
+            },
+            onError: ex =>
+            {
+                Message.Error($"Failed to load board: {ex.Message}");
+                return Task.CompletedTask;
+            },
+            onFinally: () =>
+            {
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
+    }
 
     private async Task LoadBoardDetail()
     {
@@ -109,7 +168,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             async service =>
             {
                 _boardDetail = await service.GetDetailAsync(BoardId);
-                
+
                 if (_boardDetail == null)
                 {
                     Message.Error("Board not found or access denied");
