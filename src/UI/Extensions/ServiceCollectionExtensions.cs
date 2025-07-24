@@ -102,6 +102,7 @@ namespace UI.Extensions
             services.AddScoped<IAttachmentService, AttachmentService>();
             services.AddScoped<IAvatarService, AvatarService>();
             services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IColorService, ColorService>();
             services.AddScoped<Interfaces.Services.INotificationService, Services.NotificationService>();
             services.AddScoped<INotificationSignalRService>(sp =>
             {

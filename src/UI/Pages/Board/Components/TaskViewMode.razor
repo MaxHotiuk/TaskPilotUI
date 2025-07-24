@@ -38,7 +38,7 @@
                     var tag = Tags.FirstOrDefault(t => t.Id == Task.TagId);
                     if (tag != null)
                     {
-                        <Tag Color=@tag.Color>@tag.Name</Tag>
+                        <Tag Style=@($"border-radius: 15px; border-color: {GetTagTextColor(tag.Color)}; color: {GetTagTextColor(tag.Color)}") Color=@tag.Color>@tag.Name</Tag>
                     }
                     else
                     {

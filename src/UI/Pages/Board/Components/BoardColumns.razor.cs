@@ -16,6 +16,7 @@ public partial class BoardColumns : ComponentBase
     [Parameter] public EventCallback OnGoBack { get; set; }
 
     [Inject] private IUserService UserService { get; set; } = default!;
+    [Inject] private IColorService ColorService { get; set; } = default!;
 
     private Dictionary<string, UserDto> _userCache = new();
 
@@ -97,6 +98,12 @@ public partial class BoardColumns : ComponentBase
             _ => "Unknown"
         };
     }
+
+    private string GetTagTextColor(string? hexColor)
+    {
+        return ColorService.GetTagTextColor(hexColor);
+    }
+
     private string GetDueDateColor(string dueDateString)
     {
         if (DateTime.TryParse(dueDateString, out var dueDate))
