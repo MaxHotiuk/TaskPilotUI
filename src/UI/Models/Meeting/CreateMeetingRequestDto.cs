@@ -2,12 +2,12 @@ namespace UI.Models.Meeting;
 
 public class CreateMeetingRequestDto
 {
-    public string Title { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public string Domain { get; init; } = string.Empty;
-    public Guid BoardId { get; init; }
-    public Guid CreatedBy { get; init; }
-    public DateTime? ScheduledAt { get; init; }
-    public int? Duration { get; init; }
-    public List<Guid> MemberIds { get; init; } = new List<Guid>();
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; } = string.Empty;
+    public string Domain { get; set; } = string.Empty;
+    public Guid BoardId { get; set; }
+    public Guid CreatedBy { get; set; }
+    public DateTime? ScheduledAt { get; set; }
+    public int? Duration { get; set; }
+    public List<Guid> MemberIds { get; set; } = new List<Guid>();
 }

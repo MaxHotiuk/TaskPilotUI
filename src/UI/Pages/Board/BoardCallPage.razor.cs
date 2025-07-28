@@ -8,6 +8,7 @@ namespace TaskPilotUI.UI.Pages.Board
     public partial class BoardCallPage : ComponentBase, IDisposable
     {
         [Parameter] public string? BoardId { get; set; }
+        [Parameter] public string? MeetingId { get; set; }
 
         protected bool _inCall = false;
         protected bool _cameraOn = true;
@@ -21,6 +22,8 @@ namespace TaskPilotUI.UI.Pages.Board
         [Inject] protected IAuthService AuthService { get; set; } = default!;
         [Inject] protected IUserService UserService { get; set; } = default!;
         [Inject] protected IBoardService BoardService { get; set; } = default!;
+        [Inject] protected IMeetingService MeetingService { get; set; } = default!;
+        [Inject] protected IMeetingMemberService MeetingMemberService { get; set; } = default!;
         [Inject] protected IJSRuntime? JS { get; set; }
         [Inject] protected NavigationManager NavigationManager { get; set; } = default!;
 
@@ -69,12 +72,34 @@ namespace TaskPilotUI.UI.Pages.Board
         {
             if (!string.IsNullOrEmpty(BoardId))
             {
-                var board = await BoardService.GetByIdAsync(BoardId);
-                if (board == null)
+                try
                 {
-                    _forbidden = true;
-                    NavigationManager.NavigateTo("/forbidden");
-                    return;
+                    var user = await AuthService.GetCurrentUserAsync();
+                    if (user == null)
+                    {
+                        Console.WriteLine("User not authenticated.");
+                        NavigationManager.NavigateTo("/login");
+                    }
+
+                    if (Guid.TryParse(MeetingId, out var meetingGuid))
+                    {
+                        var meetingMembers = await MeetingMemberService.GetMeetingMembersByMeetingIdAsync(meetingGuid);
+
+                        if (!meetingMembers.Any(m => m.UserId.ToString() == user!.Id))
+                        {
+                            _forbidden = true;
+                            NavigationManager.NavigateTo("/forbidden");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid MeetingId format.");
+                        NavigationManager.NavigateTo("/boards");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error initializing BoardCallPage: {ex.Message}");
                 }
             }
         }

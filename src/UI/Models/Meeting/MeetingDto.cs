@@ -2,13 +2,13 @@ namespace UI.Models.Meeting;
 
 public class MeetingDto
 {
-    public Guid Id { get; init; }
-    public string Title { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public string Link { get; init; } = string.Empty;
-    public Guid BoardId { get; init; }
-    public Guid CreatedBy { get; init; }
-    public DateTime? ScheduledAt { get; init; }
-    public int? Duration { get; init; }
-    public string Status { get; init; } = string.Empty;
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Link { get; set; } = string.Empty;
+    public Guid BoardId { get; set; }
+    public Guid CreatedBy { get; set; }
+    public DateTime? ScheduledAt { get; set; }
+    public int? Duration { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
