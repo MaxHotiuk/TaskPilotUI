@@ -11,4 +11,5 @@ public class MeetingDto
     public DateTime? ScheduledAt { get; set; }
     public int? Duration { get; set; }
     public string Status { get; set; } = string.Empty;
+    public List<Guid>? MemberIds { get; set; } = new();
 }

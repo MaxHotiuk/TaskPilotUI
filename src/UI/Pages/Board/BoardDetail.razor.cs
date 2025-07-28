@@ -42,6 +42,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private bool _showManageTagsModal = false;
     private bool _showAddMeetingModal = false;
     private bool _isAddingMeeting = false;
+    private bool _showManageMeetingsModal = false;
     private CreateMeetingRequestDto _addMeetingForm = new();
     private TaskItemDto? _selectedTask = null;
     private AddMemberModal.AddMemberForm _addMemberForm = new();
@@ -565,15 +566,15 @@ public partial class BoardDetail : ComponentBase, IDisposable
             StateHasChanged();
         }
     }
-    
+
     private void ShowCreateMeetingModal()
     {
-        if (!CanManageTasks()) 
+        if (!CanManageTasks())
         {
             Message.Warning("Only board owners and members can schedule meetings");
             return;
         }
-        
+
         ResetAddMeetingForm();
         _showAddMeetingModal = true;
     }
@@ -608,10 +609,10 @@ public partial class BoardDetail : ComponentBase, IDisposable
             StateHasChanged();
 
             var meetingId = await MeetingService.CreateMeetingAsync(_addMeetingForm);
-            
+
             _showAddMeetingModal = false;
             Message.Success($"Meeting '{_addMeetingForm.Title}' scheduled successfully");
-            
+
             await LoadBoardDetailOrMine();
         }
         catch (Exception ex)
@@ -623,5 +624,21 @@ public partial class BoardDetail : ComponentBase, IDisposable
             _isAddingMeeting = false;
             StateHasChanged();
         }
+    }
+    
+    private void ShowManageMeetingsModal()
+    {
+        if (!CanManageTasks())
+        {
+            Message.Warning("Only board owners and members can manage meetings");
+            return;
+        }
+        
+        _showManageMeetingsModal = true;
+    }
+
+    private async Task HandleMeetingChanged()
+    {
+        await Task.CompletedTask;
     }
 }
