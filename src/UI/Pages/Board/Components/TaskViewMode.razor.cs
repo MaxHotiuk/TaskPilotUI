@@ -17,6 +17,7 @@ public partial class TaskViewMode : ComponentBase
 
     [Inject] private IAvatarService AvatarService { get; set; } = default!;
     [Inject] private ITaskService TaskService { get; set; } = default!;
+    [Inject] private IColorService ColorService { get; set; } = default!;
     private ConcurrentDictionary<string, AvatarDto?> _avatarCache = new();
     private ConcurrentDictionary<string, bool> _avatarLoading = new();
 
@@ -76,6 +77,11 @@ public partial class TaskViewMode : ComponentBase
             4 => "red",
             _ => "default"
         };
+    }
+
+    private string GetTagTextColor(string? hexColor)
+    {
+        return ColorService.GetTagTextColor(hexColor);
     }
 
     private string GetAssigneeInitials(string assigneeId)

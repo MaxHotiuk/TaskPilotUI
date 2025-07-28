@@ -45,6 +45,7 @@
 
 <ManageStatesModal IsVisible=@_showManageStatesModal
                    BoardId=@BoardId
+                   OnStatesChanged=@(EventCallback.Factory.Create<List<StateDto>>(this, HandleStatesChanged))
                    OnCancel=@(() => _showManageStatesModal = false) />
 
 <ManageTagsModal IsVisible=@_showManageTagsModal

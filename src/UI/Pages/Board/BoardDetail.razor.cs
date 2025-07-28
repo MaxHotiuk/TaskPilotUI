@@ -92,6 +92,15 @@ public partial class BoardDetail : ComponentBase, IDisposable
         }
     }    
 
+    private void HandleStatesChanged(List<StateDto> states)
+    {
+        if (_boardDetail != null)
+        {
+            _boardDetail.States = states;
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadCurrentUser();

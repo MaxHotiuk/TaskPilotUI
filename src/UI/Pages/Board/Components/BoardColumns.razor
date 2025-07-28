@@ -80,7 +80,7 @@
                                                             var tag = BoardDetail.Tags.FirstOrDefault(t => t.Id == task.TagId);
                                                             if (tag != null)
                                                             {
-                                                                <Tag Style="margin-left: auto; margin-right: 0px !important;" Color=@tag.Color>@tag.Name</Tag>
+                                                                <Tag Style=@($"border-radius: 15px; border-color: {GetTagTextColor(tag.Color)}; color: {GetTagTextColor(tag.Color)}; margin-left: auto; margin-right: 0px !important;") Color=@tag.Color>@tag.Name</Tag>
                                                             }
                                                         }
                                                     </div>

@@ -27,7 +27,10 @@
             <label style="display: block; margin-bottom: 8px; font-weight: 500;">
                 Type board name to confirm:
             </label>
-            <Input @bind-Value=@DeleteConfirmation
+            <Input Value="@DeleteConfirmation"
+                   ValueChanged="@DeleteConfirmationChanged"
+                   ValueExpression="() => DeleteConfirmation"
+                   OnInput="HandleInput"
                    Placeholder=@SelectedBoard.Name />
         </div>
     </Modal>

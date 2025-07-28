@@ -19,6 +19,14 @@ public partial class DeleteBoardModal
         await OnConfirmDelete.InvokeAsync();
     }
 
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        if (e?.Value is string value)
+        {
+            await DeleteConfirmationChanged.InvokeAsync(value);
+        }
+    }
+
     private async Task CancelDelete()
     {
         await OnCancelDelete.InvokeAsync();
