@@ -20,6 +20,7 @@ public partial class AddMeetingModal : ComponentBase
 
     [Inject] private IUserService UserService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
+    [Inject] private IConfiguration Configuration { get; set; } = default!;
 
     private List<UserDto> AllUsers { get; set; } = new();
     private DateTime? ScheduledAtValue { get; set; }
@@ -73,6 +74,7 @@ public partial class AddMeetingModal : ComponentBase
         }
 
         FormModel.MemberIds = SelectedMemberIds.Select(Guid.Parse).ToList();
+        FormModel.Domain = Configuration["App:BaseUrl"]!;
 
         if (OnOk.HasDelegate)
         {

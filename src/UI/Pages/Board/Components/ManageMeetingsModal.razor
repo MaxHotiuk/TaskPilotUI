@@ -138,12 +138,6 @@
                       MaxLength="1000" />
         </FormItem>
 
-        <FormItem Label="Domain" Required>
-            <Input @bind-Value=@_meetingForm.Domain
-                   Placeholder="Enter meeting domain/platform" 
-                   MaxLength="100" />
-        </FormItem>
-
         <FormItem Label="Scheduled Date & Time">
             <DatePicker @bind-Value=@_scheduledAtValue
                        ShowTime="true"

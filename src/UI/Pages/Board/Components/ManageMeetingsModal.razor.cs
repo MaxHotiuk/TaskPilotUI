@@ -21,6 +21,7 @@ public partial class ManageMeetingsModal : ComponentBase
     [Inject] private IUserService UserService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private IMessageService Message { get; set; } = default!;
+    [Inject] private IConfiguration Configuration { get; set; } = default!;
 
     private List<MeetingDto> Meetings { get; set; } = new();
     private List<UserDto> AllUsers { get; set; } = new();
@@ -111,6 +112,7 @@ public partial class ManageMeetingsModal : ComponentBase
         {
             BoardId = Guid.Parse(BoardId),
             CreatedBy = currentUser?.Id != null ? Guid.Parse(currentUser.Id) : Guid.Empty,
+            Domain = Configuration["App:BaseUrl"]!,
             Duration = 60
         };
         _scheduledAtValue = null;
@@ -125,7 +127,8 @@ public partial class ManageMeetingsModal : ComponentBase
             Description = meeting.Description,
             BoardId = Guid.Parse(BoardId),
             CreatedBy = meeting.CreatedBy,
-            Duration = meeting.Duration
+            Duration = meeting.Duration,
+            Domain = Configuration["App:BaseUrl"]!,
         };
         
         _scheduledAtValue = meeting.ScheduledAt;
