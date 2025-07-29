@@ -15,6 +15,8 @@ public partial class BoardHeader : ComponentBase
     [Parameter] public EventCallback OnCreateTask { get; set; }
     [Parameter] public EventCallback OnManageStates { get; set; }
     [Parameter] public EventCallback OnManageTags { get; set; }
+    [Parameter] public EventCallback OnManageMeetings { get; set; }
+    [Parameter] public EventCallback OnCreateMeeting { get; set; }
     [Parameter] public string? CurrentUserId { get; set; }
     [Parameter] public EventCallback OnArchive { get; set; }
     [Parameter] public EventCallback OnOnlyMine { get; set; }

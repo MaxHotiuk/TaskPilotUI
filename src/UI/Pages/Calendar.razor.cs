@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using UI.Models.Task;
 using UI.Models.User;
+using UI.Models.Meeting;
 using UI.Interfaces.Services;
 using UI.Extensions;
 using System.Globalization;
@@ -10,15 +11,20 @@ namespace UI.Pages;
 public partial class Calendar : ComponentBase
 {
     [CascadingParameter] public IGlobalLoadingService LoadingService { get; set; } = default!;
+
     [Inject] private ITaskService TaskService { get; set; } = default!;
+    [Inject] private IMeetingService MeetingService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
+
     private List<TaskCalendarItemDto> _tasks = new();
+    private List<MeetingCalendarItemDto> _meetings = new();
     private DateTime _selectedDate = DateTime.Today;
     private DateTime _currentMonth = DateTime.Today;
     private bool _isLoading = false;
     private Dictionary<DateTime, List<TaskCalendarItemDto>> _tasksByDate = new();
+    private Dictionary<DateTime, List<MeetingCalendarItemDto>> _meetingsByDate = new();
 
     protected bool IsLoading => LoadingService?.IsLoading ?? false;
 
@@ -51,7 +57,7 @@ public partial class Calendar : ComponentBase
                     }
                 }
 
-                await LoadCalendarTasks();
+                await LoadCalendarTasksAndMeetings();
             }
             catch (Exception)
             {
@@ -63,7 +69,8 @@ public partial class Calendar : ComponentBase
         });
     }
 
-    private async Task LoadCalendarTasks()
+
+    private async Task LoadCalendarTasksAndMeetings()
     {
         try
         {
@@ -75,11 +82,19 @@ public partial class Calendar : ComponentBase
 
             var userId = Guid.Parse(currentUser.Id);
             var tasks = await TaskService.GetForCalendarMonthAsync(userId, _currentMonth);
+            var startDate = new DateTime(_currentMonth.Year, _currentMonth.Month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+            var meetings = await MeetingService.GetMeetingCalendarItemsAsync(userId, startDate, endDate);
 
             _tasks = tasks.ToList();
+            _meetings = meetings.ToList();
             _tasksByDate = _tasks
                 .Where(t => t.DueDate.HasValue)
                 .GroupBy(t => t.DueDate!.Value.Date)
+                .ToDictionary(g => g.Key, g => g.ToList());
+            _meetingsByDate = _meetings
+                .Where(m => m.ScheduledAt.HasValue)
+                .GroupBy(m => m.ScheduledAt!.Value.Date)
                 .ToDictionary(g => g.Key, g => g.ToList());
         }
         catch (Exception)
@@ -92,11 +107,13 @@ public partial class Calendar : ComponentBase
         }
     }
 
+
     private async Task OnMonthChanged(DateTime month)
     {
         _currentMonth = month;
-        await LoadCalendarTasks();
+        await LoadCalendarTasksAndMeetings();
     }
+
 
     private void OnDateSelect(DateTime date)
     {
@@ -113,10 +130,12 @@ public partial class Calendar : ComponentBase
         }
     }
 
+
     private async Task RefreshCalendar()
     {
-        await LoadCalendarTasks();
+        await LoadCalendarTasksAndMeetings();
     }
+
 
     private List<TaskCalendarItemDto> GetTasksForDate(DateTime date)
     {
@@ -124,17 +143,38 @@ public partial class Calendar : ComponentBase
         return tasks ?? new List<TaskCalendarItemDto>();
     }
 
+    private List<MeetingCalendarItemDto> GetMeetingsForDate(DateTime date)
+    {
+        _meetingsByDate.TryGetValue(date.Date, out var meetings);
+        return meetings ?? new List<MeetingCalendarItemDto>();
+    }
+
     private List<TaskCalendarItemDto> GetSelectedDateTasks()
     {
         return GetTasksForDate(_selectedDate);
     }
+
+    private List<MeetingCalendarItemDto> GetSelectedDateMeetings()
+    {
+        return GetMeetingsForDate(_selectedDate);
+    }
+
 
     private void NavigateToToday()
     {
         var today = DateTime.Today;
         _selectedDate = today;
         _currentMonth = today;
-        InvokeAsync(LoadCalendarTasks);
+        InvokeAsync(LoadCalendarTasksAndMeetings);
+    }
+    private void HandleMeetingClick(string meetingId)
+    {
+        // Navigate to a meeting details page or board, adjust as needed
+        var meeting = _meetings.FirstOrDefault(m => m.Id.ToString() == meetingId);
+        if (meeting != null)
+        {
+            Navigation.NavigateTo($"/board/{meeting.BoardId}/meeting/{meeting.Id}");
+        }
     }
 
     private int GetTasksThisWeek()

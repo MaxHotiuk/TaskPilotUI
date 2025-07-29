@@ -1,0 +1,69 @@
+@using AntDesign
+@using UI.Models.Meeting
+@using UI.Models.Member
+@using UI.Models.User
+
+<Modal Title="Schedule New Meeting"
+       Visible=@IsVisible
+       OnOk=@(async () => await HandleOk())
+       OnCancel=@(async () => await HandleCancel())
+       ConfirmLoading=@IsLoading
+       Width="600">
+    <Form Model=@FormModel
+          LabelCol="new ColLayoutParam { Span = 6 }"
+          WrapperCol="new ColLayoutParam { Span = 18 }"
+          OnFinish=@(async () => await HandleSubmit())
+          OnFinishFailed=@(() => HandleSubmitFailed())>
+
+        <FormItem Label="Meeting Title" Required>
+            <Input @bind-Value=@FormModel.Title
+                   Placeholder="Enter meeting title" 
+                   MaxLength="200" />
+        </FormItem>
+
+        <FormItem Label="Description">
+            <TextArea @bind-Value=@FormModel.Description
+                      Placeholder="Enter meeting description (optional)"
+                      Rows="3"
+                      MaxLength="1000" />
+        </FormItem>
+
+        <FormItem Label="Scheduled Date & Time">
+            <DatePicker @bind-Value=@ScheduledAtValue
+                       ShowTime="true"
+                       Format="yyyy-MM-dd HH:mm"
+                       Style="width: 100%;" />
+        </FormItem>
+
+        <FormItem Label="Duration (minutes)">
+            <AntDesign.InputNumber @bind-Value=@FormModel.Duration
+                        Min="15"
+                        Max="480"
+                        Step="15"
+                        Style="width: 100%;"
+                        Placeholder="Meeting duration in minutes" />
+        </FormItem>
+
+        <FormItem Label="Attendees">
+            <Select @bind-Values=@SelectedMemberIds
+                    Mode=@SelectMode.Multiple
+                    TItemValue="string"
+                    TItem="string"
+                    Style="width: 100%;"
+                    Placeholder="Select meeting attendees"
+                    MaxTagCount="3">
+                <SelectOptions>
+                    @foreach (var member in BoardMembers)
+                    {
+                        var user = AllUsers.FirstOrDefault(u => u.Id == member.UserId);
+                        if (user != null)
+                        {
+                            <SelectOption TItemValue="string" TItem="string" Value=@user.Id Label=@($"{user.Username} ({user.Email})") />
+                        }
+                    }
+                </SelectOptions>
+            </Select>
+        </FormItem>
+
+    </Form>
+</Modal>

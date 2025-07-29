@@ -19,7 +19,9 @@
              CurrentUserId=@(_currentUser?.Id)
              OnManageStates=@ShowManageStatesModal
              OnManageTags=@ShowManageTagsModal
-             OnOnlyMine=@OnOnlyMineToggle />
+             OnCreateMeeting=@ShowCreateMeetingModal
+             OnOnlyMine=@OnOnlyMineToggle
+             OnManageMeetings=@ShowManageMeetingsModal />
 
 <BoardColumns BoardDetail=@_boardDetail
               IsLoading=@IsLoading
@@ -63,6 +65,14 @@
               OnCancel=@(() => { _showAddTaskModal = false; ResetAddTaskForm(); })
               Tags=@(_boardDetail?.Tags?.ToList() ?? new List<TagDto>()) />
 
+<AddMeetingModal IsVisible=@_showAddMeetingModal
+                 IsLoading=@_isAddingMeeting
+                 FormModel=@_addMeetingForm
+                 BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+                 BoardId=@BoardId
+                 OnOk=@AddMeeting
+                 OnCancel=@(() => { _showAddMeetingModal = false; ResetAddMeetingForm(); }) />
+
 <TaskDetailsModal IsVisible=@_showTaskDetailsModal
                   IsLoading=@_isTaskDetailsLoading
                   CurrentTask=@_selectedTask
@@ -73,6 +83,13 @@
                   OnTaskDeleted=@HandleTaskDeleted
                   OnCancel=@(() => { _showTaskDetailsModal = false; _selectedTask = null; })
                   Tags=@(_boardDetail?.Tags?.ToList() ?? new List<TagDto>()) />
+
+<ManageMeetingsModal IsVisible=@_showManageMeetingsModal
+                     IsLoading=@IsLoading
+                     BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
+                     BoardId=@BoardId
+                     OnMeetingChanged=@HandleMeetingChanged
+                     OnCancel=@(() => _showManageMeetingsModal = false) />
 
 <ArchiveBoardModal IsVisible=@_showArchiveBoardModal
                        IsLoading=@_isArchivingBoard

@@ -75,6 +75,14 @@ namespace UI.Extensions
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
 
+            services.AddRefitClient<IMeetingApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+            
+            services.AddRefitClient<IMeetingMemberApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+
             services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.microsoft.com"));
 
@@ -104,6 +112,8 @@ namespace UI.Extensions
             services.AddScoped<IChatService, ChatService>();
             services.AddScoped<IColorService, ColorService>();
             services.AddScoped<Interfaces.Services.INotificationService, Services.NotificationService>();
+            services.AddScoped<IMeetingService, MeetingService>();
+            services.AddScoped<IMeetingMemberService, MeetingMemberService>();
             services.AddScoped<INotificationSignalRService>(sp =>
             {
                 var config = sp.GetRequiredService<IConfiguration>();
