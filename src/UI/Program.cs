@@ -11,7 +11,11 @@ namespace UI
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+            var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
+            var stream = await http.GetStreamAsync("appsettings.json");
+
+            builder.Configuration.AddJsonStream(stream);
+
 
             builder.Services.AddApiClientsAndServices(builder.Configuration);
 
