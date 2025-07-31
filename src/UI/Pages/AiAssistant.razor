@@ -6,7 +6,9 @@
 <PageContainer Title="AI Assistant for TaskPilot">
     <Card Title="Ask TaskPilot AI" Style="max-width: 600px; margin: 0 auto;">
         <div style="margin-bottom: 16px;">
-            <TextArea @bind-Value="_question" Rows="4" Placeholder="Ask any question about TaskPilot..." AllowClear="true" />
+            <TextArea @bind-Value="_question" 
+                @oninput="@((ChangeEventArgs e) => { _question = e.Value?.ToString() ?? string.Empty; StateHasChanged(); })"
+            Rows="4" Placeholder="Ask any question about TaskPilot..." AllowClear="true" />
         </div>
         <div style="text-align: right;">
             <Button Type=@ButtonType.Primary OnClick="AskAiAsync" Loading="_isLoading" Disabled="string.IsNullOrWhiteSpace(_question)">

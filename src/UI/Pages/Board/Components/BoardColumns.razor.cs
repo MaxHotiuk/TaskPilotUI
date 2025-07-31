@@ -14,9 +14,10 @@ public partial class BoardColumns : ComponentBase
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public EventCallback<TaskItemDto> OnTaskClick { get; set; }
     [Parameter] public EventCallback OnGoBack { get; set; }
-    
+
     [Inject] private IUserService UserService { get; set; } = default!;
-    
+    [Inject] private IColorService ColorService { get; set; } = default!;
+
     private Dictionary<string, UserDto> _userCache = new();
 
     protected override async Task OnParametersSetAsync()
@@ -55,7 +56,7 @@ public partial class BoardColumns : ComponentBase
         {
             return user.Username;
         }
-        
+
         var member = BoardDetail?.Members.FirstOrDefault(m => m.UserId == assigneeId);
         return member != null ? "User" : "Unknown";
     }
@@ -72,5 +73,51 @@ public partial class BoardColumns : ComponentBase
             return date.ToString("MMM dd");
         }
         return dueDate;
+    }
+    
+    private string GetPriorityColor(int priority)
+    {
+        return priority switch
+        {
+            1 => "gray",      // Low
+            2 => "blue",      // Normal
+            3 => "orange",    // High
+            4 => "red",       // Immediate
+            _ => "default"
+        };
+    }
+
+    private string GetPriorityLabel(int priority)
+    {
+        return priority switch
+        {
+            1 => "Low",
+            2 => "Normal",
+            3 => "High",
+            4 => "Immediate",
+            _ => "Unknown"
+        };
+    }
+
+    private string GetTagTextColor(string? hexColor)
+    {
+        return ColorService.GetTagTextColor(hexColor);
+    }
+
+    private string GetDueDateColor(string dueDateString)
+    {
+        if (DateTime.TryParse(dueDateString, out var dueDate))
+        {
+            var now = DateTime.Now;
+            var timeDiff = dueDate - now;
+
+            if (timeDiff.TotalDays < 0)
+                return "red"; // Overdue
+            else if (timeDiff.TotalDays <= 3)
+                return "orange"; // Due soon
+            else
+                return "green"; // Good
+        }
+        return "default";
     }
 }

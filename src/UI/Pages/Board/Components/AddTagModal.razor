@@ -1,0 +1,28 @@
+@using AntDesign
+@using UI.Models.Tag
+
+<Modal Title="Add Tag"
+       Visible=@IsVisible
+       OnOk=@HandleOk
+       OnCancel=@HandleCancel
+       ConfirmLoading=@IsLoading
+       Width="400">
+    <Form Model=@FormModel
+          LabelCol="new ColLayoutParam { Span = 6 }"
+          WrapperCol="new ColLayoutParam { Span = 18 }"
+          OnFinish=@HandleSubmit
+          OnFinishFailed=@HandleSubmitFailed>
+
+        <FormItem Label="Tag Name" Required>
+            <Input @bind-Value=@FormModel.Name
+                   Placeholder="Enter tag name" 
+                   MaxLength="50" />
+        </FormItem>
+        <FormItem Label="Color">
+            @* <Input @bind-Value=@FormModel.Color
+                   Placeholder="Enter tag color (e.g. green or blue)"
+                   MaxLength="20" /> *@
+            <input type="color" @bind-value=@FormModel.Color />
+        </FormItem>
+    </Form>
+</Modal>

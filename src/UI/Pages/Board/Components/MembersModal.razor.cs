@@ -5,6 +5,7 @@ using UI.Interfaces.Services;
 using UI.Models.User;
 using UI.Models.Avatar;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace UI.Pages.Board.Components;
 
@@ -118,14 +119,19 @@ public partial class MembersModal : ComponentBase
 
     private string GetMemberName(string userId)
     {
-        if (_userCache.TryGetValue(userId, out var user))
+        if (_userCache.TryGetValue(userId, out var user) && user.Username != null)
         {
-            return !string.IsNullOrEmpty(user.Username) ? user.Username 
-                 : !string.IsNullOrEmpty(user.Email) ? user.Email 
-                 : $"User {userId[..Math.Min(8, userId.Length)]}";
+            return user.Username;
         }
-        
-        return $"User {userId[..Math.Min(8, userId.Length)]}";
+        else
+        {
+            var fetchedUser = UserService.GetByIdAsync(userId);
+            if (fetchedUser != null)
+            {
+                return fetchedUser.Result!.Username;
+            }
+        }
+        return "Failed to load username";
     }
 
     private string FormatDate(string dateString)

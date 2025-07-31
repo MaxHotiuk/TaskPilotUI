@@ -71,9 +71,9 @@ public partial class ManageStatesModal : ComponentBase
             _addStateForm.Order = _nextOrder;
 
             var stateId = await TaskStateService.CreateAsync(BoardId, _addStateForm);
-            
+
             await LoadStatesAsync();
-            
+
             _showAddStateModal = false;
             Message.Success($"State '{_addStateForm.Name}' added successfully");
         }
@@ -85,6 +85,8 @@ public partial class ManageStatesModal : ComponentBase
         {
             _isAddingState = false;
             StateHasChanged();
+            if (OnStatesChanged.HasValue)
+                await OnStatesChanged.Value.InvokeAsync(States);
         }
     }
 
@@ -136,6 +138,8 @@ public partial class ManageStatesModal : ComponentBase
 
             await TaskStateService.SwapOrderAsync(BoardId, request);
             await LoadStatesAsync();
+            if (OnStatesChanged.HasValue)
+                await OnStatesChanged.Value.InvokeAsync(States);
         }
     }
 
@@ -156,6 +160,8 @@ public partial class ManageStatesModal : ComponentBase
 
             await TaskStateService.SwapOrderAsync(BoardId, request);
             await LoadStatesAsync();
+            if (OnStatesChanged.HasValue)
+                await OnStatesChanged.Value.InvokeAsync(States);
         }
     }
 }

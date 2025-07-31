@@ -4,6 +4,13 @@
 @using UI.Models.Member
 @using UI.Models.User
 
+@using UI.Models.Tag
+
+@code {
+    [Parameter]
+    public List<TagDto>? Tags { get; set; }
+}
+
 <Card Class="task-card" Bordered>
     <Body>
         <div class="task-header">
@@ -23,6 +30,26 @@
         </div>
 
         <div class="task-details">
+            <div class="detail-item">
+                <Icon Type="tag" />
+                <span class="label">Tag:</span>
+                @if (Task.TagId != null && Tags != null)
+                {
+                    var tag = Tags.FirstOrDefault(t => t.Id == Task.TagId);
+                    if (tag != null)
+                    {
+                        <Tag Style=@($"border-radius: 15px; border-color: {GetTagTextColor(tag.Color)}; color: {GetTagTextColor(tag.Color)}") Color=@tag.Color>@tag.Name</Tag>
+                    }
+                    else
+                    {
+                        <span class="no-tag">No tag</span>
+                    }
+                }
+                else
+                {
+                    <span class="no-tag">No tag</span>
+                }
+            </div>
             <div class="detail-item">
                 <Icon Type="user" />
                 <span class="label">Assignee:</span>
@@ -52,6 +79,12 @@
                 {
                     <span class="not-assigned">Not assigned</span>
                 }
+            </div>
+
+            <div class="detail-item">
+                <Icon Type="flag" />
+                <span class="label">Priority:</span>
+                <Tag Color=@GetPriorityColor(Task.Priority) Icon="exclamation-circle">@GetPriorityLabel(Task.Priority)</Tag>
             </div>
 
             <div class="detail-item">

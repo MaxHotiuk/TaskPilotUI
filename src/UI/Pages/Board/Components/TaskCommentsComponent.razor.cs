@@ -127,7 +127,6 @@ public partial class TaskCommentsComponent : ComponentBase
     {
         if (!string.IsNullOrEmpty(TaskId))
         {
-            await LoadComments(isInitial: true);
             await PreloadAvatarsForComments();
         }
     }

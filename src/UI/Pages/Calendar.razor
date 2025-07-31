@@ -1,0 +1,203 @@
+@page "/calendar"
+@using AntDesign
+@using UI.Models
+@using UI.Models.Task
+@using UI.Interfaces.Services
+@using System.Globalization
+
+<PageHeader Title="Calendar">
+    <PageHeaderExtra>
+        <Space Size=@SpaceSize.Middle>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="reload"
+                        Loading=@(IsLoading || _isLoading)
+                        OnClick=@RefreshCalendar>
+                    Refresh
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Primary
+                        Icon="calendar"
+                        OnClick=@NavigateToToday>
+                    Today
+                </Button>
+            </SpaceItem>
+        </Space>
+    </PageHeaderExtra>
+</PageHeader>
+
+<Space/>
+
+
+<Spin Spinning=@(IsLoading && (!_tasks.Any() && !_meetings.Any())) Tip="Loading your calendar...">
+    <Row Gutter="(24, 24)">
+        <AntDesign.Col Xxl="16" Xl="16" Lg="16" Md="24" Sm="24" Xs="24">
+            <Card Loading=@_isLoading>
+                <AntDesign.Calendar Value=@_selectedDate
+                         OnChange=@OnDateSelect
+                         OnPanelChange=@(async (date, type) => await OnMonthChanged(date))
+                         DateCellRender=@DateCellRender />
+            </Card>
+        </AntDesign.Col>
+
+        <AntDesign.Col Xxl="8" Xl="8" Lg="8" Md="24" Sm="24" Xs="24">
+            <Card Title="@($"Items for {_selectedDate:MMM dd, yyyy}")">
+                @{
+                    var selectedDateTasks = GetSelectedDateTasks();
+                    var selectedDateMeetings = GetSelectedDateMeetings != null ? GetSelectedDateMeetings() : new List<UI.Models.Meeting.MeetingCalendarItemDto>();
+                }
+                @if (selectedDateTasks.Any() || selectedDateMeetings.Any())
+                {
+                    <AntList DataSource=@(selectedDateTasks.Cast<object>().Concat(selectedDateMeetings.Cast<object>()).ToList())
+                          ItemLayout=@ListItemLayout.Vertical
+                          Size=@ListSize.Small>
+                        <ChildContent Context="item">
+                            @if (item is UI.Models.Task.TaskCalendarItemDto task)
+                            {
+                                <ListItem Style="cursor: pointer;" OnClick=@(() => HandleTaskClick(task.Id.ToString()))>
+                                    <ListItemMeta>
+                                        <TitleTemplate>
+                                            <Space>
+                                                <SpaceItem>
+                                                    @{
+                                                        var iconType = "check-circle";
+                                                        var iconColor = "#52c41a"; // default: future
+                                                        if (task.DueDate.HasValue)
+                                                        {
+                                                            var today = DateTime.Today;
+                                                            var dueDate = task.DueDate.Value.Date;
+                                                            if (dueDate < today)
+                                                            {
+                                                                iconType = "close-circle";
+                                                                iconColor = "#f5222d"; // overdue
+                                                            }
+                                                            else if (dueDate == today)
+                                                            {
+                                                                iconType = "exclamation-circle";
+                                                                iconColor = "#faad14"; // today
+                                                            }
+                                                        }
+                                                    }
+                                                    <Icon Type=@iconType Theme=@IconThemeType.Fill Style=@($"color: {iconColor};") />
+                                                </SpaceItem>
+                                                <SpaceItem>
+                                                    <Text>@task.Title</Text>
+                                                </SpaceItem>
+                                            </Space>
+                                        </TitleTemplate>
+                                    </ListItemMeta>
+                                </ListItem>
+                            }
+                            else if (item is UI.Models.Meeting.MeetingCalendarItemDto meeting)
+                            {
+                                <ListItem Style="cursor: pointer;" OnClick=@(() => HandleMeetingClick(meeting.Id.ToString()))>
+                                    <ListItemMeta>
+                                        <TitleTemplate>
+                                            <Space>
+                                                <SpaceItem>
+                                                    <Icon Type="calendar" Theme=@IconThemeType.TwoTone Style="color: #722ed1;" />
+                                                </SpaceItem>
+                                                <SpaceItem>
+                                                    <Text Strong="true">@meeting.Title</Text>
+                                                    @{
+                                                        string meetingTime = string.Empty;
+                                                        if (meeting.ScheduledAt.HasValue)
+                                                        {
+                                                            if (meeting.Duration.HasValue)
+                                                            {
+                                                                var start = meeting.ScheduledAt.Value.ToString("t");
+                                                                var end = meeting.ScheduledAt.Value.AddMinutes(meeting.Duration.Value).ToString("t");
+                                                                meetingTime = $"{start} - {end}";
+                                                            }
+                                                            else
+                                                            {
+                                                                meetingTime = meeting.ScheduledAt.Value.ToString("t");
+                                                            }
+                                                        }
+                                                    }
+                                                    <Text Type=@TextElementType.Secondary Style="margin-left: 8px; font-size: 12px;">@meetingTime</Text>
+                                                </SpaceItem>
+                                            </Space>
+                                        </TitleTemplate>
+                                    </ListItemMeta>
+                                </ListItem>
+                            }
+                        </ChildContent>
+                    </AntList>
+                }
+                else
+                {
+                    <Empty Description=@("No tasks or meetings scheduled for this date")>
+                        <ChildContent>
+                            <Text Type=@TextElementType.Secondary>
+                                Select a different date to view items
+                            </Text>
+                        </ChildContent>
+                    </Empty>
+                }
+            </Card>
+            @if ((_tasks != null && _tasks.Any()) || (_meetings != null && _meetings.Any()))
+            {
+                <Card Title="Monthly Overview" Style="margin-top: 24px;">
+                    <Row Gutter="(16, 16)" Justify=@RowJustify.Center>
+                        <AntDesign.Col Span="8">
+                            <Statistic Title="Total Tasks" 
+                                    Value=@(_tasks != null ? _tasks.Count : 0)
+                                    ValueStyle="color: #1890ff;" />
+                        </AntDesign.Col>
+                        <AntDesign.Col Span="8">
+                            <Statistic Title="Total Meetings" 
+                                    Value=@(_meetings != null ? _meetings.Count : 0)
+                                    ValueStyle="color: #722ed1;" />
+                        </AntDesign.Col>
+                        <AntDesign.Col Span="8">
+                            <Statistic Title="Overdue Tasks" 
+                                    Value=@GetOverdueTasks()
+                                    ValueStyle="color: #f5222d;" />
+                        </AntDesign.Col>
+                    </Row>
+                </Card>
+            }
+        </AntDesign.Col>
+    </Row>
+</Spin>
+
+@code {
+    private RenderFragment DateCellRender(DateTime date)
+    {
+        var tasksForDate = GetTasksForDate(date);
+        var meetingsForDate = GetMeetingsForDate != null ? GetMeetingsForDate(date) : new List<UI.Models.Meeting.MeetingCalendarItemDto>();
+        if (!tasksForDate.Any() && !meetingsForDate.Any())
+        {
+            return builder => { };
+        }
+
+        return @<Template>
+            <Space Direction="SpaceDirection.Vertical" Size="@SpaceSize.Small" Style="width: 100%;">
+                @foreach (var task in tasksForDate.Take(2))
+                {
+                    <SpaceItem>
+                        <Badge Status="@GetTaskBadgeStatus(task)" 
+                               Text="@GetTruncatedTitle(task.Title)" />
+                    </SpaceItem>
+                }
+                @foreach (var meeting in meetingsForDate.Take(2))
+                {
+                    <SpaceItem>
+                        <Badge Status=@BadgeStatus.Processing Style="background-color: #f9f0ff; color: #722ed1; border: 1px solid #722ed1;" Text="@GetTruncatedTitle(meeting.Title)" />
+                    </SpaceItem>
+                }
+                @if (tasksForDate.Count + meetingsForDate.Count > 4)
+                {
+                    <SpaceItem>
+                        <Text Type="@TextElementType.Secondary" 
+                              Style="font-size: 12px;">
+                            +@((tasksForDate.Count + meetingsForDate.Count) - 4) more
+                        </Text>
+                    </SpaceItem>
+                }
+            </Space>
+        </Template>;
+    }
+}

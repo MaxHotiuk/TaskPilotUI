@@ -13,4 +13,5 @@ public partial class TaskModalFooter : ComponentBase
     [Parameter, EditorRequired] public EventCallback<MouseEventArgs> OnClose { get; set; }
     [Parameter, EditorRequired] public EventCallback<MouseEventArgs> OnEdit { get; set; }
     [Parameter, EditorRequired] public EventCallback<MouseEventArgs> OnDelete { get; set; }
+    [Parameter, EditorRequired] public EventCallback<MouseEventArgs> OnArchive { get; set; }
 }

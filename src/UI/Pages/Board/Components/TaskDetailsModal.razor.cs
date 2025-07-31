@@ -10,6 +10,9 @@ using UI.Interfaces.Services;
 
 namespace UI.Pages.Board.Components;
 
+using UI.Models.Tag;
+using UI.Interfaces.Services;
+
 public partial class TaskDetailsModal : ComponentBase
 {
     [Parameter] public bool IsVisible { get; set; }
@@ -18,6 +21,7 @@ public partial class TaskDetailsModal : ComponentBase
     [Parameter] public List<StateDto> States { get; set; } = new();
     [Parameter] public List<BoardMemberDto> BoardMembers { get; set; } = new();
     [Parameter] public bool CanManageTask { get; set; }
+    [Parameter] public List<TagDto> Tags { get; set; } = new();
     [Parameter] public EventCallback<TaskItemDto> OnTaskUpdated { get; set; }
     [Parameter] public EventCallback<string> OnTaskDeleted { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -25,13 +29,12 @@ public partial class TaskDetailsModal : ComponentBase
     [Inject] private IUserService UserService { get; set; } = default!;
     [Inject] private ITaskService TaskService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
+    [Inject] private ITagService TagService { get; set; } = default!;
     [Inject] private NotificationService NotificationService { get; set; } = default!;
 
     private List<UserDto> AllUsers { get; set; } = new();
     private UpdateTaskRequest FormModel { get; set; } = new();
     private bool IsEditing { get; set; } = false;
-    private DateTime? DueDateValue { get; set; }
-    private string DueDateString { get; set; } = string.Empty;
     private bool _internalLoading = false;
     private string? CurrentUserId { get; set; }
 
@@ -39,12 +42,32 @@ public partial class TaskDetailsModal : ComponentBase
     {
         await LoadAllUsers();
         await LoadCurrentUser();
+        await LoadTags();
+    }
+
+    private async Task LoadCurrentTask()
+    {
+        CurrentTask = await TaskService.GetByIdAsync(CurrentTask?.Id ?? string.Empty);
+    }
+
+    private async Task LoadTags()
+    {
+        if (CurrentTask?.BoardId != null)
+        {
+            var boardGuid = Guid.Parse(CurrentTask.BoardId);
+            var tags = await TagService.GetByBoardIdAsync(boardGuid);
+            Tags = tags.ToList();
+        }
+        else
+        {
+            Tags = new List<TagDto>();
+        }
     }
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        
+
         if (CurrentTask != null && IsVisible)
         {
             InitializeForm();
@@ -65,20 +88,11 @@ public partial class TaskDetailsModal : ComponentBase
             Title = CurrentTask.Title,
             Description = CurrentTask.Description,
             StateId = CurrentTask.StateId,
+            TagId = CurrentTask.TagId,
             AssigneeId = CurrentTask.AssigneeId,
-            DueDate = CurrentTask.DueDate
+            DueDate = CurrentTask.DueDate,
+            Priority = CurrentTask.Priority
         };
-
-        if (!string.IsNullOrEmpty(CurrentTask.DueDate) && DateTime.TryParse(CurrentTask.DueDate, out var dueDate))
-        {
-            DueDateValue = dueDate;
-            DueDateString = dueDate.ToString("yyyy-MM-dd");
-        }
-        else
-        {
-            DueDateValue = null;
-            DueDateString = string.Empty;
-        }
     }
 
     private async Task LoadAllUsers()
@@ -123,6 +137,7 @@ public partial class TaskDetailsModal : ComponentBase
             builder.AddAttribute(6, "OnClose", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await HandleCancel()));
             builder.AddAttribute(7, "OnEdit", EventCallback.Factory.Create<MouseEventArgs>(this, _ => StartEdit()));
             builder.AddAttribute(8, "OnDelete", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DeleteTask()));
+            builder.AddAttribute(9, "OnArchive", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ArchiveTask()));
             builder.CloseComponent();
         };
     }
@@ -132,6 +147,40 @@ public partial class TaskDetailsModal : ComponentBase
         IsEditing = true;
         InitializeForm();
         StateHasChanged();
+    }
+
+    private async Task ArchiveTask()
+    {
+        if (CurrentTask == null) return;
+
+        try
+        {
+            _internalLoading = true;
+            StateHasChanged();
+
+            await TaskService.ArchiveAsync(Guid.Parse(CurrentTask.Id));
+
+            await NotificationService.Success(new NotificationConfig()
+            {
+                Message = "Success",
+                Description = "Task archived successfully!"
+            });
+
+            if (OnTaskUpdated.HasDelegate)
+            {
+                await OnTaskUpdated.InvokeAsync(CurrentTask);
+            }
+
+            await HandleCancel();
+        }
+        catch (Exception)
+        {
+        }
+        finally
+        {
+            _internalLoading = false;
+            StateHasChanged();
+        }
     }
 
     private void CancelEdit()
@@ -171,27 +220,20 @@ public partial class TaskDetailsModal : ComponentBase
             _internalLoading = true;
             StateHasChanged();
 
-            if (!string.IsNullOrWhiteSpace(DueDateString) && DateTime.TryParse(DueDateString, out var dueDate))
-            {
-                FormModel.DueDate = dueDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-            }
-            else
-            {
-                FormModel.DueDate = null;
-            }
-
             await TaskService.UpdateAsync(CurrentTask.Id, FormModel);
 
             CurrentTask.Title = FormModel.Title;
             CurrentTask.Description = FormModel.Description;
             CurrentTask.StateId = FormModel.StateId;
+            CurrentTask.TagId = FormModel.TagId;
             CurrentTask.AssigneeId = FormModel.AssigneeId;
             CurrentTask.DueDate = FormModel.DueDate;
+            CurrentTask.Priority = FormModel.Priority;
             CurrentTask.UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 
             IsEditing = false;
 
-            await NotificationService.Success(new NotificationConfig()
+            _ = NotificationService.Success(new NotificationConfig()
             {
                 Message = "Success",
                 Description = "Task updated successfully!"
@@ -202,13 +244,8 @@ public partial class TaskDetailsModal : ComponentBase
                 await OnTaskUpdated.InvokeAsync(CurrentTask);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await NotificationService.Error(new NotificationConfig()
-            {
-                Message = "Error",
-                Description = $"Failed to update task: {ex.Message}"
-            });
         }
         finally
         {
@@ -228,7 +265,7 @@ public partial class TaskDetailsModal : ComponentBase
 
             await TaskService.DeleteAsync(CurrentTask.Id);
 
-            await NotificationService.Success(new NotificationConfig()
+            _ = NotificationService.Success(new NotificationConfig()
             {
                 Message = "Success",
                 Description = "Task deleted successfully!"
@@ -241,13 +278,8 @@ public partial class TaskDetailsModal : ComponentBase
 
             await HandleCancel();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await NotificationService.Error(new NotificationConfig()
-            {
-                Message = "Error",
-                Description = $"Failed to delete task: {ex.Message}"
-            });
         }
         finally
         {
@@ -270,6 +302,8 @@ public partial class TaskDetailsModal : ComponentBase
                 Title = CurrentTask.Title,
                 Description = CurrentTask.Description,
                 StateId = newStateId,
+                TagId = CurrentTask.TagId,
+                Priority = CurrentTask.Priority,
                 AssigneeId = CurrentTask.AssigneeId,
                 DueDate = CurrentTask.DueDate
             };
@@ -290,13 +324,8 @@ public partial class TaskDetailsModal : ComponentBase
                 await OnTaskUpdated.InvokeAsync(CurrentTask);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await NotificationService.Error(new NotificationConfig()
-            {
-                Message = "Error",
-                Description = $"Failed to move task: {ex.Message}"
-            });
         }
         finally
         {
@@ -308,6 +337,10 @@ public partial class TaskDetailsModal : ComponentBase
     private async Task HandleSubmit()
     {
         await SaveChanges();
+        await LoadAllUsers();
+        await LoadCurrentUser();
+        await LoadTags();
+        StateHasChanged();
     }
 
     private void HandleSubmitFailed(EditContext editContext)

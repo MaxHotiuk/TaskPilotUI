@@ -1,12 +1,12 @@
-@page "/board/{BoardId}/call"
+@page "/board/{BoardId}/meeting/{MeetingId}"
 @using AntDesign
 @inherits TaskPilotUI.UI.Pages.Board.BoardCallPage
 
-<PageTitle>Board Call - @BoardId</PageTitle>
+<PageTitle>Board Meeting - @BoardId</PageTitle>
 
 <div class="board-call-container">
     <div class="call-header">
-        <Title Level="2" Style="margin: 0; color: #1890ff;">Board Call</Title>
+        <Title Level="2" Style="margin: 0; color: #1890ff;">Board Meeting</Title>
         <div class="call-status">
             @if (!_connectionReady)
             {

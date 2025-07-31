@@ -1,0 +1,34 @@
+@using AntDesign
+@using UI.Models.Tag
+
+<Modal Title="Manage Tags"
+       Visible=@IsVisible
+       OnCancel=@OnCancel
+       Footer="null"
+       Width="600">
+    <div class="manage-tags-header">
+        <Button Type=@ButtonType.Primary Icon="plus" OnClick=@ShowAddTagModal>Add Tag</Button>
+    </div>
+    <Table DataSource=@Tags RowKey=@(tag => tag.Id) Bordered Size=@TableSize.Middle>
+        <AntDesign.Column TData=@TagDto Title="Name">
+            <Template>
+                <AntDesign.Input TValue="string" @bind-Value=@context.Name MaxLength="50" Size=@InputSize.Small OnBlur=@(() => OnNameChanged(context)) />
+            </Template>
+        </AntDesign.Column>
+        <AntDesign.Column TData=@TagDto Title="Color">
+            <Template>
+                <input type="color" @bind-value=@context.Color @bind-value:event="onchange" @bind-value:after="() => OnColorChanged(context)" />
+            </Template>
+        </AntDesign.Column>
+        <AntDesign.Column TData=@TagDto Title="Actions" Width="120">
+            <Template>
+                <Button Danger Size=@ButtonSize.Small Icon="delete" OnClick=@(() => OnDeleteTag(context))>Delete</Button>
+            </Template>
+        </AntDesign.Column>
+    </Table>
+    <AddTagModal IsVisible=@_showAddTagModal
+                 IsLoading=@_isAddingTag
+                 FormModel=@_addTagForm
+                 OnOk=@(async () => await AddTag())
+                 OnCancel=@(() => { _showAddTagModal = false; ResetAddTagForm(); }) />
+</Modal>

@@ -5,11 +5,28 @@
             OnBack="OnBack">
     <PageHeaderExtra>
         <Space>
+            @if (BoardDetail != null && CurrentUserId != null && BoardDetail.OwnerId == CurrentUserId)
+            {
+                <SpaceItem>
+                    <Button Type=@ButtonType.Default
+                            Danger="true"
+                            Icon="delete"
+                            OnClick=@OnArchive>
+                        Archive Board
+                    </Button>
+                </SpaceItem>
+            }
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="ordered-list" 
+                        OnClick="OnBacklog">
+                    Backlog
+                </Button>
+            </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="team" 
                         OnClick="OnShowMembers">
-                    Members (@(BoardDetail?.Members.Count ?? 0))
                 </Button>
             </SpaceItem>
             <SpaceItem>
@@ -17,40 +34,49 @@
                         Icon="reload" 
                         Loading="IsLoading"
                         OnClick="OnRefresh">
-                    Refresh
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="setting" 
                         OnClick="OnManageStates">
-                    Manage States
+                    States
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="tag"
+                        OnClick="OnManageTags">
+                    Tags
+                </Button>
+            </SpaceItem>
+            <SpaceItem>
+                <Button Type=@ButtonType.Default
+                        Icon="phone"
+                        OnClick="OnManageMeetings">
+                    Meetings
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Primary
                         Icon="plus" 
                         OnClick="OnCreateTask">
-                    Add Task
                 </Button>
             </SpaceItem>
             <SpaceItem>
-                <Button Type=@ButtonType.Primary
-                        Icon="phone"
-                        OnClick=@OnCreateCall>
-                    Call
+                <Button Type=@ButtonType.Default
+                        Icon="user"
+                        OnClick="OnOnlyMineToggle">
+                    @if (IsOnlyMine)
+                    {
+                        <span>My Tasks</span>
+                    }
+                    else
+                    {
+                        <span>All Tasks</span>
+                    }
                 </Button>
             </SpaceItem>
-        @if (BoardDetail != null && CurrentUserId != null && BoardDetail.OwnerId == CurrentUserId)
-        {
-            <SpaceItem>
-                <Button Type=@ButtonType.Primary
-                        Icon="delete"
-                        OnClick=@OnArchive>
-                    Archive Board
-                </Button>
-            </SpaceItem>
-        }
         </Space>
     </PageHeaderExtra>
     

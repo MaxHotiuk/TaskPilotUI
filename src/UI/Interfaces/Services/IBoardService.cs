@@ -1,3 +1,4 @@
+using UI.Models.Backlog;
 using UI.Models.Board;
 
 namespace UI.Interfaces.Services;
@@ -40,8 +41,17 @@ public interface IBoardService
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
-        
+
     Task<BoardDto> GetByIdAsync(
         Guid id,
+        CancellationToken cancellationToken = default);
+    
+    Task<IEnumerable<BacklogDto>> SearchBacklogRangeForBoardAsync(
+        Guid boardId,
+        string searchTerm,
+        int page,
+        int pageSize,
+        DateOnly startDate,
+        DateOnly endDate,
         CancellationToken cancellationToken = default);
 }

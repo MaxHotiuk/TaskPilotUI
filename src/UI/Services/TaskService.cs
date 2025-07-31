@@ -72,4 +72,56 @@ public class TaskService : ITaskService
             throw new Exception($"Failed to delete task: {ex.Message}", ex);
         }
     }
+
+    public async Task<List<TaskCalendarItemDto>> GetForCalendarMonthAsync(Guid userId, DateTime dayInMonth)
+    {
+        try
+        {
+            return await _boardTaskApi.GetForCalendarMonthAsync(userId, dayInMonth);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get tasks for calendar month: {ex.Message}", ex);
+        }
+    }
+
+    public async Task ArchiveAsync(Guid taskId)
+    {
+        try
+        {
+            await _boardTaskApi.ArchiveAsync(taskId);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to archive task: {ex.Message}", ex);
+        }
+    }
+
+    public async Task RestoreAsync(Guid taskId)
+    {
+        try
+        {
+            await _boardTaskApi.RestoreAsync(taskId);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to restore task: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<ArchivedTaskDto>> SearchArchivedRangeTaskItemsAsync(
+        int page,
+        int pageSize,
+        string searchTerm,
+        Guid boardId)
+    {
+        try
+        {
+            return await _boardTaskApi.SearchArchivedRangeTaskItemsAsync(page, pageSize, searchTerm, boardId);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to search archived tasks: {ex.Message}", ex);
+        }
+    }
 }

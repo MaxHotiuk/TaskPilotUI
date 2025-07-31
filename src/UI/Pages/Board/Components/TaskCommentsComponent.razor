@@ -183,13 +183,14 @@
 
                         <div class="comment-textarea-wrapper" style="margin-bottom: 4px;">
                             <TextArea @bind-Value=NewCommentContent
-                                     Rows="2"
-                                     Placeholder="Add a comment..."
-                                     MaxLength="1000"
-                                     ShowCount=@false
-                                     @onkeydown=@HandleKeyDown
-                                     class="comment-textarea"
-                                     style="font-size: 13px; padding: 4px 8px; min-height: 32px;" />
+                                @oninput="@((ChangeEventArgs e) => { NewCommentContent = e.Value?.ToString() ?? string.Empty; StateHasChanged(); })"
+                                Rows="2"
+                                Placeholder="Add a comment..."
+                                MaxLength="1000"
+                                ShowCount=@false
+                                @onkeydown=@HandleKeyDown
+                                class="comment-textarea"
+                                style="font-size: 13px; padding: 4px 8px; min-height: 32px;" />
                         </div>
 
                         <div class="attachment-row" style="margin-bottom: 4px; gap: 4px; display: flex; flex-wrap: wrap; align-items: center;">
