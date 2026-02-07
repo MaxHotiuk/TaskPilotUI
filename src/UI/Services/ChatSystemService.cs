@@ -1,6 +1,8 @@
 using UI.Interfaces.Api;
 using UI.Interfaces.Services;
 using UI.Models.Chat;
+using UI.Models.Attachment;
+using Refit;
 
 namespace UI.Services;
 
@@ -39,5 +41,29 @@ public class ChatSystemService : IChatSystemService
         CancellationToken cancellationToken = default)
     {
         return await _chatApi.SendMessageAsync(chatId, request, cancellationToken);
+    }
+
+    public async Task UpdateReadStatusAsync(
+        Guid chatId,
+        UpdateChatReadStatusRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        await _chatApi.UpdateReadStatusAsync(chatId, request, cancellationToken);
+    }
+
+    public async Task<AttachmentDto> UploadChatAttachmentAsync(
+        Guid chatId,
+        Guid messageId,
+        Guid userId,
+        Stream fileStream,
+        string fileName,
+        string? contentType,
+        CancellationToken cancellationToken = default)
+    {
+        var streamPart = string.IsNullOrWhiteSpace(contentType)
+            ? new StreamPart(fileStream, fileName)
+            : new StreamPart(fileStream, fileName, contentType);
+
+        return await _chatApi.UploadChatAttachmentAsync(chatId, messageId, userId, streamPart, cancellationToken);
     }
 }

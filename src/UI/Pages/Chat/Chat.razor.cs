@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Refit;
 using UI.Interfaces.Services;
 using UI.Interfaces.SignalR;
 using UI.Models.Chat;
@@ -11,6 +13,7 @@ public partial class Chat : ComponentBase, IDisposable
 {
     private readonly List<ChatDto> _chats = new();
     private readonly List<ChatMessageDto> _messages = new();
+    private readonly HashSet<Guid> _typingUsers = new();
     private Guid _currentUserId;
     private Guid? _organizationId;
     private Guid? _activeChatId;
@@ -31,6 +34,12 @@ public partial class Chat : ComponentBase, IDisposable
     private readonly List<UserDto> _searchResults = new();
     private string _searchText = string.Empty;
     private bool _isInitialized;
+    private CancellationTokenSource? _typingCts;
+    private bool _isTyping;
+    private DateTime? _lastReadAt;
+    private static readonly TimeSpan TypingTimeout = TimeSpan.FromSeconds(2.5);
+    private readonly List<AttachmentMemory> _pendingAttachments = new();
+    private readonly List<string> _pendingAttachmentNames = new();
 
     private Guid? OrganizationId
     {
@@ -54,6 +63,7 @@ public partial class Chat : ComponentBase, IDisposable
     [Inject] public IAuthService AuthService { get; set; } = default!;
     [Inject] public IUserService UserService { get; set; } = default!;
     [Inject] public MessageService MessageService { get; set; } = default!;
+    [Inject] public IAttachmentService AttachmentService { get; set; } = default!;
 
     private bool _canLoadChats => _currentUserId != Guid.Empty && _organizationId.HasValue;
 
@@ -101,6 +111,8 @@ public partial class Chat : ComponentBase, IDisposable
         ChatSignalRService.OnChatCreated(HandleChatUpsert);
         ChatSignalRService.OnChatUpdated(HandleChatUpsert);
         ChatSignalRService.OnChatMessageReceived(HandleChatMessage);
+        ChatSignalRService.OnUserTyping(HandleUserTyping);
+        ChatSignalRService.OnUserStoppedTyping(HandleUserStoppedTyping);
     }
 
     private async Task LoadChatsAsync()
@@ -125,13 +137,21 @@ public partial class Chat : ComponentBase, IDisposable
         {
             var result = await ChatService.GetChatsAsync(_currentUserId, organizationId);
             _chats.Clear();
-            _chats.AddRange(result.OrderByDescending(chat => chat.UpdatedAt));
+            foreach (var chat in result.OrderByDescending(chat => chat.UpdatedAt))
+            {
+                ApplyMemberNames(chat);
+                _chats.Add(chat);
+            }
 
             if (_activeChatId.HasValue && _chats.All(chat => chat.Id != _activeChatId.Value))
             {
                 _activeChatId = null;
                 _activeChat = null;
                 _messages.Clear();
+            }
+            else if (_activeChat != null)
+            {
+                ApplyMemberNames(_activeChat);
             }
         }
         catch (Exception ex)
@@ -150,12 +170,22 @@ public partial class Chat : ComponentBase, IDisposable
         if (_activeChatId == chat.Id)
             return;
 
+        var previousChatId = _activeChatId;
+        if (previousChatId.HasValue)
+        {
+            await ChatSignalRService.LeaveChatGroupAsync(previousChatId.Value.ToString());
+        }
+
+        await StopTypingAsync();
+        _typingUsers.Clear();
+        _lastReadAt = null;
         _activeChatId = chat.Id;
         _activeChat = chat;
         _currentPage = 1;
         _messages.Clear();
         _hasMoreMessages = false;
         _newMessage = string.Empty;
+        ClearAttachments();
 
         await ChatSignalRService.JoinChatGroupAsync(chat.Id.ToString());
         await LoadMessagesAsync(reset: true);
@@ -189,6 +219,7 @@ public partial class Chat : ComponentBase, IDisposable
 
             _messages.Sort((left, right) => left.CreatedAt.CompareTo(right.CreatedAt));
             _hasMoreMessages = messages.Count == PageSize;
+            await MarkChatReadAsync();
         }
         catch (Exception ex)
         {
@@ -212,7 +243,7 @@ public partial class Chat : ComponentBase, IDisposable
 
     private async Task SendMessageAsync()
     {
-        if (_activeChatId == null || string.IsNullOrWhiteSpace(_newMessage))
+        if (_activeChatId == null || (string.IsNullOrWhiteSpace(_newMessage) && !_pendingAttachments.Any()))
             return;
 
         _isSending = true;
@@ -236,6 +267,13 @@ public partial class Chat : ComponentBase, IDisposable
             }
 
             UpdateChatLastMessage(message);
+            if (_pendingAttachments.Any())
+            {
+                await UploadMessageAttachmentsAsync(message.Id);
+            }
+
+            ClearAttachments();
+            await StopTypingAsync();
         }
         catch (Exception ex)
         {
@@ -248,10 +286,110 @@ public partial class Chat : ComponentBase, IDisposable
         }
     }
 
-    private Task OnNewMessageChanged(string message)
+    private async Task OnNewMessageChanged(string message)
     {
         _newMessage = message;
-        return Task.CompletedTask;
+
+        if (_activeChatId == null || _currentUserId == Guid.Empty)
+            return;
+
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            await StopTypingAsync();
+            return;
+        }
+
+        await StartTypingAsync();
+        ScheduleStopTyping();
+    }
+
+    private async Task OnAttachmentsSelected(InputFileChangeEventArgs e)
+    {
+        if (e.FileCount == 0)
+            return;
+
+        foreach (var file in e.GetMultipleFiles())
+        {
+            if (_pendingAttachments.Any(att => att.Name == file.Name))
+                continue;
+
+            using var stream = file.OpenReadStream(long.MaxValue);
+            using var memory = new MemoryStream();
+            await stream.CopyToAsync(memory);
+            _pendingAttachments.Add(new AttachmentMemory
+            {
+                Name = file.Name,
+                Data = memory.ToArray(),
+                ContentType = file.ContentType
+            });
+            _pendingAttachmentNames.Add(file.Name);
+        }
+
+        StateHasChanged();
+    }
+
+    private void RemoveAttachmentAt(int index)
+    {
+        if (index < 0 || index >= _pendingAttachmentNames.Count)
+            return;
+
+        var name = _pendingAttachmentNames[index];
+        _pendingAttachmentNames.RemoveAt(index);
+        var attachment = _pendingAttachments.FirstOrDefault(att => att.Name == name);
+        if (attachment != null)
+        {
+            _pendingAttachments.Remove(attachment);
+        }
+        StateHasChanged();
+    }
+
+    private void ClearAttachments()
+    {
+        _pendingAttachments.Clear();
+        _pendingAttachmentNames.Clear();
+        StateHasChanged();
+    }
+
+    private async Task UploadMessageAttachmentsAsync(Guid messageId)
+    {
+        if (_activeChatId == null || _currentUserId == Guid.Empty)
+            return;
+
+        var uploadedAny = false;
+        foreach (var attachment in _pendingAttachments)
+        {
+            try
+            {
+                using var stream = new MemoryStream(attachment.Data);
+                await ChatService.UploadChatAttachmentAsync(
+                    _activeChatId.Value,
+                    messageId,
+                    _currentUserId,
+                    stream,
+                    attachment.Name,
+                    attachment.ContentType);
+                uploadedAny = true;
+            }
+            catch (Exception ex)
+            {
+                MessageService.Error($"Failed to upload attachment '{attachment.Name}': {ex.Message}");
+            }
+        }
+
+        if (uploadedAny)
+        {
+            MarkMessageHasAttachments(messageId);
+        }
+    }
+
+    private void MarkMessageHasAttachments(Guid messageId)
+    {
+        var message = _messages.FirstOrDefault(item => item.Id == messageId);
+        if (message == null)
+            return;
+
+        message.HasAttachments = true;
+        StateHasChanged();
     }
 
     private void OpenCreateChat()
@@ -392,6 +530,13 @@ public partial class Chat : ComponentBase, IDisposable
     {
         _ = InvokeAsync(() =>
         {
+            var existingChat = _chats.FirstOrDefault(existing => existing.Id == chat.Id);
+            if (existingChat != null && chat.LastMessage == null)
+            {
+                chat.LastMessage = existingChat.LastMessage;
+            }
+
+            ApplyMemberNames(chat);
             var index = _chats.FindIndex(existing => existing.Id == chat.Id);
             if (index >= 0)
             {
@@ -413,6 +558,24 @@ public partial class Chat : ComponentBase, IDisposable
         });
     }
 
+    private void ApplyMemberNames(ChatDto chat)
+    {
+        if (!_allUsers.Any())
+            return;
+
+        foreach (var member in chat.Members)
+        {
+            if (!string.IsNullOrWhiteSpace(member.UserName))
+                continue;
+
+            var user = _allUsers.FirstOrDefault(u => u.Id == member.UserId);
+            if (user != null)
+            {
+                member.UserName = user.Username;
+            }
+        }
+    }
+
     private void HandleChatMessage(ChatMessageDto message)
     {
         _ = InvokeAsync(() =>
@@ -423,10 +586,172 @@ public partial class Chat : ComponentBase, IDisposable
             {
                 _messages.Add(message);
                 _messages.Sort((left, right) => left.CreatedAt.CompareTo(right.CreatedAt));
+                if (message.SenderId != _currentUserId)
+                {
+                    _ = MarkChatReadAsync();
+                    if (!message.HasAttachments)
+                    {
+                        _ = ProbeAttachmentsAsync(message);
+                    }
+                }
             }
 
             StateHasChanged();
         });
+    }
+
+    private async Task ProbeAttachmentsAsync(ChatMessageDto message)
+    {
+        if (message.Id == Guid.Empty || _currentUserId == Guid.Empty)
+            return;
+
+        const int maxAttempts = 3;
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                var attachments = await AttachmentService.GetAsync(message.Id, _currentUserId);
+                if (attachments.Any())
+                {
+                    message.HasAttachments = true;
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+            }
+            catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+            }
+            catch
+            {
+                return;
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1.5));
+        }
+    }
+
+    private void HandleUserTyping(ChatTypingEvent typingEvent)
+    {
+        if (_activeChatId != typingEvent.ChatId || typingEvent.UserId == _currentUserId)
+            return;
+
+        _typingUsers.Add(typingEvent.UserId);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleUserStoppedTyping(ChatTypingEvent typingEvent)
+    {
+        if (_activeChatId != typingEvent.ChatId || typingEvent.UserId == _currentUserId)
+            return;
+
+        _typingUsers.Remove(typingEvent.UserId);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task StartTypingAsync()
+    {
+        if (_isTyping || _activeChatId == null)
+            return;
+
+        _isTyping = true;
+        await ChatSignalRService.StartTypingAsync(_activeChatId.Value.ToString(), _currentUserId.ToString());
+    }
+
+    private void ScheduleStopTyping()
+    {
+        _typingCts?.Cancel();
+        _typingCts = new CancellationTokenSource();
+        var token = _typingCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TypingTimeout, token);
+                if (!token.IsCancellationRequested)
+                {
+                    await InvokeAsync(StopTypingAsync);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }, token);
+    }
+
+    private async Task StopTypingAsync()
+    {
+        _typingCts?.Cancel();
+        _typingCts = null;
+
+        if (!_isTyping)
+            return;
+
+        _isTyping = false;
+        if (_activeChatId == null)
+            return;
+
+        await ChatSignalRService.StopTypingAsync(_activeChatId.Value.ToString(), _currentUserId.ToString());
+    }
+
+    private IReadOnlyList<string> GetTypingUsers()
+    {
+        if (_activeChat == null)
+            return Array.Empty<string>();
+
+        return _typingUsers
+            .Select(id => _activeChat.Members.FirstOrDefault(member => member.UserId == id)?.UserName ?? "Someone")
+            .Distinct()
+            .ToList();
+    }
+
+    private async Task MarkChatReadAsync()
+    {
+        if (_activeChatId == null)
+            return;
+
+        var readAt = DateTime.UtcNow;
+        if (_lastReadAt.HasValue && readAt - _lastReadAt.Value < TimeSpan.FromSeconds(5))
+            return;
+
+        var request = new UpdateChatReadStatusRequestDto
+        {
+            UserId = _currentUserId,
+            ReadAt = readAt
+        };
+
+        try
+        {
+            await ChatService.UpdateReadStatusAsync(_activeChatId.Value, request);
+            _lastReadAt = readAt;
+            UpdateLocalReadStatus(readAt);
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to update read status: {ex.Message}");
+        }
+    }
+
+    private void UpdateLocalReadStatus(DateTime readAt)
+    {
+        if (_activeChat == null)
+            return;
+
+        var member = _activeChat.Members.FirstOrDefault(m => m.UserId == _currentUserId);
+        if (member != null)
+        {
+            member.LastReadAt = readAt;
+        }
+
+        var chat = _chats.FirstOrDefault(c => c.Id == _activeChat.Id);
+        if (chat != null)
+        {
+            var chatMember = chat.Members.FirstOrDefault(m => m.UserId == _currentUserId);
+            if (chatMember != null)
+            {
+                chatMember.LastReadAt = readAt;
+            }
+        }
     }
 
     private void UpdateChatLastMessage(ChatMessageDto message)
@@ -450,5 +775,24 @@ public partial class Chat : ComponentBase, IDisposable
 
     public void Dispose()
     {
+        _ = StopTypingAsync();
+        if (_activeChatId.HasValue)
+        {
+            _ = ChatSignalRService.LeaveChatGroupAsync(_activeChatId.Value.ToString());
+        }
+
+        if (_currentUserId != Guid.Empty)
+        {
+            _ = ChatSignalRService.LeaveUserGroupAsync(_currentUserId.ToString());
+        }
+
+        _ = ChatSignalRService.DisconnectAsync();
+    }
+
+    private class AttachmentMemory
+    {
+        public string Name { get; set; } = string.Empty;
+        public byte[] Data { get; set; } = Array.Empty<byte>();
+        public string ContentType { get; set; } = string.Empty;
     }
 }

@@ -83,6 +83,21 @@ public partial class ChatList : ComponentBase
         return member?.UserId;
     }
 
+    private bool IsChatUnread(ChatDto chat)
+    {
+        if (chat.LastMessage == null)
+            return false;
+
+        if (chat.LastMessage.SenderId == CurrentUserId)
+            return false;
+
+        var member = chat.Members.FirstOrDefault(m => m.UserId == CurrentUserId);
+        if (member?.LastReadAt == null)
+            return true;
+
+        return chat.LastMessage.CreatedAt > member.LastReadAt.Value;
+    }
+
     private async Task LoadAvatarAsync(Guid userId)
     {
         if (_avatarCache.ContainsKey(userId) || _avatarLoading.Contains(userId))

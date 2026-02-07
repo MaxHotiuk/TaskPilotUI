@@ -68,6 +68,18 @@ public class ChatSignalRService : IChatSignalRService
             await _hubConnection.InvokeAsync("LeaveChatGroup", chatId);
     }
 
+    public async Task StartTypingAsync(string chatId, string userId)
+    {
+        if (_hubConnection != null && !string.IsNullOrWhiteSpace(chatId) && !string.IsNullOrWhiteSpace(userId))
+            await _hubConnection.InvokeAsync("StartTyping", chatId, userId);
+    }
+
+    public async Task StopTypingAsync(string chatId, string userId)
+    {
+        if (_hubConnection != null && !string.IsNullOrWhiteSpace(chatId) && !string.IsNullOrWhiteSpace(userId))
+            await _hubConnection.InvokeAsync("StopTyping", chatId, userId);
+    }
+
     public void OnChatCreated(Action<ChatDto> handler)
     {
         _hubConnection?.On("ChatCreated", handler);
@@ -81,6 +93,16 @@ public class ChatSignalRService : IChatSignalRService
     public void OnChatMessageReceived(Action<ChatMessageDto> handler)
     {
         _hubConnection?.On("ReceiveChatMessage", handler);
+    }
+
+    public void OnUserTyping(Action<ChatTypingEvent> handler)
+    {
+        _hubConnection?.On("UserTyping", handler);
+    }
+
+    public void OnUserStoppedTyping(Action<ChatTypingEvent> handler)
+    {
+        _hubConnection?.On("UserStoppedTyping", handler);
     }
 
     public async ValueTask DisposeAsync()

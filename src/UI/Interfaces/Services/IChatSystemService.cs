@@ -1,4 +1,6 @@
 using UI.Models.Chat;
+using UI.Models.Attachment;
+using System.IO;
 
 namespace UI.Interfaces.Services;
 
@@ -15,5 +17,17 @@ public interface IChatSystemService
     Task<ChatMessageDto> SendMessageAsync(
         Guid chatId,
         SendChatMessageRequestDto request,
+        CancellationToken cancellationToken = default);
+    Task UpdateReadStatusAsync(
+        Guid chatId,
+        UpdateChatReadStatusRequestDto request,
+        CancellationToken cancellationToken = default);
+    Task<AttachmentDto> UploadChatAttachmentAsync(
+        Guid chatId,
+        Guid messageId,
+        Guid userId,
+        Stream fileStream,
+        string fileName,
+        string? contentType,
         CancellationToken cancellationToken = default);
 }

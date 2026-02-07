@@ -10,7 +10,7 @@ namespace UI.Interfaces.Api;
 public interface IAttachmentApi
 {
     [Get("/api/attachments/{entityId}")]
-    Task<List<AttachmentDto>> GetAsync(Guid entityId);
+    Task<List<AttachmentDto>> GetAsync(Guid entityId, [Query] Guid userId);
 
     [Multipart]
     [Post("/api/attachments/{entityId}")]

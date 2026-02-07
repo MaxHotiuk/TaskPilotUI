@@ -39,8 +39,15 @@
                           IsSending=@_isSending
                           HasMoreMessages=@_hasMoreMessages
                           CurrentUserId=@_currentUserId
+                          TypingUsers=@GetTypingUsers()
                           NewMessage=@_newMessage
                           NewMessageChanged=@OnNewMessageChanged
+                          PendingAttachmentNames=@_pendingAttachmentNames
+                          HasPendingAttachments=@_pendingAttachments.Any()
+                          OnAttachmentsSelected=@OnAttachmentsSelected
+                          OnRemoveAttachment=@RemoveAttachmentAt
+                          OnClearAttachments=@ClearAttachments
+                          OnStopTyping=@StopTypingAsync
                           OnSend=@SendMessageAsync
                           OnLoadMore=@LoadMoreMessagesAsync />
         </Col>

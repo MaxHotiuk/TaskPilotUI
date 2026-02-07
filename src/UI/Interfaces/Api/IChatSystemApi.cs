@@ -1,5 +1,6 @@
 using Refit;
 using UI.Models.Chat;
+using UI.Models.Attachment;
 
 namespace UI.Interfaces.Api;
 
@@ -26,5 +27,20 @@ public interface IChatSystemApi
     Task<ChatMessageDto> SendMessageAsync(
         Guid chatId,
         [Body] SendChatMessageRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    [Patch("/api/chats/{chatId}/read")]
+    Task UpdateReadStatusAsync(
+        Guid chatId,
+        [Body] UpdateChatReadStatusRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    [Multipart]
+    [Post("/api/chats/{chatId}/messages/{messageId}/attachments?userId={userId}")]
+    Task<AttachmentDto> UploadChatAttachmentAsync(
+        Guid chatId,
+        Guid messageId,
+        [AliasAs("userId")] Guid userId,
+        [AliasAs("file")] StreamPart file,
         CancellationToken cancellationToken = default);
 }

@@ -8,6 +8,7 @@ namespace UI.Pages.Board.Components
     {
         [Parameter] public string CommentId { get; set; } = string.Empty;
         [Inject] public IAttachmentService AttachmentService { get; set; } = default!;
+        [Inject] public IAuthService AuthService { get; set; } = default!;
         private List<AttachmentDto> Attachments = new();
         private bool IsLoading = true;
         protected bool IsPreviewVisible = false;
@@ -24,8 +25,11 @@ namespace UI.Pages.Board.Components
             {
                 try
                 {
-                    Console.WriteLine($"Loading attachments for CommentId: {CommentId}");
-                    Attachments = await AttachmentService.GetAsync(Guid.Parse(CommentId));
+                    var currentUser = await AuthService.GetCurrentUserAsync();
+                    if (currentUser != null && currentUser.Id != Guid.Empty)
+                    {
+                        Attachments = await AttachmentService.GetAsync(Guid.Parse(CommentId), currentUser.Id);
+                    }
                 }
                 catch { }
             }

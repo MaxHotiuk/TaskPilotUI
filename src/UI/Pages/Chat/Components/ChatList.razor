@@ -32,8 +32,12 @@ else
                                 <span style=@($"font-weight: {(chat.Id == SelectedChatId ? "600" : "400")};")>
                                     @GetChatTitle(chat)
                                 </span>
-                                <span style="font-size: 12px; color: rgba(0,0,0,0.45);">
-                                    @chat.UpdatedAt.ToString("g")
+                                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(0,0,0,0.45);">
+                                    @if (IsChatUnread(chat))
+                                    {
+                                        <Badge Dot="true" />
+                                    }
+                                    <span>@chat.UpdatedAt.ToString("g")</span>
                                 </span>
                             </div>
                         </TitleTemplate>
