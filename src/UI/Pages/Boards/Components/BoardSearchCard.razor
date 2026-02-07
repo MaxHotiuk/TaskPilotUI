@@ -10,14 +10,14 @@
                 <div class="board-title-section">
                     <Title Level="4" Class="board-title">@Board.Name</Title>
                     <div class="board-owner-badge">
-                        @if (IsOwner)
-                        {
-                            <Tag Color=@TagColor.Gold Icon="crown">Owner</Tag>
-                        }
-                        else
-                        {
-                            <Tag Color=@TagColor.Cyan Icon="team">Member</Tag>
-                        }
+                    @if (IsOwner)
+                    {
+                        <Tag Color=@TagColor.Gold Icon="crown">@UI.Resources.I18n.Owner</Tag>
+                    }
+                    else
+                    {
+                        <Tag Color=@TagColor.Cyan Icon="team">@UI.Resources.I18n.Member</Tag>
+                    }
                     </div>
                 </div>
             </div>
@@ -32,7 +32,7 @@
             @if (IsArchived)
             {
                 <div class="board-archived-footer" style="margin-top: 16px;">
-                    <Button Type=@ButtonType.Primary OnClick="@DearchiveBoardAsync">De-archive</Button>
+                    <Button Type=@ButtonType.Primary OnClick="@DearchiveBoardAsync">@UI.Resources.I18n.Archived</Button>
                 </div>
             }
             else
@@ -45,7 +45,7 @@
                             </div>
                             <div class="stat-content">
                                 <div class="stat-number">@Board.NumberOfTasks</div>
-                                <div class="stat-label">Tasks</div>
+                                <div class="stat-label">@UI.Resources.I18n.TasksLabel</div>
                             </div>
                         </div>
                         <div class="stat-item">
@@ -54,7 +54,7 @@
                             </div>
                             <div class="stat-content">
                                 <div class="stat-number">@Board.NumberOfMembers</div>
-                                <div class="stat-label">Members</div>
+                                <div class="stat-label">@UI.Resources.I18n.MembersLabel</div>
                             </div>
                         </div>
                     </div>

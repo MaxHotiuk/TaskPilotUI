@@ -3,32 +3,32 @@
 @using UI.Models.Chat
 @using AntDesign
 
-<PageContainer Title="AI Assistant for TaskPilot">
-    <Card Title="Ask TaskPilot AI" Style="max-width: 600px; margin: 0 auto;">
+<PageContainer Title=@UI.Resources.I18n.AIAssistantTitle>
+    <Card Title="@UI.Resources.I18n.AiResponseTitle" Style="max-width: 600px; margin: 0 auto;">
         <div style="margin-bottom: 16px;">
             <TextArea @bind-Value="_question" 
                 @oninput="@((ChangeEventArgs e) => { _question = e.Value?.ToString() ?? string.Empty; StateHasChanged(); })"
-            Rows="4" Placeholder="Ask any question about TaskPilot..." AllowClear="true" />
+            Rows="4" Placeholder=@UI.Resources.I18n.AskPlaceholder AllowClear="true" />
         </div>
         <div style="text-align: right;">
             <Button Type=@ButtonType.Primary OnClick="AskAiAsync" Loading="_isLoading" Disabled="string.IsNullOrWhiteSpace(_question)">
-                Ask
+                @UI.Resources.I18n.Ask
             </Button>
         </div>
         @if (_error != null)
         {
-            <Alert Type=@AlertType.Error Message="Error" Description="@_error" ShowIcon="true" Closable="true" OnClose="@(() => _error = string.Empty)" Style="margin-top: 16px;" />
+            <Alert Type=@AlertType.Error Message=@UI.Resources.I18n.Error Description="@_error" ShowIcon="true" Closable="true" OnClose="@(() => _error = string.Empty)" Style="margin-top: 16px;" />
         }
         @if (_response != null)
         {
-            <Card Title="AI Response" Style="margin-top: 24px;">
+            <Card Title=@UI.Resources.I18n.AiResponseTitle Style="margin-top: 24px;">
                 <Paragraph>@_response.Response</Paragraph>
             </Card>
         }
         @if (_isLoading)
         {
             <div style="text-align: center; margin-top: 24px;">
-                <Spin Size=@SpinSize.Large Tip="Thinking...">
+                <Spin Size=@SpinSize.Large Tip=@UI.Resources.I18n.Thinking>
                     <div style="height: 60px;"></div>
                 </Spin>
             </div>

@@ -3,7 +3,7 @@
 @using UI.Models.Member
 @using UI.Models.User
 
-<Modal Title="Board Members"
+<Modal Title="@UI.Resources.I18n.BoardMembersTitle"
        Visible=@IsVisible
        OnCancel=@OnCancel
        Footer="null"
@@ -12,7 +12,7 @@
         <Button Type=@ButtonType.Primary
                 Icon="plus"
                 OnClick="OnAddMember">
-            Add Member
+            @UI.Resources.I18n.AddMemberButton
         </Button>
     </div>
     
@@ -22,7 +22,7 @@
         {
             <div class="loading-members">
                 <Spin />
-                <span style="margin-left: 8px;">Loading member details...</span>
+                <span style="margin-left: 8px;">@UI.Resources.I18n.LoadingMemberDetails</span>
             </div>
         }
         else
@@ -69,13 +69,13 @@
                             <SpaceItem>
                                 <Button Size=@ButtonSize.Small 
                                         OnClick=@(() => OnChangeRole.InvokeAsync((member, "Member")))>
-                                    Make Member
+                                    @UI.Resources.I18n.MakeMember
                                 </Button>
                             </SpaceItem>
                             <SpaceItem>
                                 <Button Size=@ButtonSize.Small 
                                         OnClick=@(() => OnChangeRole.InvokeAsync((member, "Owner")))>
-                                    Make Owner
+                                    @UI.Resources.I18n.MakeOwner
                                 </Button>
                             </SpaceItem>
                             <SpaceItem>
@@ -83,7 +83,7 @@
                                         Size=@ButtonSize.Small 
                                         Icon="delete"
                                         OnClick=@(() => OnRemoveMember.InvokeAsync(member))>
-                                    Remove
+                                    @UI.Resources.I18n.RemoveMember
                                 </Button>
                             </SpaceItem>
                         </Space>
@@ -96,7 +96,7 @@
     else
     {
         <div class="no-members">
-            <p>No members found</p>
+            <p>@UI.Resources.I18n.NoMembersFound</p>
         </div>
     }
 </Modal>

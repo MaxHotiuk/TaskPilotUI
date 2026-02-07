@@ -1,0 +1,80 @@
+@using UI.Models.Chat
+
+@if (ActiveChat == null)
+{
+    <Card>
+        <div style="text-align: center; padding: 24px; color: rgba(0,0,0,0.45);">
+            Select a chat to start messaging
+        </div>
+    </Card>
+}
+else
+{
+    <Card Title="@GetChatTitle()">
+        @if (IsLoading)
+        {
+            <div style="text-align: center; padding: 24px;">
+                <Spin Size=@SpinSize.Large />
+            </div>
+        }
+        else if (!Messages.Any())
+        {
+            <div style="text-align: center; padding: 24px; color: rgba(0,0,0,0.45);">
+                No messages yet
+            </div>
+        }
+        else
+        {
+            <AntList DataSource=@Messages
+                     ItemLayout=@ListItemLayout.Horizontal
+                     Size=@ListSize.Small>
+                <ChildContent Context="message">
+                    <ListItem>
+                        <ListItemMeta>
+                            <AvatarTemplate>
+                                @if (TryGetAvatar(message.SenderId, out var avatarUrl))
+                                {
+                                    <Avatar Src=@avatarUrl />
+                                }
+                                else
+                                {
+                                    <Avatar>@GetSenderInitials(message.SenderName)</Avatar>
+                                }
+                            </AvatarTemplate>
+                            <TitleTemplate>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>@message.SenderName</span>
+                                    <span style="font-size: 12px; color: rgba(0,0,0,0.45);">@message.CreatedAt.ToString("g")</span>
+                                </div>
+                            </TitleTemplate>
+                            <DescriptionTemplate>
+                                <div style="white-space: pre-wrap;">@message.Content</div>
+                            </DescriptionTemplate>
+                        </ListItemMeta>
+                    </ListItem>
+                </ChildContent>
+            </AntList>
+        }
+
+        @if (HasMoreMessages)
+        {
+            <div style="text-align: center; margin-top: 12px;">
+                <Button OnClick=@OnLoadMore Disabled=@IsLoading>Load older messages</Button>
+            </div>
+        }
+
+        <Divider />
+
+        <div>
+            <TextArea @bind-Value=NewMessage
+                      @oninput=@OnMessageInput
+                      Rows="3"
+                      Placeholder="Type a message..." />
+            <div style="text-align: right; margin-top: 8px;">
+                <Button Type=@ButtonType.Primary OnClick=@OnSend Disabled=@string.IsNullOrWhiteSpace(NewMessage) Loading=@IsSending>
+                    Send
+                </Button>
+            </div>
+        </div>
+    </Card>
+}

@@ -3,12 +3,12 @@
 @using UI.Models
 @using AntDesign
 
-<PageContainer Title="Welcome to TaskPilot">
+<PageContainer Title="@UI.Resources.I18n.WelcomeToTaskPilot">
     @if (IsLoading)
     {
         <Card>
             <div style="text-align: center; padding: 40px;">
-                <Spin Size=@SpinSize.Large Tip="Loading user information...">
+                <Spin Size=@SpinSize.Large Tip="@UI.Resources.I18n.LoadingUserInformation">
                     <div style="height: 100px;"></div>
                 </Spin>
             </div>
@@ -16,11 +16,11 @@
     }
     else if (_currentUser != null)
     {
-        <Card Title="Dashboard">
+            <Card Title="@UI.Resources.I18n.Dashboard">
             <div style="margin-bottom: 24px;">
                 <Alert
-                    Message="Welcome back!"
-                    Description=@($"You are successfully logged in as {_currentUser.Username}")
+                    Message="@UI.Resources.I18n.WelcomeBack"
+                    Description=@(string.Format(UI.Resources.I18n.WelcomeLoggedInAs, _currentUser.Username))
                     Type=@AlertType.Success
                     ShowIcon=@true
                     Banner
@@ -29,37 +29,37 @@
             
             <Row Gutter="16">
                 <AntDesign.Col Span="24" Md="12">
-                    <Card Title="User Information" Size=@CardSize.Small>
+                    <Card Title="@UI.Resources.I18n.UserInformation" Size=@CardSize.Small>
                         <div style="margin-bottom: 16px;">
-                            <Text Strong>Username: </Text>
+                            <Text Strong>@UI.Resources.I18n.Username </Text>
                             <Text>@_currentUser.Username</Text>
                         </div>
                         <div style="margin-bottom: 16px;">
-                            <Text Strong>Email: </Text>
+                            <Text Strong>@UI.Resources.I18n.Email </Text>
                             <Text>@_currentUser.Email</Text>
                         </div>
                         <div style="margin-bottom: 16px;">
-                            <Text Strong>Role: </Text>
+                            <Text Strong>@UI.Resources.I18n.Role </Text>
                             <Tag Color=@(_currentUser.Role == "Admin" ? "red" : "blue")>@_currentUser.Role</Tag>
                         </div>
                         <div style="margin-bottom: 16px;">
-                            <Text Strong>Member Since: </Text>
+                            <Text Strong>@UI.Resources.I18n.MemberSince </Text>
                             <span>@GetFormattedDate(_currentUser.CreatedAt)</span>
                         </div>
                     </Card>
                 </AntDesign.Col>
                 
                 <AntDesign.Col Span="24" Md="12">
-                    <Card Title="Quick Actions" Size=@CardSize.Small>
+                    <Card Title="@UI.Resources.I18n.QuickActions" Size=@CardSize.Small>
                         <Space Direction=@SpaceDirection.Vertical style="width: 100%;" gap="16">
                             <Button Type=@ButtonType.Primary Icon="plus" Size=@ButtonSize.Large Block="true">
-                                Create New Board
+                                @UI.Resources.I18n.CreateNewBoard
                             </Button>
                             <Button Icon="team" Size=@ButtonSize.Large Block="true">
-                                View My Boards
+                                @UI.Resources.I18n.ViewMyBoards
                             </Button>
                             <Button Icon="user" Size=@ButtonSize.Large Block="true">
-                                Profile Settings
+                                @UI.Resources.I18n.ProfileSettings
                             </Button>
                         </Space>
                     </Card>
@@ -67,16 +67,16 @@
             </Row>
         </Card>
         
-        <Card Title="Recent Activity" Style="margin-top: 24px;">
+        <Card Title=@UI.Resources.I18n.Dashboard Style="margin-top: 24px;">
             <div style="text-align: center; padding: 40px;">
                 <Icon Type="inbox" style="font-size: 48px; color: #ccc; margin-bottom: 16px;" />
-                <p style="color: #999;">No recent activity to show</p>
+                <p style="color: #999;">@UI.Resources.I18n.NoRecentActivity</p>
             </div>
         </Card>
         
         <div style="margin-top: 24px; text-align: right;">
             <Button Type=@ButtonType.Default OnClick="HandleLogout">
-                Logout
+                @UI.Resources.I18n.Logout
             </Button>
         </div>
     }
@@ -85,12 +85,12 @@
         <Card>
             <div style="text-align: center; padding: 40px;">
                 <Avatar Size=@AvatarSize.Large Icon="user" style="margin-bottom: 16px;" />
-                <Title Level="3">Welcome to TaskPilot</Title>
+                <Title Level="3">@UI.Resources.I18n.WelcomeToTaskPilot</Title>
                 <Paragraph>
-                    Please sign in to access your boards and manage your tasks.
+                    @UI.Resources.I18n.SignInWithMicrosoftDescription
                 </Paragraph>
                 <Button Type=@ButtonType.Primary Size=@ButtonSize.Large OnClick="NavigateToLogin">
-                    Sign In
+                    @UI.Resources.I18n.SignIn
                 </Button>
             </div>
         </Card>

@@ -36,7 +36,7 @@ namespace UI.Pages
 
             if (!string.IsNullOrEmpty(error))
             {
-                _error = $"Authentication failed: {error}";
+                _error = string.Format(UI.Resources.I18n.AuthenticationFailedWithError, error);
                 return;
             }
 
@@ -59,7 +59,7 @@ namespace UI.Pages
             }
             catch (Exception ex)
             {
-                _error = $"Failed to initiate login: {ex.Message}";
+                _error = string.Format(UI.Resources.I18n.FailedToInitiateLogin, ex.Message);
             }
             finally
             {
@@ -91,7 +91,7 @@ namespace UI.Pages
             }
             catch (Exception ex)
             {
-                _error = $"Authentication error: {ex.Message}";
+                _error = string.Format(UI.Resources.I18n.AuthenticationException, ex.Message);
                 Console.WriteLine($"Exception in HandleCallback: {ex}");
             }
             finally

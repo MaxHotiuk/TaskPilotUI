@@ -3,7 +3,7 @@
 @using UI.Models.Member
 @using UI.Models.User
 
-<Modal Title="Manage Meetings"
+<Modal Title=@UI.Resources.I18n.Meetings
        Visible=@IsVisible
        OnCancel=@HandleCancel
        Footer=@null
@@ -12,12 +12,12 @@
     
     <div class="meeting-management-container">
         <div class="meeting-header">
-            <Title Level="4">Board Meetings</Title>
+            <Title Level="4">@UI.Resources.I18n.Meetings</Title>
             <Button Type=@ButtonType.Primary
                     Icon="plus" 
                     OnClick=@ShowAddMeetingForm
                     Loading=@IsLoading>
-                Schedule New Meeting
+                @UI.Resources.I18n.ScheduleNewMeeting
             </Button>
         </div>
 
@@ -30,9 +30,9 @@
             }
             else if (!Meetings.Any())
             {
-                <Empty Description=@("No meetings scheduled for this board")>
+                <Empty Description=@UI.Resources.I18n.NoMeetingsScheduled>
                     <Button Type=@ButtonType.Primary OnClick=@ShowAddMeetingForm>
-                        Schedule First Meeting
+                        @UI.Resources.I18n.ScheduleFirstMeeting
                     </Button>
                 </Empty>
             }
@@ -90,18 +90,18 @@
                                         Icon="edit" 
                                         Size=@ButtonSize.Small
                                         OnClick=@(() => ShowEditMeetingForm(meeting))>
-                                    Edit
+                                    @UI.Resources.I18n.Edit
                                 </Button>
-                                <Popconfirm Title="Are you sure you want to delete this meeting?"
+                                <Popconfirm Title=@UI.Resources.I18n.ConfirmDeleteMeeting
                                            OnConfirm=@(() => DeleteMeeting(meeting.Id.ToString()))
-                                           OkText="Yes"
-                                           CancelText="No">
+                                           OkText=@UI.Resources.I18n.Yes
+                                           CancelText=@UI.Resources.I18n.No>
                                     <Button Type=@ButtonType.Text
                                             Danger
                                             Icon="delete" 
                                             Size=@ButtonSize.Small
                                             Loading=@(DeletingMeetingId == meeting.Id)>
-                                        Delete
+                                        @UI.Resources.I18n.Delete
                                     </Button>
                                 </Popconfirm>
                             </div>
@@ -113,7 +113,7 @@
     </div>
 </Modal>
 
-<Modal Title=@(IsEditMode ? "Edit Meeting" : "Schedule New Meeting")
+<Modal Title=@(IsEditMode ? UI.Resources.I18n.EditTask : UI.Resources.I18n.AddNewTask)
        Visible=@_showMeetingForm
        OnOk=@HandleMeetingFormOk
        OnCancel=@HandleMeetingFormCancel
@@ -125,34 +125,34 @@
           WrapperCol="new ColLayoutParam { Span = 18 }"
           OnFinish=@HandleMeetingFormSubmit>
 
-        <FormItem Label="Meeting Title" Required>
+        <FormItem Label=@UI.Resources.I18n.Meetings Required>
             <Input @bind-Value=@_meetingForm.Title
-                   Placeholder="Enter meeting title" 
+                   Placeholder=@UI.Resources.I18n.EnterMeetingTitle 
                    MaxLength="200" />
         </FormItem>
 
-        <FormItem Label="Description">
+        <FormItem Label=@UI.Resources.I18n.DescriptionLabel>
             <TextArea @bind-Value=@_meetingForm.Description
-                      Placeholder="Enter meeting description (optional)"
+                      Placeholder=@UI.Resources.I18n.EnterMeetingDescription
                       Rows="3"
                       MaxLength="1000" />
         </FormItem>
 
-        <FormItem Label="Scheduled Date & Time">
+        <FormItem Label=@UI.Resources.I18n.SelectMeetingDateTime>
             <DatePicker @bind-Value=@_scheduledAtValue
                        ShowTime="true"
                        Format="yyyy-MM-dd HH:mm"
                        Style="width: 100%;"
-                       Placeholder=@("Select meeting date and time") />
+                       Placeholder=@UI.Resources.I18n.SelectMeetingDateTime />
         </FormItem>
 
-        <FormItem Label="Duration (minutes)">
-            <AntDesign.InputNumber @bind-Value=@_meetingForm.Duration
+        <FormItem Label=@UI.Resources.I18n.DurationMinutesLabel>
+                        <AntDesign.InputNumber @bind-Value=@_meetingForm.Duration
                         Min="15"
                         Max="480"
                         Step="15"
                         Style="width: 100%;"
-                        Placeholder="Meeting duration in minutes" />
+                        Placeholder=@UI.Resources.I18n.MeetingDurationPlaceholder />
         </FormItem>
 
         <FormItem Label="Attendees">
@@ -160,16 +160,16 @@
                     Mode=@SelectMode.Multiple
                     TItemValue="string"
                     TItem="string"
-                    Style="width: 100%;"
-                    Placeholder="Select meeting attendees"
+            Style="width: 100%;"
+                    Placeholder=@UI.Resources.I18n.SelectMeetingAttendees
                     MaxTagCount="3">
                 <SelectOptions>
                     @foreach (var member in BoardMembers)
                     {
-                        var user = AllUsers.FirstOrDefault(u => u.Id == member.UserId);
+                        var user = AllUsers.FirstOrDefault(u => u.Id.ToString() == member.UserId);
                         if (user != null)
                         {
-                            <SelectOption TItemValue="string" TItem="string" Value=@user.Id Label=@($"{user.Username} ({user.Email})") />
+                            <SelectOption TItemValue="string" TItem="string" Value=@user.Id.ToString() Label=@($"{user.Username} ({user.Email})") />
                         }
                     }
                 </SelectOptions>

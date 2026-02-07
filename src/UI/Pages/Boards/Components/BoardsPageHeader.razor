@@ -1,6 +1,6 @@
 @using AntDesign
 
-<PageHeader Title="My Boards">
+<PageHeader Title="@UI.Resources.I18n.MyBoardsTitle">
     <PageHeaderExtra>
         <Space>
             <SpaceItem>
@@ -8,14 +8,14 @@
                         Icon="reload" 
                         Loading=@IsLoading
                         OnClick=@OnRefreshClicked>
-                    Refresh
+                    @UI.Resources.I18n.Refresh
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Primary
                         Icon="plus" 
                         OnClick=@OnCreateClicked>
-                    Create Board
+                    @UI.Resources.I18n.CreateBoard
                 </Button>
             </SpaceItem>
         </Space>

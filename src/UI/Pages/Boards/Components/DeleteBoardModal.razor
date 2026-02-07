@@ -3,29 +3,28 @@
 
 @if (SelectedBoard != null)
 {
-    <Modal Title=@($"Delete Board: {SelectedBoard.Name}")
+    <Modal Title=@($"{UI.Resources.I18n.DeleteBoardTitle}: {SelectedBoard.Name}")
            Visible=@Visible
            OnOk=@ConfirmDelete
            OnCancel=@CancelDelete
-           OkText='"Delete"'
-           CancelText='"Cancel"'
+           OkText=@UI.Resources.I18n.DeleteTask
+           CancelText=@UI.Resources.I18n.Cancel
            ConfirmLoading=@IsDeleting>
         
         <Alert Type=@AlertType.Warning
                ShowIcon=@true
                Style="margin-bottom: 16px;">
             <MessageTemplate>
-                <strong>Warning:</strong> This action cannot be undone.
+                <strong>@UI.Resources.I18n.DeleteBoardWarning</strong>
             </MessageTemplate>
             <ChildContent>
-                Deleting this board will permanently remove all tasks, comments, and associated data.
-                Please type the board name to confirm.
+                @UI.Resources.I18n.DeleteBoardDescription
             </ChildContent>
         </Alert>
         
         <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 8px; font-weight: 500;">
-                Type board name to confirm:
+                @UI.Resources.I18n.BoardNameLabel:
             </label>
             <Input Value="@DeleteConfirmation"
                    ValueChanged="@DeleteConfirmationChanged"

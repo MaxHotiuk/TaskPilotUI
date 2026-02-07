@@ -33,11 +33,11 @@
 
         <div class="profile-stats">
             <div class="stat-item">
-                <Text Type=@TextElementType.Secondary Class="stat-label">Member Since</Text>
+                <Text Type=@TextElementType.Secondary Class="stat-label">@UI.Resources.I18n.MemberSince</Text>
                 <Text Strong Class="stat-value">@GetFormattedDate(_currentUser?.CreatedAt)</Text>
             </div>
             <div class="stat-item">
-                <Text Type=@TextElementType.Secondary Class="stat-label">Last Updated</Text>
+                <Text Type=@TextElementType.Secondary Class="stat-label">@UI.Resources.I18n.LastUpdatedLabel</Text>
                 <Text Strong Class="stat-value">@GetFormattedDate(_currentUser?.UpdatedAt)</Text>
             </div>
         </div>
@@ -46,7 +46,7 @@
         {
             <div class="avatar-actions">
                 <Button Type=@ButtonType.Text Danger OnClick="@OnDeleteAvatar" Size=@ButtonSize.Small>
-                    <Icon Type="delete" /> Remove Avatar
+                    <Icon Type="delete" /> @UI.Resources.I18n.RemoveAvatar
                 </Button>
             </div>
         }

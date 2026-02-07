@@ -1,7 +1,7 @@
 @using AntDesign
 @using UI.Models.Board
 
-<PageHeader Title=@(BoardDetail?.Name ?? "Loading...")
+<PageHeader Title=@(BoardDetail?.Name ?? UI.Resources.I18n.Loading)
             OnBack="OnBack">
     <PageHeaderExtra>
         <Space>
@@ -12,21 +12,22 @@
                             Danger="true"
                             Icon="delete"
                             OnClick=@OnArchive>
-                        Archive Board
+                        @UI.Resources.I18n.ArchiveBoard
                     </Button>
                 </SpaceItem>
             }
             <SpaceItem>
-                <Button Type=@ButtonType.Default
-                        Icon="ordered-list" 
-                        OnClick="OnBacklog">
-                    Backlog
+                    <Button Type=@ButtonType.Default
+                            Icon="ordered-list" 
+                            OnClick="OnBacklog">
+                    @UI.Resources.I18n.Backlog
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="team" 
                         OnClick="OnShowMembers">
+                    @UI.Resources.I18n.MembersLabel
                 </Button>
             </SpaceItem>
             <SpaceItem>
@@ -34,46 +35,48 @@
                         Icon="reload" 
                         Loading="IsLoading"
                         OnClick="OnRefresh">
+                    @UI.Resources.I18n.Loading
                 </Button>
             </SpaceItem>
             <SpaceItem>
-                <Button Type=@ButtonType.Default
+                    <Button Type=@ButtonType.Default
                         Icon="setting" 
                         OnClick="OnManageStates">
-                    States
+                    @UI.Resources.I18n.States
                 </Button>
             </SpaceItem>
             <SpaceItem>
-                <Button Type=@ButtonType.Default
+                    <Button Type=@ButtonType.Default
                         Icon="tag"
                         OnClick="OnManageTags">
-                    Tags
+                    @UI.Resources.I18n.Tags
                 </Button>
             </SpaceItem>
             <SpaceItem>
-                <Button Type=@ButtonType.Default
+                    <Button Type=@ButtonType.Default
                         Icon="phone"
                         OnClick="OnManageMeetings">
-                    Meetings
+                    @UI.Resources.I18n.Meetings
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Primary
                         Icon="plus" 
                         OnClick="OnCreateTask">
+                    @UI.Resources.I18n.AddNewTask
                 </Button>
             </SpaceItem>
             <SpaceItem>
-                <Button Type=@ButtonType.Default
+                    <Button Type=@ButtonType.Default
                         Icon="user"
                         OnClick="OnOnlyMineToggle">
                     @if (IsOnlyMine)
                     {
-                        <span>My Tasks</span>
+                        <span>@UI.Resources.I18n.MyTasks</span>
                     }
                     else
                     {
-                        <span>All Tasks</span>
+                        <span>@UI.Resources.I18n.AllTasks</span>
                     }
                 </Button>
             </SpaceItem>
@@ -84,13 +87,13 @@
         @if (BoardDetail != null)
         {
             <Descriptions Size=@DescriptionsSize.Small Column="2">
-                <DescriptionsItem Title="Description" Span="2">
-                    @(BoardDetail.Description ?? "No description")
+                <DescriptionsItem Title=@UI.Resources.I18n.Description Span="2">
+                    @(BoardDetail.Description ?? UI.Resources.I18n.NoDescription)
                 </DescriptionsItem>
-                <DescriptionsItem Title="Tasks">
+                <DescriptionsItem Title=@UI.Resources.I18n.TasksLabel>
                     @BoardDetail.Tasks.Count
                 </DescriptionsItem>
-                <DescriptionsItem Title="Members">
+                <DescriptionsItem Title=@UI.Resources.I18n.MembersLabel>
                     @BoardDetail.Members.Count
                 </DescriptionsItem>
             </Descriptions>

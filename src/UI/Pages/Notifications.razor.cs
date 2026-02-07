@@ -33,10 +33,9 @@ public partial class Notifications : ComponentBase
     private async Task GetCurrentUserIdAsync()
     {
         var user = await AuthService.GetCurrentUserAsync();
-        if (user != null && Guid.TryParse(user.Id?.ToString(), out var parsedId) && parsedId != Guid.Empty)
+        if (user != null && user.Id != Guid.Empty)
         {
-            currentUserId = parsedId;
-            return;
+            currentUserId = user.Id;
         }
     }
 
@@ -63,7 +62,7 @@ public partial class Notifications : ComponentBase
         }
         catch (Exception ex)
         {
-            MessageService.Error($"Failed to connect to notification service: {ex.Message}");
+            MessageService.Error(string.Format(UI.Resources.I18n.FailedToConnectNotificationService, ex.Message));
         }
     }
 
@@ -87,7 +86,7 @@ public partial class Notifications : ComponentBase
         }
         catch (Exception ex)
         {
-            MessageService.Error($"Failed to load notifications: {ex.Message}");
+            MessageService.Error(string.Format(UI.Resources.I18n.FailedToLoadNotifications, ex.Message));
         }
     }
 
@@ -103,7 +102,7 @@ public partial class Notifications : ComponentBase
         isLoading = false;
         StateHasChanged();
         
-        MessageService.Success("Notifications refreshed");
+        MessageService.Success(UI.Resources.I18n.NotificationsRefreshed);
     }
 
     private async Task LoadMoreNotificationsAsync()
@@ -136,7 +135,7 @@ public partial class Notifications : ComponentBase
         }
         catch (Exception ex)
         {
-            MessageService.Error($"Failed to mark notification as read: {ex.Message}");
+            MessageService.Error(string.Format(UI.Resources.I18n.FailedToMarkNotificationRead, ex.Message));
         }
     }
 
@@ -153,7 +152,7 @@ public partial class Notifications : ComponentBase
         }
         catch (Exception ex)
         {
-            MessageService.Error($"Failed to mark all notifications as read: {ex.Message}");
+            MessageService.Error(string.Format(UI.Resources.I18n.FailedToMarkNotificationRead, ex.Message));
         }
     }
 
@@ -170,7 +169,7 @@ public partial class Notifications : ComponentBase
         }
         catch (Exception ex)
         {
-            MessageService.Error($"Failed to delete notification: {ex.Message}");
+            MessageService.Error(string.Format(UI.Resources.I18n.FailedToDeleteNotification, ex.Message));
         }
     }
 
@@ -209,10 +208,10 @@ public partial class Notifications : ComponentBase
     {
         return type switch
         {
-            NotificationType.AddedToBoard => "Added to Board",
-            NotificationType.AssignedToTask => "Task Assignment",
-            NotificationType.CommentedOnTask => "New Comment",
-            _ => "Notification"
+            NotificationType.AddedToBoard => UI.Resources.I18n.NotificationAddedToBoard,
+            NotificationType.AssignedToTask => UI.Resources.I18n.NotificationTaskAssignment,
+            NotificationType.CommentedOnTask => UI.Resources.I18n.NotificationNewComment,
+            _ => UI.Resources.I18n.NotificationDefault
         };
     }
 

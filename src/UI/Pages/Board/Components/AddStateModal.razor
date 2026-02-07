@@ -1,7 +1,7 @@
 @using AntDesign
 @using UI.Models.State
 
-<Modal Title="Add New State"
+<Modal Title="@UI.Resources.I18n.AddNewState"
        Visible=@IsVisible
        OnOk=@HandleOk
        OnCancel=@HandleCancel
@@ -13,15 +13,15 @@
           OnFinish=@HandleSubmit
           OnFinishFailed=@HandleSubmitFailed>
 
-        <FormItem Label="State Name" Required>
+        <FormItem Label=@UI.Resources.I18n.StateNameLabel Required>
             <Input @bind-Value=@FormModel.Name
-                   Placeholder="Enter state name (e.g., To Do, In Progress)" 
+                   Placeholder=@UI.Resources.I18n.EnterStateNamePlaceholder
                    MaxLength="50" />
         </FormItem>
 
         <div style="margin-bottom: 16px;">
             <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
-                Default states: To Do, In Progress, Review, Done
+                @UI.Resources.I18n.DefaultStatesDescription
             </Text>
         </div>
 

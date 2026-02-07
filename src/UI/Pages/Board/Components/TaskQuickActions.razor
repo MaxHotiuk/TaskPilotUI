@@ -3,9 +3,9 @@
 @using UI.Models.State
 
 <div class="quick-actions">
-    <Divider>Quick Actions</Divider>
+    <Divider>@UI.Resources.I18n.QuickActionsLabel</Divider>
     <div class="state-change-section">
-        <Text Strong>Move to State:</Text>
+        <Text Strong>@UI.Resources.I18n.MoveToStateLabel</Text>
         <div class="state-buttons">
             @foreach (var state in States)
             {

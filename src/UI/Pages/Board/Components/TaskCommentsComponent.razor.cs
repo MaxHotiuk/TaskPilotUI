@@ -195,8 +195,8 @@ public partial class TaskCommentsComponent : ComponentBase
         {
             await NotificationService.Error(new NotificationConfig
             {
-                Message = "Error",
-                Description = "Failed to load comments"
+                Message = UI.Resources.I18n.Error,
+                Description = UI.Resources.I18n.FailedToLoadComments
             });
         }
         finally
@@ -323,8 +323,8 @@ public partial class TaskCommentsComponent : ComponentBase
         {
             await NotificationService.Error(new NotificationConfig
             {
-                Message = "Error",
-                Description = $"Failed to add comment{(ex.Message != null ? ": " + ex.Message : string.Empty)}"
+                Message = UI.Resources.I18n.Error,
+                Description = UI.Resources.I18n.FailedToAddComment + (ex.Message != null ? ": " + ex.Message : string.Empty)
             });
         }
         finally
@@ -365,16 +365,16 @@ public partial class TaskCommentsComponent : ComponentBase
 
             await NotificationService.Success(new NotificationConfig
             {
-                Message = "Success",
-                Description = "Comment updated successfully"
+                Message = UI.Resources.I18n.Success,
+                Description = UI.Resources.I18n.CommentUpdatedSuccess
             });
         }
         catch (Exception)
         {
             await NotificationService.Error(new NotificationConfig
             {
-                Message = "Error",
-                Description = "Failed to update comment"
+                Message = UI.Resources.I18n.Error,
+                Description = UI.Resources.I18n.FailedToUpdateComment
             });
         }
         finally
@@ -402,16 +402,16 @@ public partial class TaskCommentsComponent : ComponentBase
 
             await NotificationService.Success(new NotificationConfig
             {
-                Message = "Success",
-                Description = "Comment deleted successfully"
+                Message = UI.Resources.I18n.Success,
+                Description = UI.Resources.I18n.CommentDeletedSuccess
             });
         }
         catch (Exception)
         {
             await NotificationService.Error(new NotificationConfig
             {
-                Message = "Error",
-                Description = "Failed to delete comment"
+                Message = UI.Resources.I18n.Error,
+                Description = UI.Resources.I18n.FailedToDeleteComment
             });
         }
     }
@@ -437,13 +437,13 @@ public partial class TaskCommentsComponent : ComponentBase
 
     private string GetAuthorName(string authorId)
     {
-        var user = AllUsers.FirstOrDefault(u => u.Id == authorId);
-        return user?.Username ?? "Unknown User";
+        var user = AllUsers.FirstOrDefault(u => u.Id.ToString() == authorId);
+        return user?.Username ?? UI.Resources.I18n.UnknownUser;
     }
 
     private string GetAuthorInitials(string authorId)
     {
-        var user = AllUsers.FirstOrDefault(u => u.Id == authorId);
+        var user = AllUsers.FirstOrDefault(u => u.Id.ToString() == authorId);
         if (user == null) return "U";
 
         var parts = user.Username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -456,17 +456,17 @@ public partial class TaskCommentsComponent : ComponentBase
 
     private string GetCurrentUserName()
     {
-        if (string.IsNullOrEmpty(CurrentUserId)) return "You";
+        if (string.IsNullOrEmpty(CurrentUserId)) return UI.Resources.I18n.You;
 
-        var user = AllUsers.FirstOrDefault(u => u.Id == CurrentUserId);
-        return user?.Username ?? "You";
+        var user = AllUsers.FirstOrDefault(u => u.Id.ToString() == CurrentUserId);
+        return user?.Username ?? UI.Resources.I18n.You;
     }
 
     private string GetCurrentUserInitials()
     {
         if (string.IsNullOrEmpty(CurrentUserId)) return "Y";
 
-        var user = AllUsers.FirstOrDefault(u => u.Id == CurrentUserId);
+        var user = AllUsers.FirstOrDefault(u => u.Id.ToString() == CurrentUserId);
         if (user == null) return "Y";
 
         var parts = user.Username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -483,13 +483,13 @@ public partial class TaskCommentsComponent : ComponentBase
         var timeSpan = now - dateTime;
 
         if (timeSpan.TotalMinutes < 1)
-            return "Just now";
+            return UI.Resources.I18n.JustNow;
         if (timeSpan.TotalMinutes < 60)
-            return $"{(int)timeSpan.TotalMinutes}m ago";
+            return string.Format(UI.Resources.I18n.MinutesAgo, (int)timeSpan.TotalMinutes);
         if (timeSpan.TotalHours < 24)
-            return $"{(int)timeSpan.TotalHours}h ago";
+            return string.Format(UI.Resources.I18n.HoursAgo, (int)timeSpan.TotalHours);
         if (timeSpan.TotalDays < 7)
-            return $"{(int)timeSpan.TotalDays}d ago";
+            return string.Format(UI.Resources.I18n.DaysAgo, (int)timeSpan.TotalDays);
 
         return dateTime.ToString("MMM dd, yyyy");
     }
