@@ -27,6 +27,7 @@ public partial class Chat : ComponentBase, IDisposable
     private string _newMessage = string.Empty;
     private bool _isCreateChatModalVisible;
     private bool _isCreatingChat;
+    private bool _isStartingCall;
     private CreateChatRequestDto _createChatRequest = new();
     private readonly List<OrganizationSummaryDto> _organizations = new();
     private readonly List<UserDto> _allUsers = new();
@@ -40,6 +41,7 @@ public partial class Chat : ComponentBase, IDisposable
     private static readonly TimeSpan TypingTimeout = TimeSpan.FromSeconds(2.5);
     private readonly List<AttachmentMemory> _pendingAttachments = new();
     private readonly List<string> _pendingAttachmentNames = new();
+    private string _currentUserName = string.Empty;
 
     private Guid? OrganizationId
     {
@@ -64,6 +66,7 @@ public partial class Chat : ComponentBase, IDisposable
     [Inject] public IUserService UserService { get; set; } = default!;
     [Inject] public MessageService MessageService { get; set; } = default!;
     [Inject] public IAttachmentService AttachmentService { get; set; } = default!;
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
 
     private bool _canLoadChats => _currentUserId != Guid.Empty && _organizationId.HasValue;
 
@@ -85,6 +88,7 @@ public partial class Chat : ComponentBase, IDisposable
         if (user != null && user.Id != Guid.Empty)
         {
             _currentUserId = user.Id;
+            _currentUserName = user.Username;
             _organizations.Clear();
             _organizations.AddRange(user.Organizations);
 
@@ -284,6 +288,74 @@ public partial class Chat : ComponentBase, IDisposable
             _isSending = false;
             StateHasChanged();
         }
+    }
+
+    private async Task StartCallAsync()
+    {
+        if (_activeChatId == null || _currentUserId == Guid.Empty || _isStartingCall)
+            return;
+
+        _isStartingCall = true;
+        StateHasChanged();
+
+        try
+        {
+            var request = new StartChatCallRequestDto
+            {
+                SenderId = _currentUserId
+            };
+
+            var response = await ChatService.StartCallAsync(_activeChatId.Value, request);
+            if (response.Message != null)
+            {
+                HandleChatMessage(response.Message);
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.RoomUrl))
+            {
+                NavigateToCallRoom(response.RoomUrl);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to start call: {ex.Message}");
+        }
+        finally
+        {
+            _isStartingCall = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task JoinCallAsync(string roomUrl)
+    {
+        if (string.IsNullOrWhiteSpace(roomUrl))
+            return Task.CompletedTask;
+
+        NavigateToCallRoom(roomUrl);
+        return Task.CompletedTask;
+    }
+
+    private void NavigateToCallRoom(string roomUrl)
+    {
+        var callUrl = AppendUserName(roomUrl);
+        if (string.IsNullOrWhiteSpace(callUrl))
+            return;
+
+        NavigationManager.NavigateTo(callUrl, forceLoad: true);
+    }
+
+    private string AppendUserName(string roomUrl)
+    {
+        if (string.IsNullOrWhiteSpace(roomUrl) || string.IsNullOrWhiteSpace(_currentUserName))
+            return roomUrl;
+
+        if (roomUrl.Contains("userName=", StringComparison.OrdinalIgnoreCase))
+            return roomUrl;
+
+        var separator = roomUrl.Contains('?') ? "&" : "?";
+        var userName = Uri.EscapeDataString(_currentUserName);
+        return $"{roomUrl}{separator}userName={userName}";
     }
 
     private async Task OnNewMessageChanged(string message)
@@ -589,7 +661,7 @@ public partial class Chat : ComponentBase, IDisposable
                 if (message.SenderId != _currentUserId)
                 {
                     _ = MarkChatReadAsync();
-                    if (!message.HasAttachments)
+                    if (!message.HasAttachments && !string.Equals(message.MessageType, "Call", StringComparison.OrdinalIgnoreCase))
                     {
                         _ = ProbeAttachmentsAsync(message);
                     }
@@ -765,6 +837,7 @@ public partial class Chat : ComponentBase, IDisposable
             Id = message.Id,
             SenderId = message.SenderId,
             SenderName = message.SenderName,
+            MessageType = message.MessageType,
             Content = message.Content,
             CreatedAt = message.CreatedAt
         };

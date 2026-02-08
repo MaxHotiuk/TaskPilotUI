@@ -7,6 +7,19 @@
     overflow-y: auto;
 }
 
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.chat-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+}
+
 .chat-message-row {
     display: flex;
     gap: 8px;
@@ -44,6 +57,9 @@
     color: rgba(0, 0, 0, 0.85);
     white-space: pre-wrap;
     word-break: break-word;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .chat-message-outgoing .chat-message-bubble {
@@ -54,6 +70,11 @@
 
 .chat-message-incoming .chat-message-bubble {
     border-bottom-left-radius: 4px;
+}
+
+.chat-call-bubble {
+    background: #e6f7ff;
+    color: #0050b3;
 }
 
 .chat-message-meta {

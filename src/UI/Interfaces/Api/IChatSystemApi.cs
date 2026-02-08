@@ -29,6 +29,12 @@ public interface IChatSystemApi
         [Body] SendChatMessageRequestDto request,
         CancellationToken cancellationToken = default);
 
+    [Post("/api/chats/{chatId}/calls")]
+    Task<StartChatCallResponseDto> StartCallAsync(
+        Guid chatId,
+        [Body] StartChatCallRequestDto request,
+        CancellationToken cancellationToken = default);
+
     [Patch("/api/chats/{chatId}/read")]
     Task UpdateReadStatusAsync(
         Guid chatId,

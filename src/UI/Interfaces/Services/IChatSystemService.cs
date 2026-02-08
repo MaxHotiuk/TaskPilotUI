@@ -18,6 +18,10 @@ public interface IChatSystemService
         Guid chatId,
         SendChatMessageRequestDto request,
         CancellationToken cancellationToken = default);
+    Task<StartChatCallResponseDto> StartCallAsync(
+        Guid chatId,
+        StartChatCallRequestDto request,
+        CancellationToken cancellationToken = default);
     Task UpdateReadStatusAsync(
         Guid chatId,
         UpdateChatReadStatusRequestDto request,

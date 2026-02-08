@@ -98,6 +98,14 @@ public partial class ChatList : ComponentBase
         return chat.LastMessage.CreatedAt > member.LastReadAt.Value;
     }
 
+    private string GetLastMessagePreview(ChatMessagePreviewDto message)
+    {
+        if (string.Equals(message.MessageType, "Call", StringComparison.OrdinalIgnoreCase))
+            return "started a call";
+
+        return message.Content;
+    }
+
     private async Task LoadAvatarAsync(Guid userId)
     {
         if (_avatarCache.ContainsKey(userId) || _avatarLoading.Contains(userId))

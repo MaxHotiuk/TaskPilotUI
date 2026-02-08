@@ -43,6 +43,14 @@ public class ChatSystemService : IChatSystemService
         return await _chatApi.SendMessageAsync(chatId, request, cancellationToken);
     }
 
+    public async Task<StartChatCallResponseDto> StartCallAsync(
+        Guid chatId,
+        StartChatCallRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        return await _chatApi.StartCallAsync(chatId, request, cancellationToken);
+    }
+
     public async Task UpdateReadStatusAsync(
         Guid chatId,
         UpdateChatReadStatusRequestDto request,

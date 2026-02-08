@@ -11,7 +11,19 @@
 }
 else
 {
-    <Card Title="@GetChatTitle()">
+    <Card>
+        <div class="chat-header">
+            <div class="chat-title">@GetChatTitle()</div>
+            @if (OnStartCall.HasDelegate)
+            {
+                <Button Type=@ButtonType.Primary
+                        Icon="phone"
+                        OnClick=@OnStartCall
+                        Disabled=@(ActiveChat == null)>
+                    Start call
+                </Button>
+            }
+        </div>
         @if (IsLoading && !Messages.Any())
         {
             <div style="text-align: center; padding: 24px;">
@@ -54,7 +66,19 @@ else
                             {
                                 <div class="chat-sender-name">@message.SenderName</div>
                             }
-                            @if (!string.IsNullOrWhiteSpace(message.Content))
+                            @if (IsCallMessage(message))
+                            {
+                                <div class="chat-message-bubble chat-call-bubble">
+                                    <span>Call started</span>
+                                    <Button Size=@ButtonSize.Small
+                                            Type=@ButtonType.Primary
+                                            Disabled=@(string.IsNullOrWhiteSpace(message.Content) || !OnJoinCall.HasDelegate)
+                                            OnClick=@(() => OnJoinCall.InvokeAsync(message.Content))>
+                                        Join
+                                    </Button>
+                                </div>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(message.Content))
                             {
                                 <div class="chat-message-bubble">@message.Content</div>
                             }

@@ -45,7 +45,7 @@ else
                             @if (chat.LastMessage != null)
                             {
                                 <div style="color: rgba(0,0,0,0.65); font-size: 12px; margin-top: 4px;">
-                                    @chat.LastMessage.SenderName: @chat.LastMessage.Content
+                                    @chat.LastMessage.SenderName: @GetLastMessagePreview(chat.LastMessage)
                                 </div>
                             }
                         </DescriptionTemplate>

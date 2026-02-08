@@ -21,6 +21,8 @@ public partial class ChatMessages : ComponentBase
     [Parameter] public EventCallback OnSend { get; set; }
     [Parameter] public EventCallback OnLoadMore { get; set; }
     [Parameter] public EventCallback OnStopTyping { get; set; }
+    [Parameter] public EventCallback OnStartCall { get; set; }
+    [Parameter] public EventCallback<string> OnJoinCall { get; set; }
     [Parameter] public IReadOnlyList<string> PendingAttachmentNames { get; set; } = Array.Empty<string>();
     [Parameter] public bool HasPendingAttachments { get; set; }
     [Parameter] public EventCallback<InputFileChangeEventArgs> OnAttachmentsSelected { get; set; }
@@ -155,6 +157,11 @@ public partial class ChatMessages : ComponentBase
     private bool ShouldShowReadStatus(ChatMessageDto message)
     {
         return IsOwnMessage(message);
+    }
+
+    private bool IsCallMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Call", StringComparison.OrdinalIgnoreCase);
     }
 
     private string GetReadStatus(ChatMessageDto message)
