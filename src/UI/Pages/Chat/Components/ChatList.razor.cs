@@ -31,6 +31,9 @@ public partial class ChatList : ComponentBase
 
     private string GetChatTitle(ChatDto chat)
     {
+        if (chat.Type == ChatType.Board)
+            return string.IsNullOrWhiteSpace(chat.Name) ? "Board chat" : chat.Name;
+
         if (chat.Type == ChatType.Group)
             return string.IsNullOrWhiteSpace(chat.Name) ? "Group chat" : chat.Name;
 
@@ -43,6 +46,9 @@ public partial class ChatList : ComponentBase
 
     private string GetChatInitials(ChatDto chat)
     {
+        if (chat.Type == ChatType.Board)
+            return "B";
+
         if (chat.Type == ChatType.Group)
             return "G";
 
@@ -55,7 +61,12 @@ public partial class ChatList : ComponentBase
 
     private string? GetChatIcon(ChatDto chat)
     {
-        return chat.Type == ChatType.Group ? "team" : null;
+        return chat.Type switch
+        {
+            ChatType.Group => "team",
+            ChatType.Board => "appstore",
+            _ => null
+        };
     }
 
     private bool TryGetChatAvatar(ChatDto chat, out string? avatarUrl)
@@ -98,12 +109,73 @@ public partial class ChatList : ComponentBase
         return chat.LastMessage.CreatedAt > member.LastReadAt.Value;
     }
 
-    private string GetLastMessagePreview(ChatMessagePreviewDto message)
+    private const int MessagePreviewMaxLength = 15;
+
+    private string GetLastMessagePreviewText(ChatDto chat, ChatMessagePreviewDto message)
+    {
+        var content = GetMessagePreviewContent(message);
+        var truncated = TruncateContent(content);
+
+        if (IsSystemMessage(message))
+            return truncated;
+
+        var senderName = ResolveSenderName(chat, message);
+        return $"{senderName}: {truncated}";
+    }
+
+    private string ResolveSenderName(ChatDto chat, ChatMessagePreviewDto message)
+    {
+        if (message.SenderId == CurrentUserId)
+            return "You";
+
+        if (!string.IsNullOrWhiteSpace(message.SenderName))
+            return message.SenderName;
+
+        var memberName = chat.Members.FirstOrDefault(member => member.UserId == message.SenderId)?.UserName;
+        if (!string.IsNullOrWhiteSpace(memberName))
+            return memberName;
+
+        return "Someone";
+    }
+
+    private string GetMessagePreviewContent(ChatMessagePreviewDto message)
     {
         if (string.Equals(message.MessageType, "Call", StringComparison.OrdinalIgnoreCase))
             return "started a call";
 
-        return message.Content;
+        if (IsTaskMessage(message))
+            return string.IsNullOrWhiteSpace(message.Content) ? "Task update" : message.Content;
+
+        if (IsUpdateMessage(message))
+            return string.IsNullOrWhiteSpace(message.Content) ? "Chat update" : message.Content;
+
+        return message.Content ?? string.Empty;
+    }
+
+    private bool IsTaskMessage(ChatMessagePreviewDto message)
+    {
+        return string.Equals(message.MessageType, "Task", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsUpdateMessage(ChatMessagePreviewDto message)
+    {
+        return string.Equals(message.MessageType, "Update", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsSystemMessage(ChatMessagePreviewDto message)
+    {
+        return IsTaskMessage(message) || IsUpdateMessage(message);
+    }
+
+    private string TruncateContent(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return string.Empty;
+
+        if (content.Length <= MessagePreviewMaxLength)
+            return content;
+
+        return content.Substring(0, MessagePreviewMaxLength) + "...";
     }
 
     private async Task LoadAvatarAsync(Guid userId)

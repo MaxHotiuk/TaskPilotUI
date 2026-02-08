@@ -26,6 +26,20 @@ public interface IChatSystemService
         Guid chatId,
         UpdateChatReadStatusRequestDto request,
         CancellationToken cancellationToken = default);
+    Task UpdateChatNameAsync(
+        Guid chatId,
+        UpdateChatNameRequestDto request,
+        CancellationToken cancellationToken = default);
+    Task AddChatMembersAsync(
+        Guid chatId,
+        UpdateChatMembersRequestDto request,
+        CancellationToken cancellationToken = default);
+    Task RemoveChatMembersAsync(
+        Guid chatId,
+        UpdateChatMembersRequestDto request,
+        CancellationToken cancellationToken = default);
+    Task ClearChatHistoryAsync(Guid chatId, Guid userId, CancellationToken cancellationToken = default);
+    Task DeleteChatAsync(Guid chatId, Guid userId, CancellationToken cancellationToken = default);
     Task<AttachmentDto> UploadChatAttachmentAsync(
         Guid chatId,
         Guid messageId,

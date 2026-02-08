@@ -41,6 +41,36 @@ public interface IChatSystemApi
         [Body] UpdateChatReadStatusRequestDto request,
         CancellationToken cancellationToken = default);
 
+    [Patch("/api/chats/{chatId}/name")]
+    Task UpdateChatNameAsync(
+        Guid chatId,
+        [Body] UpdateChatNameRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    [Post("/api/chats/{chatId}/members")]
+    Task AddChatMembersAsync(
+        Guid chatId,
+        [Body] UpdateChatMembersRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    [Post("/api/chats/{chatId}/members/remove")]
+    Task RemoveChatMembersAsync(
+        Guid chatId,
+        [Body] UpdateChatMembersRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    [Delete("/api/chats/{chatId}/messages")]
+    Task ClearChatHistoryAsync(
+        Guid chatId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    [Delete("/api/chats/{chatId}")]
+    Task DeleteChatAsync(
+        Guid chatId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     [Multipart]
     [Post("/api/chats/{chatId}/messages/{messageId}/attachments?userId={userId}")]
     Task<AttachmentDto> UploadChatAttachmentAsync(

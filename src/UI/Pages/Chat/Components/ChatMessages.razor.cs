@@ -28,9 +28,11 @@ public partial class ChatMessages : ComponentBase
     [Parameter] public EventCallback<InputFileChangeEventArgs> OnAttachmentsSelected { get; set; }
     [Parameter] public EventCallback<int> OnRemoveAttachment { get; set; }
     [Parameter] public EventCallback OnClearAttachments { get; set; }
+    [Parameter] public RenderFragment? HeaderActions { get; set; }
 
     [Inject] private IAvatarService AvatarService { get; set; } = default!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
     private readonly Dictionary<Guid, AvatarDto?> _avatarCache = new();
     private readonly HashSet<Guid> _avatarLoading = new();
     private ElementReference _threadRef;
@@ -151,7 +153,7 @@ public partial class ChatMessages : ComponentBase
 
     private bool ShouldShowSender(ChatMessageDto message)
     {
-        return ActiveChat?.Type == ChatType.Group && !IsOwnMessage(message);
+        return (ActiveChat?.Type == ChatType.Group || ActiveChat?.Type == ChatType.Board) && !IsOwnMessage(message) && !IsTaskMessage(message) && !IsUpdateMessage(message);
     }
 
     private bool ShouldShowReadStatus(ChatMessageDto message)
@@ -162,6 +164,58 @@ public partial class ChatMessages : ComponentBase
     private bool IsCallMessage(ChatMessageDto message)
     {
         return string.Equals(message.MessageType, "Call", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsTaskMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Task", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsUpdateMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Update", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetTaskMessageContent(ChatMessageDto message)
+    {
+        return string.IsNullOrWhiteSpace(message.Content) ? "Task update" : message.Content;
+    }
+
+    private string GetTaskAssigneeName(ChatMessageDto message)
+    {
+        if (message.AssigneeId == null)
+            return "Unassigned";
+
+        var assignee = ActiveChat?.Members.FirstOrDefault(member => member.UserId == message.AssigneeId.Value);
+        if (assignee != null && !string.IsNullOrWhiteSpace(assignee.UserName))
+            return assignee.UserName;
+
+        if (message.AssigneeId == CurrentUserId)
+            return "you";
+
+        return "Someone";
+    }
+
+    private string GetTaskMessageSender(ChatMessageDto message)
+    {
+        if (message.SenderId == CurrentUserId)
+            return "you";
+
+        return string.IsNullOrWhiteSpace(message.SenderName) ? "someone" : message.SenderName;
+    }
+
+    private string GetUpdateMessageContent(ChatMessageDto message)
+    {
+        return string.IsNullOrWhiteSpace(message.Content) ? "Chat updated" : message.Content;
+    }
+
+    private void OpenTaskFromMessage(ChatMessageDto message)
+    {
+        if (ActiveChat?.BoardId == null || message.TaskId == null)
+            return;
+
+        var url = $"/board/{ActiveChat.BoardId}?taskId={message.TaskId}";
+        Navigation.NavigateTo(url);
     }
 
     private string GetReadStatus(ChatMessageDto message)
@@ -236,6 +290,9 @@ public partial class ChatMessages : ComponentBase
     {
         if (ActiveChat == null)
             return "Chat";
+
+        if (ActiveChat.Type == ChatType.Board)
+            return string.IsNullOrWhiteSpace(ActiveChat.Name) ? "Board chat" : ActiveChat.Name;
 
         if (ActiveChat.Type == ChatType.Group)
             return string.IsNullOrWhiteSpace(ActiveChat.Name) ? "Group chat" : ActiveChat.Name;

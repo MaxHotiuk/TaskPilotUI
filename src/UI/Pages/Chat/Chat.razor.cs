@@ -42,6 +42,17 @@ public partial class Chat : ComponentBase, IDisposable
     private readonly List<AttachmentMemory> _pendingAttachments = new();
     private readonly List<string> _pendingAttachmentNames = new();
     private string _currentUserName = string.Empty;
+    private bool _isManageChatModalVisible;
+    private bool _isUpdatingChat;
+    private string _manageChatName = string.Empty;
+    private readonly List<UserDto> _manageSelectedUsers = new();
+    private readonly List<UserDto> _manageSearchResults = new();
+    private string _manageSearchText = string.Empty;
+    private readonly HashSet<Guid> _membersToRemove = new();
+    private bool _isClearChatModalVisible;
+    private bool _isClearingChatHistory;
+    private bool _isDeleteChatModalVisible;
+    private bool _isDeletingChat;
 
     private Guid? OrganizationId
     {
@@ -57,6 +68,294 @@ public partial class Chat : ComponentBase, IDisposable
             {
                 _ = LoadChatsAsync();
             }
+        }
+    }
+
+    private bool CanManageActiveChat()
+    {
+        if (_activeChat?.Type != ChatType.Group)
+            return false;
+
+        return _activeChat.Members.Any(member => member.UserId == _currentUserId && member.Role == ChatMemberRole.Owner);
+    }
+
+    private bool CanClearActiveChat()
+    {
+        if (_activeChat == null)
+            return false;
+
+        if (_activeChat.Type == ChatType.Private)
+            return true;
+
+        return CanManageActiveChat();
+    }
+
+    private bool CanDeleteActiveChat()
+    {
+        if (_activeChat == null)
+            return false;
+
+        if (_activeChat.Type == ChatType.Private)
+            return true;
+
+        return CanManageActiveChat();
+    }
+
+    private void OpenManageChatModal()
+    {
+        if (!CanManageActiveChat() || _activeChat == null)
+            return;
+
+        ResetManageChatForm();
+        _isManageChatModalVisible = true;
+    }
+
+    private void CloseManageChatModal()
+    {
+        _isManageChatModalVisible = false;
+    }
+
+    private void ResetManageChatForm()
+    {
+        _manageChatName = _activeChat?.Name ?? string.Empty;
+        _manageSearchText = string.Empty;
+        _manageSearchResults.Clear();
+        _manageSelectedUsers.Clear();
+        _membersToRemove.Clear();
+    }
+
+    private IEnumerable<ChatMemberDto> GetActiveChatMembers()
+    {
+        if (_activeChat == null)
+            return Array.Empty<ChatMemberDto>();
+
+        return _activeChat.Members.Where(member => !_membersToRemove.Contains(member.UserId));
+    }
+
+    private IEnumerable<ChatMemberDto> GetRemovedMembers()
+    {
+        if (_activeChat == null)
+            return Array.Empty<ChatMemberDto>();
+
+        return _activeChat.Members.Where(member => _membersToRemove.Contains(member.UserId));
+    }
+
+    private bool CanRemoveMember(ChatMemberDto member)
+    {
+        if (_activeChat?.Type != ChatType.Group)
+            return false;
+
+        if (member.UserId == _currentUserId)
+            return false;
+
+        return true;
+    }
+
+    private void MarkMemberForRemoval(ChatMemberDto member)
+    {
+        if (!CanRemoveMember(member))
+            return;
+
+        _membersToRemove.Add(member.UserId);
+    }
+
+    private void UnmarkMemberForRemoval(ChatMemberDto member)
+    {
+        _membersToRemove.Remove(member.UserId);
+    }
+
+    private void OnManageSearchInput(ChangeEventArgs e)
+    {
+        var searchText = e.Value?.ToString() ?? string.Empty;
+        _manageSearchText = searchText;
+        OnManageSearch(searchText);
+    }
+
+    private void OnManageSearch(string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            _manageSearchResults.Clear();
+            return;
+        }
+
+        var lowerSearchText = searchText.ToLowerInvariant();
+        var selectedIds = _manageSelectedUsers.Select(u => u.Id).ToHashSet();
+        var existingIds = _activeChat?.Members.Select(member => member.UserId).ToHashSet() ?? new HashSet<Guid>();
+
+        _manageSearchResults.Clear();
+        _manageSearchResults.AddRange(_allUsers
+            .Where(u => u.Email.ToLowerInvariant().Contains(lowerSearchText) || u.Username.ToLowerInvariant().Contains(lowerSearchText))
+            .Where(u => !selectedIds.Contains(u.Id))
+            .Where(u => !existingIds.Contains(u.Id))
+            .Where(u => u.Id != _currentUserId)
+            .Where(u => !_organizationId.HasValue || u.Organizations == null || !u.Organizations.Any() || u.Organizations.Any(o => o.Id == _organizationId.Value))
+            .Take(10));
+    }
+
+    private void SelectManageUser(UserDto user)
+    {
+        if (_manageSelectedUsers.Any(u => u.Id == user.Id))
+            return;
+
+        _manageSelectedUsers.Add(user);
+        _manageSearchText = string.Empty;
+        _manageSearchResults.Clear();
+        StateHasChanged();
+    }
+
+    private void RemoveManageUser(UserDto user)
+    {
+        _manageSelectedUsers.Remove(user);
+        StateHasChanged();
+    }
+
+    private async Task SaveChatManagementAsync()
+    {
+        if (_activeChat == null || !CanManageActiveChat())
+            return;
+
+        _isUpdatingChat = true;
+        StateHasChanged();
+
+        try
+        {
+            if (!string.Equals(_manageChatName, _activeChat.Name, StringComparison.Ordinal))
+            {
+                var name = _manageChatName?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    MessageService.Error("Chat name cannot be empty.");
+                    return;
+                }
+
+                await ChatService.UpdateChatNameAsync(_activeChat.Id, new UpdateChatNameRequestDto
+                {
+                    UserId = _currentUserId,
+                    Name = name
+                });
+            }
+
+            if (_manageSelectedUsers.Any())
+            {
+                await ChatService.AddChatMembersAsync(_activeChat.Id, new UpdateChatMembersRequestDto
+                {
+                    UserId = _currentUserId,
+                    MemberIds = _manageSelectedUsers.Select(user => user.Id).ToList()
+                });
+            }
+
+            if (_membersToRemove.Any())
+            {
+                await ChatService.RemoveChatMembersAsync(_activeChat.Id, new UpdateChatMembersRequestDto
+                {
+                    UserId = _currentUserId,
+                    MemberIds = _membersToRemove.ToList()
+                });
+            }
+
+            _isManageChatModalVisible = false;
+            await LoadChatsAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to update chat: {ex.Message}");
+        }
+        finally
+        {
+            _isUpdatingChat = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenClearChatModal()
+    {
+        if (!CanClearActiveChat())
+            return;
+
+        _isClearChatModalVisible = true;
+    }
+
+    private void CloseClearChatModal()
+    {
+        _isClearChatModalVisible = false;
+    }
+
+    private void OpenDeleteChatModal()
+    {
+        if (!CanDeleteActiveChat())
+            return;
+
+        _isDeleteChatModalVisible = true;
+    }
+
+    private void CloseDeleteChatModal()
+    {
+        _isDeleteChatModalVisible = false;
+    }
+
+    private async Task ClearChatHistoryAsync()
+    {
+        if (_activeChatId == null || _currentUserId == Guid.Empty)
+            return;
+
+        _isClearingChatHistory = true;
+        StateHasChanged();
+
+        try
+        {
+            await ChatService.ClearChatHistoryAsync(_activeChatId.Value, _currentUserId);
+            _messages.Clear();
+            if (_activeChat != null)
+            {
+                _activeChat.LastMessage = null;
+            }
+
+            var chat = _chats.FirstOrDefault(item => item.Id == _activeChatId.Value);
+            if (chat != null)
+            {
+                chat.LastMessage = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to clear chat history: {ex.Message}");
+        }
+        finally
+        {
+            _isClearingChatHistory = false;
+            _isClearChatModalVisible = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteChatAsync()
+    {
+        if (_activeChatId == null || _currentUserId == Guid.Empty)
+            return;
+
+        _isDeletingChat = true;
+        StateHasChanged();
+
+        try
+        {
+            await ChatService.DeleteChatAsync(_activeChatId.Value, _currentUserId);
+            await ChatSignalRService.LeaveChatGroupAsync(_activeChatId.Value.ToString());
+            var chatId = _activeChatId.Value;
+            _chats.RemoveAll(chat => chat.Id == chatId);
+            _messages.Clear();
+            _activeChatId = null;
+            _activeChat = null;
+            _isDeleteChatModalVisible = false;
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to delete chat: {ex.Message}");
+        }
+        finally
+        {
+            _isDeletingChat = false;
+            StateHasChanged();
         }
     }
 
@@ -839,6 +1138,7 @@ public partial class Chat : ComponentBase, IDisposable
             SenderName = message.SenderName,
             MessageType = message.MessageType,
             Content = message.Content,
+            TaskId = message.TaskId,
             CreatedAt = message.CreatedAt
         };
         chat.UpdatedAt = message.UpdatedAt;

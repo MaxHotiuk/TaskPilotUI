@@ -77,6 +77,141 @@
     color: #0050b3;
 }
 
+.chat-message-system {
+    justify-content: center;
+}
+
+.chat-message-task {
+    justify-content: flex-start;
+}
+
+.chat-system-bubble {
+    background: #f0f5ff;
+    color: rgba(0, 0, 0, 0.65);
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.chat-system-bubble-action {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chat-system-bubble-action:hover {
+    background: #e6f4ff;
+}
+
+.chat-system-time {
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.chat-system-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.chat-system-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.chat-system-icon {
+    font-size: 14px;
+}
+
+.chat-system-hint {
+    color: #1677ff;
+    font-weight: 500;
+}
+
+.chat-update-bubble {
+    background: #f5f5f5;
+    color: rgba(0, 0, 0, 0.65);
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.chat-update-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.chat-update-icon {
+    font-size: 14px;
+}
+
+.chat-task-bubble {
+    background: #f6ffed;
+    color: rgba(0, 0, 0, 0.75);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid #b7eb8f;
+    max-width: 80%;
+}
+
+.chat-task-bubble-action {
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.chat-task-bubble-action:hover {
+    background: #f0f5ff;
+    border-color: #adc6ff;
+}
+
+.chat-task-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.chat-task-icon {
+    font-size: 16px;
+}
+
+.chat-task-title {
+    font-size: 14px;
+}
+
+.chat-task-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.chat-task-time {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.chat-task-hint {
+    color: #1677ff;
+    font-weight: 500;
+}
+
 .chat-message-meta {
     font-size: 11px;
     color: rgba(0, 0, 0, 0.45);

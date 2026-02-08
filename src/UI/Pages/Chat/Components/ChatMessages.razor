@@ -14,15 +14,21 @@ else
     <Card>
         <div class="chat-header">
             <div class="chat-title">@GetChatTitle()</div>
-            @if (OnStartCall.HasDelegate)
-            {
-                <Button Type=@ButtonType.Primary
-                        Icon="phone"
-                        OnClick=@OnStartCall
-                        Disabled=@(ActiveChat == null)>
-                    Start call
-                </Button>
-            }
+            <Space>
+                @if (HeaderActions != null)
+                {
+                    @HeaderActions
+                }
+                @if (OnStartCall.HasDelegate)
+                {
+                    <Button Type=@ButtonType.Primary
+                            Icon="phone"
+                            OnClick=@OnStartCall
+                            Disabled=@(ActiveChat == null)>
+                        Start call
+                    </Button>
+                }
+            </Space>
         </div>
         @if (IsLoading && !Messages.Any())
         {
@@ -47,67 +53,103 @@ else
                 }
                 @foreach (var message in Messages)
                 {
-                    <div class="chat-message-row @(IsOwnMessage(message) ? "chat-message-outgoing" : "chat-message-incoming")">
-                        @if (!IsOwnMessage(message))
-                        {
-                            <div class="chat-avatar">
-                                @if (TryGetAvatar(message, out var avatarUrl))
-                                {
-                                    <Avatar Src=@avatarUrl Size=@AvatarSize.Small />
-                                }
-                                else
-                                {
-                                    <Avatar Size=@AvatarSize.Small>@GetSenderInitials(message.SenderName)</Avatar>
-                                }
-                            </div>
-                        }
-                        <div class="chat-message-content">
-                            @if (ShouldShowSender(message))
-                            {
-                                <div class="chat-sender-name">@message.SenderName</div>
-                            }
-                            @if (IsCallMessage(message))
-                            {
-                                <div class="chat-message-bubble chat-call-bubble">
-                                    <span>Call started</span>
-                                    <Button Size=@ButtonSize.Small
-                                            Type=@ButtonType.Primary
-                                            Disabled=@(string.IsNullOrWhiteSpace(message.Content) || !OnJoinCall.HasDelegate)
-                                            OnClick=@(() => OnJoinCall.InvokeAsync(message.Content))>
-                                        Join
-                                    </Button>
+                    @if (IsTaskMessage(message))
+                    {
+                        <div class="chat-message-row chat-message-task">
+                            <div class=@($"chat-task-bubble {(message.TaskId.HasValue ? "chat-task-bubble-action" : string.Empty)}")
+                                 @onclick="() => OpenTaskFromMessage(message)">
+                                <div class="chat-task-header">
+                                    <span class="chat-task-icon">🧩</span>
+                                    <span class="chat-task-title">@GetTaskMessageContent(message)</span>
                                 </div>
-                            }
-                            else if (!string.IsNullOrWhiteSpace(message.Content))
-                            {
-                                <div class="chat-message-bubble">@message.Content</div>
-                            }
-                            @if (message.HasAttachments)
-                            {
-                                <ChatMessageAttachments MessageId="@message.Id" />
-                            }
-                            <div class="chat-message-meta">
-                                <span>@message.CreatedAt.ToString("t")</span>
-                                @if (ShouldShowReadStatus(message))
-                                {
-                                    <span class="chat-read-status">@GetReadStatus(message)</span>
-                                }
+                                <div class="chat-task-meta">
+                                    <span>Added by @GetTaskMessageSender(message)</span>
+                                    <span>Assignee: @GetTaskAssigneeName(message)</span>
+                                    <span class="chat-task-time">@message.CreatedAt.ToString("t")</span>
+                                    @if (message.TaskId.HasValue)
+                                    {
+                                        <span class="chat-task-hint">Open task</span>
+                                    }
+                                </div>
                             </div>
                         </div>
-                        @if (IsOwnMessage(message))
-                        {
-                            <div class="chat-avatar">
-                                @if (TryGetAvatar(message, out var avatarUrl))
-                                {
-                                    <Avatar Src=@avatarUrl Size=@AvatarSize.Small />
-                                }
-                                else
-                                {
-                                    <Avatar Size=@AvatarSize.Small>@GetSenderInitials(message.SenderName)</Avatar>
-                                }
+                    }
+                    else if (IsUpdateMessage(message))
+                    {
+                        <div class="chat-message-row chat-message-system">
+                            <div class="chat-update-bubble">
+                                <div class="chat-update-text">
+                                    <span class="chat-update-icon">ℹ️</span>
+                                    <span>@GetUpdateMessageContent(message)</span>
+                                </div>
+                                <span class="chat-system-time">@message.CreatedAt.ToString("t")</span>
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="chat-message-row @(IsOwnMessage(message) ? "chat-message-outgoing" : "chat-message-incoming")">
+                            @if (!IsOwnMessage(message))
+                            {
+                                <div class="chat-avatar">
+                                    @if (TryGetAvatar(message, out var avatarUrl))
+                                    {
+                                        <Avatar Src=@avatarUrl Size=@AvatarSize.Small />
+                                    }
+                                    else
+                                    {
+                                        <Avatar Size=@AvatarSize.Small>@GetSenderInitials(message.SenderName)</Avatar>
+                                    }
+                                </div>
+                            }
+                            <div class="chat-message-content">
+                                @if (ShouldShowSender(message))
+                                {
+                                    <div class="chat-sender-name">@message.SenderName</div>
+                                }
+                                @if (IsCallMessage(message))
+                                {
+                                    <div class="chat-message-bubble chat-call-bubble">
+                                        <span>Call started</span>
+                                        <Button Size=@ButtonSize.Small
+                                                Type=@ButtonType.Primary
+                                                Disabled=@(string.IsNullOrWhiteSpace(message.Content) || !OnJoinCall.HasDelegate)
+                                                OnClick=@(() => OnJoinCall.InvokeAsync(message.Content))>
+                                            Join
+                                        </Button>
+                                    </div>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(message.Content))
+                                {
+                                    <div class="chat-message-bubble">@message.Content</div>
+                                }
+                                @if (message.HasAttachments)
+                                {
+                                    <ChatMessageAttachments MessageId="@message.Id" />
+                                }
+                                <div class="chat-message-meta">
+                                    <span>@message.CreatedAt.ToString("t")</span>
+                                    @if (ShouldShowReadStatus(message))
+                                    {
+                                        <span class="chat-read-status">@GetReadStatus(message)</span>
+                                    }
+                                </div>
+                            </div>
+                            @if (IsOwnMessage(message))
+                            {
+                                <div class="chat-avatar">
+                                    @if (TryGetAvatar(message, out var avatarUrl))
+                                    {
+                                        <Avatar Src=@avatarUrl Size=@AvatarSize.Small />
+                                    }
+                                    else
+                                    {
+                                        <Avatar Size=@AvatarSize.Small>@GetSenderInitials(message.SenderName)</Avatar>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
         }

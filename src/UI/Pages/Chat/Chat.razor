@@ -51,7 +51,22 @@
                           OnSend=@SendMessageAsync
                           OnStartCall=@StartCallAsync
                           OnJoinCall=@JoinCallAsync
-                          OnLoadMore=@LoadMoreMessagesAsync />
+                          OnLoadMore=@LoadMoreMessagesAsync>
+                <HeaderActions>
+                    @if (CanManageActiveChat())
+                    {
+                        <Button OnClick=@OpenManageChatModal>Manage chat</Button>
+                    }
+                    @if (CanClearActiveChat())
+                    {
+                        <Button OnClick=@OpenClearChatModal>Clear history</Button>
+                    }
+                    @if (CanDeleteActiveChat())
+                    {
+                        <Button Danger="true" OnClick=@OpenDeleteChatModal>Delete chat</Button>
+                    }
+                </HeaderActions>
+            </ChatMessages>
         </Col>
     </Row>
 </PageContainer>
@@ -114,4 +129,114 @@
             </FormItem>
         }
     </Form>
+</Modal>
+
+<Modal Title="Manage chat"
+       Visible=@_isManageChatModalVisible
+       OnOk=@SaveChatManagementAsync
+       OnCancel=@CloseManageChatModal
+       ConfirmLoading=@_isUpdatingChat>
+    @if (_activeChat != null)
+    {
+        <Form Model=@_activeChat TModel="ChatDto" Layout=@FormLayout.Vertical>
+            <FormItem Label="Chat name">
+                <Input @bind-Value=@_manageChatName Placeholder="Group chat name" />
+            </FormItem>
+            <FormItem Label="Members">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    @foreach (var member in GetActiveChatMembers())
+                    {
+                        <Tag Closable=@CanRemoveMember(member) OnClose=@(() => MarkMemberForRemoval(member))>
+                            @member.UserName
+                        </Tag>
+                    }
+                </div>
+            </FormItem>
+            @if (_membersToRemove.Any())
+            {
+                <FormItem Label="Removed members">
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        @foreach (var member in GetRemovedMembers())
+                        {
+                            <Tag Color=@("red")>
+                                @member.UserName
+                                <Button Size=@ButtonSize.Small
+                                        Type=@ButtonType.Text
+                                        OnClick=@(() => UnmarkMemberForRemoval(member))>
+                                    Undo
+                                </Button>
+                            </Tag>
+                        }
+                    </div>
+                </FormItem>
+            }
+            <FormItem Label="Add members">
+                <div style="position: relative;">
+                    <Input @bind-Value=@_manageSearchText
+                           @oninput=@OnManageSearchInput
+                           Placeholder="Search users" />
+
+                    @if (_manageSearchResults.Any() && !string.IsNullOrWhiteSpace(_manageSearchText))
+                    {
+                        <div class="user-search-dropdown">
+                            @foreach (var user in _manageSearchResults)
+                            {
+                                <div @onclick=@(() => SelectManageUser(user)) class="user-search-item">
+                                    <div style="font-weight: 500;">@user.Username</div>
+                                    <div style="font-size: 12px; color: #999;">@user.Email</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </FormItem>
+
+            @if (_manageSelectedUsers.Any())
+            {
+                <FormItem Label="Selected users">
+                    <div class="selected-users-container">
+                        @foreach (var user in _manageSelectedUsers)
+                        {
+                            <Tag Closable="true" OnClose=@(() => RemoveManageUser(user))>
+                                <div class="user-tag">
+                                    <span class="username">@user.Username</span>
+                                    <span class="email">(@user.Email)</span>
+                                </div>
+                            </Tag>
+                        }
+                    </div>
+                </FormItem>
+            }
+        </Form>
+    }
+</Modal>
+
+<Modal Title="Clear chat history"
+       Visible=@_isClearChatModalVisible
+       OnOk=@ClearChatHistoryAsync
+       OnCancel=@CloseClearChatModal
+       ConfirmLoading=@_isClearingChatHistory>
+    <Alert Type=@AlertType.Warning ShowIcon=@true>
+        <MessageTemplate>
+            <strong>This will remove all messages in this chat.</strong>
+        </MessageTemplate>
+        <ChildContent>
+            This action cannot be undone.
+        </ChildContent>
+    </Alert>
+</Modal>
+
+<Modal Title="Delete chat"
+       Visible=@_isDeleteChatModalVisible
+       OnOk=@DeleteChatAsync
+       OnCancel=@CloseDeleteChatModal
+       ConfirmLoading=@_isDeletingChat>
+    <Alert Type=@AlertType.Error ShowIcon=@true>
+        <MessageTemplate>
+            <strong>Delete this chat permanently?</strong>
+        </MessageTemplate>
+        <ChildContent>
+            The chat and its messages will be removed for everyone.
+        </ChildContent>
+    </Alert>
 </Modal>

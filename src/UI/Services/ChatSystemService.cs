@@ -59,6 +59,40 @@ public class ChatSystemService : IChatSystemService
         await _chatApi.UpdateReadStatusAsync(chatId, request, cancellationToken);
     }
 
+    public async Task UpdateChatNameAsync(
+        Guid chatId,
+        UpdateChatNameRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        await _chatApi.UpdateChatNameAsync(chatId, request, cancellationToken);
+    }
+
+    public async Task AddChatMembersAsync(
+        Guid chatId,
+        UpdateChatMembersRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        await _chatApi.AddChatMembersAsync(chatId, request, cancellationToken);
+    }
+
+    public async Task RemoveChatMembersAsync(
+        Guid chatId,
+        UpdateChatMembersRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        await _chatApi.RemoveChatMembersAsync(chatId, request, cancellationToken);
+    }
+
+    public async Task ClearChatHistoryAsync(Guid chatId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _chatApi.ClearChatHistoryAsync(chatId, userId, cancellationToken);
+    }
+
+    public async Task DeleteChatAsync(Guid chatId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _chatApi.DeleteChatAsync(chatId, userId, cancellationToken);
+    }
+
     public async Task<AttachmentDto> UploadChatAttachmentAsync(
         Guid chatId,
         Guid messageId,
