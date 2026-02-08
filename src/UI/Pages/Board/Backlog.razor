@@ -3,20 +3,20 @@
 @using UI.Models.Backlog
 
 
-<PageHeader OnBack=@OnBack>
+    <PageHeader OnBack=@OnBack>
     <TitleTemplate>
-        Backlog for "@BoardName"
+        @string.Format(UI.Resources.I18n.BacklogFor, BoardName)
     </TitleTemplate>
     <PageHeaderContent>
         <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
             <Input Size=@InputSize.Large
-                   Placeholder="Search backlog..." 
+                   Placeholder=@UI.Resources.I18n.SearchYourBoards 
                    @bind-Value=@SearchTerm
                    @oninput=@OnSearch
                    AllowClear=@true
                    Style="border-radius: 8px; min-width: 220px;" />
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span>Start date:</span>
+                <span>@UI.Resources.I18n.StartDateLabel</span>
                 <DatePicker 
                     Size=@InputSize.Large
                     Value=@StartDate
@@ -25,7 +25,7 @@
                     Style="border-radius: 8px; width: 140px;" />
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span>End date:</span>
+                <span>@UI.Resources.I18n.EndDateLabel</span>
                 <DatePicker 
                     Size=@InputSize.Large
                     Value=@EndDate
@@ -54,7 +54,7 @@
             @if (!InitLoading && !Loading && HasMore)
             {
                 <div class="demo-loadmore-btn-content ">
-                    <Button OnClick=@LoadMore>Load more</Button>
+                    <Button OnClick=@LoadMore>@UI.Resources.I18n.LoadMoreBoards</Button>
                 </div>
             }
         </LoadMore>

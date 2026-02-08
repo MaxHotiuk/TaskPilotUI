@@ -6,8 +6,8 @@
 
 <div class="task-comments-container">
     <div class="comments-header">
-        <div class="comments-search">
-            <Search Placeholder="Search comments..." 
+            <div class="comments-search">
+            <Search Placeholder=@UI.Resources.I18n.SearchCommentsPlaceholder 
                    @bind-Value=@SearchTerm
                    OnSearch=@OnSearchComments
                    OnPressEnter=@OnSearchComments
@@ -19,8 +19,8 @@
 
     @if (IsLoading)
     {
-        <div class="comments-loading">
-            <Spin Size=SpinSize.Small Tip="Loading comments...">
+            <div class="comments-loading">
+            <Spin Size=SpinSize.Small Tip=@UI.Resources.I18n.LoadingComments>
                 <div style="height: 100px;"></div>
             </Spin>
         </div>
@@ -67,10 +67,10 @@
                                                 <Overlay>
                                                     <Menu>
                                                         <MenuItem OnClick=@(() => StartEditComment(comment))>
-                                                            <Icon Type="edit" /> Edit
+                                                            <Icon Type="edit" /> @UI.Resources.I18n.Edit
                                                         </MenuItem>
                                                         <MenuItem OnClick=@(() => DeleteComment(comment.Id)) Danger="true">
-                                                            <Icon Type="delete" /> Delete
+                                                            <Icon Type="delete" /> @UI.Resources.I18n.Delete
                                                         </MenuItem>
                                                     </Menu>
                                                 </Overlay>
@@ -88,21 +88,21 @@
                                     <div class="comment-edit-form">
                                         <TextArea @bind-Value=EditingContent
                                                  Rows="3" 
-                                                 Placeholder="Edit your comment..."
+                                                 Placeholder=@UI.Resources.I18n.EditYourCommentPlaceholder
                                                  MaxLength="1000"
                                                  ShowCount=@true />
                                         <div class="comment-edit-actions">
                                             <Button Size=@ButtonSize.Small 
                                                    OnClick=@CancelEditComment
                                                    Type=@ButtonType.Default>
-                                                Cancel
+                                                @UI.Resources.I18n.Cancel
                                             </Button>
                                             <Button Size=@ButtonSize.Small
                                                    OnClick=@(() => SaveEditComment(comment.Id))
                                                    Type=@ButtonType.Primary
                                                    Loading=@IsUpdating
                                                    Disabled=@(string.IsNullOrWhiteSpace(EditingContent))>
-                                                Save
+                                                @UI.Resources.I18n.Save
                                             </Button>
                                         </div>
                                     </div>
@@ -128,11 +128,11 @@
                                    class="load-more-btn">
                                     @if (IsLoadingMore)
                                     {
-                                        <span>Loading more comments...</span>
+                                        <span>@UI.Resources.I18n.LoadingMoreComments</span>
                                     }
                                     else
                                     {
-                                        <span>Load more comments</span>
+                                        <span>@UI.Resources.I18n.LoadMoreComments</span>
                                     }
                                 </Button>
                             </div>
@@ -142,16 +142,16 @@
                     {
                         <div class="no-comments">
                             <Empty>
-                                <DescriptionTemplate>
-                                    @if (IsSearching)
-                                    {
-                                        <span>No comments found matching "@SearchTerm"</span>
-                                    }
-                                    else
-                                    {
-                                        <span>No comments yet. Be the first to comment on this task</span>
-                                    }
-                                </DescriptionTemplate>
+                            <DescriptionTemplate>
+                                @if (IsSearching)
+                                {
+                                    <span>@UI.Resources.I18n.NoCommentsFound</span>
+                                }
+                                else
+                                {
+                                    <span>@UI.Resources.I18n.NoCommentsYet</span>
+                                }
+                            </DescriptionTemplate>
                             </Empty>
                         </div>
                     }
@@ -181,11 +181,11 @@
                             <span class="current-user-name" style="font-size: 13px; font-weight: 500;">@GetCurrentUserName()</span>
                         </div>
 
-                        <div class="comment-textarea-wrapper" style="margin-bottom: 4px;">
+                            <div class="comment-textarea-wrapper" style="margin-bottom: 4px;">
                             <TextArea @bind-Value=NewCommentContent
                                 @oninput="@((ChangeEventArgs e) => { NewCommentContent = e.Value?.ToString() ?? string.Empty; StateHasChanged(); })"
                                 Rows="2"
-                                Placeholder="Add a comment..."
+                                Placeholder=@UI.Resources.I18n.AddACommentPlaceholder
                                 MaxLength="1000"
                                 ShowCount=@false
                                 @onkeydown=@HandleKeyDown
@@ -197,7 +197,7 @@
                             <label class="attachment-upload-label" style="margin-bottom: 0;">
                                 <InputFile OnChange=@OnAttachmentsSelected multiple style="display: none;" />
                                 <span class="avatar-upload-btn attachment-btn" style="font-size: 13px; padding: 2px 6px;">
-                                    <Icon Type="paper-clip" /> Attach
+                                    <Icon Type="paper-clip" /> @UI.Resources.I18n.AttachText
                                 </span>
                             </label>
                             @if (SelectedAttachmentNames != null && SelectedAttachmentNames.Any())
@@ -214,19 +214,19 @@
                                         </Button>
                                     </span>
                                 }
-                                <Button Size=@ButtonSize.Small OnClick=@ClearAttachments Type=@ButtonType.Text class="remove-attachment-btn" style="font-size: 12px; padding: 0 4px;">Remove All</Button>
+                                <Button Size=@ButtonSize.Small OnClick=@ClearAttachments Type=@ButtonType.Text class="remove-attachment-btn" style="font-size: 12px; padding: 0 4px;">@UI.Resources.I18n.RemoveAll</Button>
                             }
                         </div>
 
                         <div class="comment-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
-                            <Text Type=@TextElementType.Secondary Style="font-size: 11px;">Ctrl+Enter to post</Text>
+                            <Text Type=@TextElementType.Secondary Style="font-size: 11px;">@UI.Resources.I18n.CtrlEnterToPost</Text>
                             <div>
                                 <Button Size=@ButtonSize.Small
                                        OnClick=@ClearNewComment
                                        Type=@ButtonType.Default
                                        Disabled=@(string.IsNullOrWhiteSpace(NewCommentContent))
                                        style="font-size: 12px; padding: 0 8px; height: 24px;">
-                                    Clear
+                                    @UI.Resources.I18n.Clear
                                 </Button>
                                 <Button Size=@ButtonSize.Small
                                        OnClick=@AddComment
@@ -234,7 +234,7 @@
                                        Loading=@IsAdding
                                        Disabled=@(string.IsNullOrWhiteSpace(NewCommentContent))
                                        style="font-size: 12px; padding: 0 8px; height: 24px; margin-left: 4px;">
-                                    Comment
+                                    @UI.Resources.I18n.CommentButton
                                 </Button>
                             </div>
                         </div>

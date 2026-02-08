@@ -32,7 +32,7 @@
         <div class="task-details">
             <div class="detail-item">
                 <Icon Type="tag" />
-                <span class="label">Tag:</span>
+                <span class="label">@UI.Resources.I18n.TagLabel</span>
                 @if (Task.TagId != null && Tags != null)
                 {
                     var tag = Tags.FirstOrDefault(t => t.Id == Task.TagId);
@@ -42,17 +42,17 @@
                     }
                     else
                     {
-                        <span class="no-tag">No tag</span>
+                        <span class="no-tag">@UI.Resources.I18n.NoTagText</span>
                     }
                 }
                 else
                 {
-                    <span class="no-tag">No tag</span>
+                    <span class="no-tag">@UI.Resources.I18n.NoTagText</span>
                 }
             </div>
             <div class="detail-item">
                 <Icon Type="user" />
-                <span class="label">Assignee:</span>
+                <span class="label">@UI.Resources.I18n.AssigneeLabel</span>
                 @if (!string.IsNullOrEmpty(Task.AssigneeId))
                 {
                     <div class="assignee-info">
@@ -77,19 +77,19 @@
                 }
                 else
                 {
-                    <span class="not-assigned">Not assigned</span>
+                    <span class="not-assigned">@UI.Resources.I18n.NotAssigned</span>
                 }
             </div>
 
             <div class="detail-item">
                 <Icon Type="flag" />
-                <span class="label">Priority:</span>
+                <span class="label">@UI.Resources.I18n.PriorityLabel</span>
                 <Tag Color=@GetPriorityColor(Task.Priority) Icon="exclamation-circle">@GetPriorityLabel(Task.Priority)</Tag>
             </div>
 
             <div class="detail-item">
                 <Icon Type="calendar" />
-                <span class="label">Due:</span>
+                <span class="label">@UI.Resources.I18n.DueLabel</span>
                 @if (!string.IsNullOrEmpty(Task.DueDate))
                 {
                     <div class="due-date-info">
@@ -102,7 +102,7 @@
                 }
                 else
                 {
-                    <span class="no-due-date">No due date</span>
+                    <span class="no-due-date">@UI.Resources.I18n.NoDueDate</span>
                 }
             </div>
         </div>
@@ -110,13 +110,13 @@
         <div class="task-timestamps">
             <span class="timestamp">
                 <Icon Type="plus-circle" />
-                Created @GetCreatedTimeString()
+                @UI.Resources.I18n.CreatedLabel @GetCreatedTimeString()
             </span>
             @if (!string.IsNullOrEmpty(Task.UpdatedAt))
             {
                 <span class="timestamp">
                     <Icon Type="edit" />
-                    Updated @GetUpdatedTimeString()
+                    @UI.Resources.I18n.UpdatedLabel @GetUpdatedTimeString()
                 </span>
             }
         </div>

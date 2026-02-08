@@ -1,0 +1,117 @@
+@page "/chats"
+@using UI.Models.Chat
+@using UI.Pages.Chat.Components
+@using UI.Interfaces.Services
+@using UI.Interfaces.SignalR
+
+<PageContainer Title="Chats">
+    <Row Gutter="16">
+        <Col Span="8">
+            <Card Title="Chats">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <Select @bind-Value=@OrganizationId TItemValue="Guid?" TItem="Guid?" Style="width: 100%" Placeholder="Select organization">
+                        <SelectOptions>
+                            @foreach (var organization in _organizations)
+                            {
+                                <SelectOption TItemValue="Guid?" TItem="Guid?" Value=@organization.Id Label=@organization.Name />
+                            }
+                        </SelectOptions>
+                    </Select>
+                    <Space>
+                        <SpaceItem>
+                            <Button OnClick=@OpenCreateChat Disabled=@(!_canLoadChats)>New chat</Button>
+                        </SpaceItem>
+                    </Space>
+                </div>
+
+                <Divider />
+
+                <ChatList Chats=@_chats
+                          SelectedChatId=@_activeChatId
+                          CurrentUserId=@_currentUserId
+                          OnSelectChat=@SelectChatAsync />
+            </Card>
+        </Col>
+        <Col Span="16">
+            <ChatMessages ActiveChat=@_activeChat
+                          Messages=@_messages
+                          IsLoading=@_isLoadingMessages
+                          IsSending=@_isSending
+                          HasMoreMessages=@_hasMoreMessages
+                          CurrentUserId=@_currentUserId
+                          TypingUsers=@GetTypingUsers()
+                          NewMessage=@_newMessage
+                          NewMessageChanged=@OnNewMessageChanged
+                          PendingAttachmentNames=@_pendingAttachmentNames
+                          HasPendingAttachments=@_pendingAttachments.Any()
+                          OnAttachmentsSelected=@OnAttachmentsSelected
+                          OnRemoveAttachment=@RemoveAttachmentAt
+                          OnClearAttachments=@ClearAttachments
+                          OnStopTyping=@StopTypingAsync
+                          OnSend=@SendMessageAsync
+                          OnStartCall=@StartCallAsync
+                          OnJoinCall=@JoinCallAsync
+                          OnLoadMore=@LoadMoreMessagesAsync />
+        </Col>
+    </Row>
+</PageContainer>
+
+<Modal Title="Create chat"
+       Visible=@_isCreateChatModalVisible
+       OnOk=@CreateChatAsync
+       OnCancel=@CloseCreateChat
+       ConfirmLoading=@_isCreatingChat>
+    <Form Model=@_createChatRequest Layout=@FormLayout.Vertical>
+        <FormItem Label="Chat type">
+            <Select @bind-Value=@_createChatRequest.Type TItemValue="ChatType" TItem="ChatType" Style="width: 100%">
+                <SelectOptions>
+                    <SelectOption TItemValue="ChatType" TItem="ChatType" Value=@ChatType.Private Label="Private" />
+                    <SelectOption TItemValue="ChatType" TItem="ChatType" Value=@ChatType.Group Label="Group" />
+                </SelectOptions>
+            </Select>
+        </FormItem>
+        @if (_createChatRequest.Type == ChatType.Group)
+        {
+            <FormItem Label="Chat name">
+                <Input @bind-Value=@_createChatRequest.Name Placeholder="Group chat name" />
+            </FormItem>
+        }
+        <FormItem Label="Members">
+            <div style="position: relative;">
+                <Input @bind-Value=@_searchText
+                       @oninput=@OnSearchInput
+                       Placeholder="Search users" />
+
+                @if (_searchResults.Any() && !string.IsNullOrWhiteSpace(_searchText))
+                {
+                    <div class="user-search-dropdown">
+                        @foreach (var user in _searchResults)
+                        {
+                            <div @onclick=@(() => SelectUser(user)) class="user-search-item">
+                                <div style="font-weight: 500;">@user.Username</div>
+                                <div style="font-size: 12px; color: #999;">@user.Email</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </FormItem>
+
+        @if (_selectedUsers.Any())
+        {
+            <FormItem Label="Selected users">
+                <div class="selected-users-container">
+                    @foreach (var user in _selectedUsers)
+                    {
+                        <Tag Closable="true" OnClose=@(() => RemoveUser(user))>
+                            <div class="user-tag">
+                                <span class="username">@user.Username</span>
+                                <span class="email">(@user.Email)</span>
+                            </div>
+                        </Tag>
+                    }
+                </div>
+            </FormItem>
+        }
+    </Form>
+</Modal>

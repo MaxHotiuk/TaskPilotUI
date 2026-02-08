@@ -1,0 +1,160 @@
+@using UI.Models.Chat
+@using Microsoft.AspNetCore.Components.Forms
+
+@if (ActiveChat == null)
+{
+    <Card>
+        <div style="text-align: center; padding: 24px; color: rgba(0,0,0,0.45);">
+            Select a chat to start messaging
+        </div>
+    </Card>
+}
+else
+{
+    <Card>
+        <div class="chat-header">
+            <div class="chat-title">@GetChatTitle()</div>
+            @if (OnStartCall.HasDelegate)
+            {
+                <Button Type=@ButtonType.Primary
+                        Icon="phone"
+                        OnClick=@OnStartCall
+                        Disabled=@(ActiveChat == null)>
+                    Start call
+                </Button>
+            }
+        </div>
+        @if (IsLoading && !Messages.Any())
+        {
+            <div style="text-align: center; padding: 24px;">
+                <Spin Size=@SpinSize.Large />
+            </div>
+        }
+        else if (!Messages.Any())
+        {
+            <div style="text-align: center; padding: 24px; color: rgba(0,0,0,0.45);">
+                No messages yet
+            </div>
+        }
+        else
+        {
+            <div class="chat-thread" @ref="_threadRef" @onscroll="HandleScrollAsync">
+                @if (IsLoading)
+                {
+                    <div class="chat-loading-older">
+                        <Spin Size=@SpinSize.Small />
+                    </div>
+                }
+                @foreach (var message in Messages)
+                {
+                    <div class="chat-message-row @(IsOwnMessage(message) ? "chat-message-outgoing" : "chat-message-incoming")">
+                        @if (!IsOwnMessage(message))
+                        {
+                            <div class="chat-avatar">
+                                @if (TryGetAvatar(message, out var avatarUrl))
+                                {
+                                    <Avatar Src=@avatarUrl Size=@AvatarSize.Small />
+                                }
+                                else
+                                {
+                                    <Avatar Size=@AvatarSize.Small>@GetSenderInitials(message.SenderName)</Avatar>
+                                }
+                            </div>
+                        }
+                        <div class="chat-message-content">
+                            @if (ShouldShowSender(message))
+                            {
+                                <div class="chat-sender-name">@message.SenderName</div>
+                            }
+                            @if (IsCallMessage(message))
+                            {
+                                <div class="chat-message-bubble chat-call-bubble">
+                                    <span>Call started</span>
+                                    <Button Size=@ButtonSize.Small
+                                            Type=@ButtonType.Primary
+                                            Disabled=@(string.IsNullOrWhiteSpace(message.Content) || !OnJoinCall.HasDelegate)
+                                            OnClick=@(() => OnJoinCall.InvokeAsync(message.Content))>
+                                        Join
+                                    </Button>
+                                </div>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(message.Content))
+                            {
+                                <div class="chat-message-bubble">@message.Content</div>
+                            }
+                            @if (message.HasAttachments)
+                            {
+                                <ChatMessageAttachments MessageId="@message.Id" />
+                            }
+                            <div class="chat-message-meta">
+                                <span>@message.CreatedAt.ToString("t")</span>
+                                @if (ShouldShowReadStatus(message))
+                                {
+                                    <span class="chat-read-status">@GetReadStatus(message)</span>
+                                }
+                            </div>
+                        </div>
+                        @if (IsOwnMessage(message))
+                        {
+                            <div class="chat-avatar">
+                                @if (TryGetAvatar(message, out var avatarUrl))
+                                {
+                                    <Avatar Src=@avatarUrl Size=@AvatarSize.Small />
+                                }
+                                else
+                                {
+                                    <Avatar Size=@AvatarSize.Small>@GetSenderInitials(message.SenderName)</Avatar>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        @if (TypingUsers.Any())
+        {
+            <div class="chat-typing-indicator">@GetTypingText()</div>
+        }
+
+        <Divider />
+
+        <div>
+            <div class="attachment-row" style="margin-bottom: 4px; gap: 4px; display: flex; flex-wrap: wrap; align-items: center;">
+                <label class="attachment-upload-label" style="margin-bottom: 0;">
+                    <InputFile OnChange=@OnAttachmentsSelectedInternal multiple style="display: none;" />
+                    <span class="avatar-upload-btn attachment-btn" style="font-size: 13px; padding: 2px 6px;">
+                        <Icon Type="paper-clip" /> Attach
+                    </span>
+                </label>
+                @if (PendingAttachmentNames.Any())
+                {
+                    @for (var i = 0; i < PendingAttachmentNames.Count; i++)
+                    {
+                        var name = PendingAttachmentNames[i];
+                        var displayName = name.Length > 8 ? name.Substring(0, 8) + "..." : name;
+                        var index = i;
+                        <span class="attachment-badge" style="font-size: 12px; padding: 1px 4px; margin-right: 2px;">
+                            📎 @displayName
+                            <Button Size=@ButtonSize.Small Type=@ButtonType.Text OnClick=@(() => OnRemoveAttachment.InvokeAsync(index)) style="padding: 0 2px;">
+                                <Icon Type="close" />
+                            </Button>
+                        </span>
+                    }
+                    <Button Size=@ButtonSize.Small OnClick=@OnClearAttachments Type=@ButtonType.Text class="remove-attachment-btn" style="font-size: 12px; padding: 0 4px;">Remove all</Button>
+                }
+            </div>
+            <TextArea @bind-Value=NewMessage
+                      @oninput=@OnMessageInput
+                      @onblur=@OnMessageBlur
+                      Rows="3"
+                      Placeholder="Type a message..." />
+            <div style="text-align: right; margin-top: 8px;">
+                <Button Type=@ButtonType.Primary OnClick=@OnSend Disabled=@(string.IsNullOrWhiteSpace(NewMessage) && !HasPendingAttachments) Loading=@IsSending>
+                    Send
+                </Button>
+            </div>
+        </div>
+    </Card>
+}
+

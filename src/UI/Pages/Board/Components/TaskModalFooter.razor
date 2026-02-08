@@ -4,40 +4,40 @@
 <div class="task-modal-footer">
     @if (IsEditing)
     {
-        <Button OnClick=@OnCancelEdit>Cancel</Button>
+        <Button OnClick=@OnCancelEdit>@UI.Resources.I18n.Cancel</Button>
         <Button Type=@ButtonType.Primary
                 Loading=@IsLoading
                 OnClick=@OnSaveChanges>
-            Save Changes
+            @UI.Resources.I18n.SaveChanges
         </Button>
     }
     else
     {
-        <Button OnClick=@OnClose>Close</Button>
+        <Button OnClick=@OnClose>@UI.Resources.I18n.Close</Button>
         
         @if (CanManageTask)
         {
-            <Button Type=@ButtonType.Default OnClick=@OnEdit>Edit Task</Button>
+            <Button Type=@ButtonType.Default OnClick=@OnEdit>@UI.Resources.I18n.EditTask</Button>
             
-            <Popconfirm Title="Are you sure you want to delete this task?"
+                <Popconfirm Title="@UI.Resources.I18n.ConfirmDeleteTask"
                         OnConfirm=@OnDelete
-                        OkText="Yes"
-                        CancelText="No">
+                        OkText="@UI.Resources.I18n.Yes"
+                        CancelText="@UI.Resources.I18n.No">
                 <Button Type=@ButtonType.Primary
                         Danger=@true
                         Loading=@IsLoading>
-                    Delete Task
+                    @UI.Resources.I18n.DeleteTask
                 </Button>
             </Popconfirm>
 
-            <Popconfirm Title="Are you sure you want to archive this task?"
+                <Popconfirm Title="@UI.Resources.I18n.ConfirmArchiveTask"
                         OnConfirm=@OnArchive
-                        OkText="Yes"
-                        CancelText="No">
+                        OkText="@UI.Resources.I18n.Yes"
+                        CancelText="@UI.Resources.I18n.No">
                 <Button Type=@ButtonType.Primary
                         Danger=@true
                         Loading=@IsLoading>
-                    Archive Task
+                    @UI.Resources.I18n.ArchiveTask
                 </Button>
             </Popconfirm>
         }

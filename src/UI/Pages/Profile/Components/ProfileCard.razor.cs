@@ -50,7 +50,7 @@ public partial class ProfileCard : ComponentBase
     {
         if (_currentUser != null)
         {
-            var avatar = await AvatarService.GetAvatarOrNullAsync(Guid.Parse(_currentUser.Id));
+            var avatar = await AvatarService.GetAvatarOrNullAsync(_currentUser.Id);
             _avatarUrl = avatar?.CompressedUrl;
         }
     }
@@ -73,7 +73,7 @@ public partial class ProfileCard : ComponentBase
         try
         {
             using var stream = browserFile.OpenReadStream();
-            var avatar = await AvatarService.UploadAsync(Guid.Parse(_currentUser!.Id), stream, browserFile.Name);
+            var avatar = await AvatarService.UploadAsync(_currentUser!.Id, stream, browserFile.Name);
             _avatarUrl = avatar.CompressedUrl;
             Message.Success("Avatar updated successfully");
             StateHasChanged();
@@ -90,7 +90,7 @@ public partial class ProfileCard : ComponentBase
         
         try
         {
-            await AvatarService.DeleteAsync(Guid.Parse(_currentUser.Id));
+            await AvatarService.DeleteAsync(_currentUser.Id);
             _avatarUrl = null;
             Message.Success("Avatar removed successfully");
             StateHasChanged();
@@ -101,11 +101,11 @@ public partial class ProfileCard : ComponentBase
         }
     }
 
-    private string GetFormattedDate(string? dateString)
+    private string GetFormattedDate(DateTime? date)
     {
-        if (string.IsNullOrEmpty(dateString) || !DateTime.TryParse(dateString, out var date))
+        if (date == null)
             return "N/A";
         
-        return date.ToString("MMM dd, yyyy");
+        return date.Value.ToString("MMM dd, yyyy");
     }
 }

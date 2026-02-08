@@ -5,7 +5,7 @@
 @using UI.Interfaces.Services
 @using System.Globalization
 
-<PageHeader Title="Calendar">
+<PageHeader Title=@UI.Resources.I18n.CalendarTitle>
     <PageHeaderExtra>
         <Space Size=@SpaceSize.Middle>
             <SpaceItem>
@@ -13,14 +13,14 @@
                         Icon="reload"
                         Loading=@(IsLoading || _isLoading)
                         OnClick=@RefreshCalendar>
-                    Refresh
+                    @UI.Resources.I18n.Refresh
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Type=@ButtonType.Primary
                         Icon="calendar"
                         OnClick=@NavigateToToday>
-                    Today
+                    @UI.Resources.I18n.Today
                 </Button>
             </SpaceItem>
         </Space>

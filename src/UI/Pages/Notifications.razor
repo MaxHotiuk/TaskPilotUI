@@ -12,17 +12,17 @@
 @inject NavigationManager Navigation
 @implements IDisposable
 
-<PageHeader Title="Notifications">
+<PageHeader Title="@UI.Resources.I18n.Dashboard">
     <PageHeaderExtra>
         <Space>
             <SpaceItem>
                 <Button Type=@ButtonType.Primary Icon="check" OnClick=@MarkAllAsReadAsync Disabled=@(!notifications.Any(n => !n.IsRead))>
-                    Mark All as Read
+                    @UI.Resources.I18n.ClearFilters
                 </Button>
             </SpaceItem>
             <SpaceItem>
                 <Button Icon="reload" OnClick=@RefreshNotificationsAsync Loading=@isLoading>
-                    Refresh
+                    @UI.Resources.I18n.Refresh
                 </Button>
             </SpaceItem>
         </Space>
@@ -34,14 +34,14 @@
 <div style="padding: 24px; background: #fff; min-height: 280px;">
     @if (isLoading && !notifications.Any())
     {
-        <div style="text-align: center; padding: 50px;">
+            <div style="text-align: center; padding: 50px;">
             <Spin Size=@SpinSize.Large />
-            <div style="margin-top: 16px;">Loading notifications...</div>
+            <div style="margin-top: 16px;">@UI.Resources.I18n.LoadingMoreBoards</div>
         </div>
     }
     else if (!notifications.Any())
     {
-        <Empty Description=@("No notifications found")>
+        <Empty Description=@UI.Resources.I18n.NoRecentActivity>
             <Icon Type="bell" Style="font-size: 64px; color: #d9d9d9;" />
         </Empty>
     }
@@ -85,7 +85,7 @@
         {
             <div style="text-align: center; margin-top: 16px;">
                 <Button OnClick=@LoadMoreNotificationsAsync Loading=@isLoadingMore Disabled=@isLoadingMore>
-                    Load More
+                    @UI.Resources.I18n.LoadMoreBoards
                 </Button>
             </div>
         }
@@ -99,13 +99,13 @@
 
         if (!notification.IsRead)
         {
-            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => MarkAsReadAsync(notification.Id))">Mark as read</Button>);
+            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => MarkAsReadAsync(notification.Id))">@UI.Resources.I18n.MarkAsRead</Button>);
         }
         if (notification.BoardId.HasValue)
         {
-            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => NavigateToItem(notification))">View</Button>);
+            actions.Add(@<Button Size="@ButtonSize.Small" Type="@ButtonType.Link" OnClick="@(() => NavigateToItem(notification))">@UI.Resources.I18n.View</Button>);
         }
-        actions.Add(@<Popconfirm Title="Are you sure you want to delete this notification?" OnConfirm="@(() => DeleteAsync(notification.Id))" OkText="Yes" CancelText="No"><Button Size="@ButtonSize.Small" Type="@ButtonType.Link" Danger="true" Icon="delete">Delete</Button></Popconfirm>);
+        actions.Add(@<Popconfirm Title=@UI.Resources.I18n.ConfirmDeleteTask OnConfirm="@(() => DeleteAsync(notification.Id))" OkText=@UI.Resources.I18n.Yes CancelText=@UI.Resources.I18n.No><Button Size="@ButtonSize.Small" Type="@ButtonType.Link" Danger="true" Icon="delete">@UI.Resources.I18n.DeleteTask</Button></Popconfirm>);
 
         return actions.ToArray();
     }

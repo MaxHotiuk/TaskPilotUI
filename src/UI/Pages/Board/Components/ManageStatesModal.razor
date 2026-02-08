@@ -1,16 +1,16 @@
 @using AntDesign
 @using UI.Models.State
 
-<Modal Title="Manage States"
+<Modal Title="@UI.Resources.I18n.ManageStates"
        Visible=@IsVisible
        OnCancel=@OnCancel
        Footer="null"
        Width="600">
     <div class="manage-states-header">
-        <Button Type=@ButtonType.Primary Icon="plus" OnClick=@ShowAddStateModal>Add State</Button>
+        <Button Type=@ButtonType.Primary Icon="plus" OnClick=@ShowAddStateModal>@UI.Resources.I18n.AddStateButton</Button>
     </div>
     <Table DataSource=@States RowKey=@(state => state.Id) Bordered Size=@TableSize.Middle>
-        <AntDesign.Column TData=@StateDto Title="Order" Width="80">
+        <AntDesign.Column TData=@StateDto Title=@UI.Resources.I18n.OrderLabel Width="80">
             <Template>
                 <div class="order-controls">
                     <Button Size=@ButtonSize.Small 
@@ -26,14 +26,14 @@
                 </div>
             </Template>
         </AntDesign.Column>
-        <AntDesign.Column TData=@StateDto Title="Name">
+        <AntDesign.Column TData=@StateDto Title=@UI.Resources.I18n.NameLabel>
             <Template>
                 <AntDesign.Input TValue="string" @bind-Value=@context.Name MaxLength="50" Size=@InputSize.Small OnBlur=@(() => OnNameChanged(context)) />
             </Template>
         </AntDesign.Column>
-        <AntDesign.Column TData=@StateDto Title="Actions" Width="120">
+        <AntDesign.Column TData=@StateDto Title=@UI.Resources.I18n.ActionsLabel Width="120">
             <Template>
-                <Button Danger Size=@ButtonSize.Small Icon="delete" OnClick=@(() => OnDeleteState(context))>Delete</Button>
+                <Button Danger Size=@ButtonSize.Small Icon="delete" OnClick=@(() => OnDeleteState(context))>@UI.Resources.I18n.DeleteLabel</Button>
             </Template>
         </AntDesign.Column>
     </Table>

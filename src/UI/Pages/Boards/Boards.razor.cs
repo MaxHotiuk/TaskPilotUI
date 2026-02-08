@@ -91,7 +91,7 @@ public partial class Boards : ComponentBase
             var currentUser = AuthService.GetCachedUser();
             if (currentUser == null) return;
 
-            var userId = Guid.Parse(currentUser.Id);
+            var userId = currentUser.Id;
             IEnumerable<BoardSearchDto> results;
 
             if (_filterType == "owner")
@@ -193,7 +193,7 @@ public partial class Boards : ComponentBase
         var currentUser = AuthService.GetCachedUser();
         if (currentUser != null)
         {
-            await BoardService.ClearCacheAsync(currentUser.Id);
+            await BoardService.ClearCacheAsync(currentUser.Id.ToString());
         }
         
         await SearchBoards(reset: true);
@@ -224,7 +224,7 @@ public partial class Boards : ComponentBase
         if (_selectedBoard == null ||
             !_deleteConfirmation.Trim().Equals(_selectedBoard.Name?.Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            MessageBox.Error("Delete confirmation does not match board name.");
+            MessageBox.Error(UI.Resources.I18n.DeleteBoardConfirmationMismatch);
             return;
         }
 
@@ -238,7 +238,7 @@ public partial class Boards : ComponentBase
             var currentUser = AuthService.GetCachedUser();
             if (currentUser != null)
             {
-                await BoardService.ClearCacheAsync(currentUser.Id);
+                await BoardService.ClearCacheAsync(currentUser.Id.ToString());
             }
             
             await SearchBoards(reset: true);
@@ -269,17 +269,17 @@ public partial class Boards : ComponentBase
         if (!_boards.Any())
         {
             if (!string.IsNullOrWhiteSpace(_searchTerm))
-                return $"No boards found matching \"{_searchTerm}\"";
-            
+                return string.Format(UI.Resources.I18n.NoBoardsFoundMatching, _searchTerm);
+
             return _filterType switch
             {
-                "owner" => "You don't own any boards yet. Create your first board to get started!",
-                "member" => "You're not a member of any boards yet.",
-                _ => "You don't have any boards yet. Create your first board to get started!"
+                "owner" => UI.Resources.I18n.YouDontOwnAnyBoardsYetCreateFirst,
+                "member" => UI.Resources.I18n.YouAreNotMemberOfAnyBoards,
+                _ => UI.Resources.I18n.YouDontHaveAnyBoardsCreateFirst
             };
         }
         
-        return "No boards found";
+        return UI.Resources.I18n.NoBoardsFound;
     }
 
     private async Task RefreshBoards()
@@ -287,7 +287,7 @@ public partial class Boards : ComponentBase
         var currentUser = AuthService.GetCachedUser();
         if (currentUser != null)
         {
-            await BoardService.ClearCacheAsync(currentUser.Id);
+            await BoardService.ClearCacheAsync(currentUser.Id.ToString());
         }
         await SearchBoards(reset: true);
     }
@@ -295,7 +295,7 @@ public partial class Boards : ComponentBase
     private bool IsCurrentUserOwner(string ownerId)
     {
         var currentUser = AuthService.GetCachedUser();
-        return currentUser?.Id == ownerId;
+        return currentUser?.Id.ToString() == ownerId;
     }
 
     public void Dispose()

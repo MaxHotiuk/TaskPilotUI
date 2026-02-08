@@ -67,6 +67,10 @@ namespace UI.Extensions
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
 
+            services.AddRefitClient<IChatSystemApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+
             services.AddRefitClient<INotificationApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
@@ -110,6 +114,7 @@ namespace UI.Extensions
             services.AddScoped<IAttachmentService, AttachmentService>();
             services.AddScoped<IAvatarService, AvatarService>();
             services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IChatSystemService, ChatSystemService>();
             services.AddScoped<IColorService, ColorService>();
             services.AddScoped<Interfaces.Services.INotificationService, Services.NotificationService>();
             services.AddScoped<IMeetingService, MeetingService>();
@@ -128,6 +133,13 @@ namespace UI.Extensions
                 var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SignalRService>>();
                 var configuration = sp.GetRequiredService<IConfiguration>();
                 return new SignalRService(navigationManager, logger, configuration);
+            });
+
+            services.AddScoped<IChatSignalRService>(sp =>
+            {
+                var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ChatSignalRService>>();
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                return new ChatSignalRService(logger, configuration);
             });
 
             return services;

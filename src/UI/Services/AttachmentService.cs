@@ -17,9 +17,9 @@ namespace UI.Services
             _attachmentApi = attachmentApi;
         }
 
-        public async Task<List<AttachmentDto>> GetAsync(Guid entityId)
+        public async Task<List<AttachmentDto>> GetAsync(Guid entityId, Guid userId)
         {
-            return await _attachmentApi.GetAsync(entityId);
+            return await _attachmentApi.GetAsync(entityId, userId);
         }
 
         public async Task<AttachmentDto> UploadAsync(Guid entityId, Stream fileStream, string fileName)

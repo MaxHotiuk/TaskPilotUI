@@ -5,7 +5,7 @@
         <AntDesign.Col Xs="24" Sm="24" Md="12" Lg="14" Xl="16">
             <div class="search-section">
                 <Input Size=@InputSize.Large
-                       Placeholder="Search your boards..." 
+                       Placeholder="@UI.Resources.I18n.SearchYourBoards" 
                        @bind-Value=@SearchTerm
                        @oninput=@OnSearchChanged
                        AllowClear=@true
@@ -17,7 +17,7 @@
                 <Space Size=@SpaceSize.Small Wrap=@true>
                     <SpaceItem>
                         <Text Type=@TextElementType.Secondary Style="margin-right: 8px; font-weight: 500;">
-                            Show:
+                            @UI.Resources.I18n.Show
                         </Text>
                     </SpaceItem>
                     <SpaceItem>
@@ -25,7 +25,7 @@
                                 OnClick=@(() => OnFilterChanged.InvokeAsync("all"))
                                 Size=@ButtonSize.Small
                                 Style="border-radius: 6px;">
-                            All Boards
+                            @UI.Resources.I18n.AllBoards
                         </Button>
                     </SpaceItem>
                     <SpaceItem>
@@ -34,7 +34,7 @@
                                 Size=@ButtonSize.Small
                                 Style="border-radius: 6px;">
                             <Icon Type="crown" Style="margin-right: 4px;" />
-                            Owner
+                            @UI.Resources.I18n.Owner
                         </Button>
                     </SpaceItem>
                     <SpaceItem>
@@ -43,7 +43,7 @@
                                 Size=@ButtonSize.Small
                                 Style="border-radius: 6px;">
                             <Icon Type="team" Style="margin-right: 4px;" />
-                            Member
+                            @UI.Resources.I18n.Member
                         </Button>
                     </SpaceItem>
                     <SpaceItem>
@@ -52,7 +52,7 @@
                                 Size=@ButtonSize.Small
                                 Style="border-radius: 6px;">
                             <Icon Type="inbox" Style="margin-right: 4px;" />
-                            Archived
+                            @UI.Resources.I18n.Archived
                         </Button>
                     </SpaceItem>
                 </Space>

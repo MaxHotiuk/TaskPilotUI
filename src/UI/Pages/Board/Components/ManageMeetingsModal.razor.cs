@@ -70,7 +70,7 @@ public partial class ManageMeetingsModal : ComponentBase
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading users: {ex.Message}");
-            Message.Error("Failed to load users");
+            Message.Error(UI.Resources.I18n.FailedToLoadUsers);
         }
     }
 
@@ -87,7 +87,7 @@ public partial class ManageMeetingsModal : ComponentBase
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading meetings: {ex.Message}");
-            Message.Error("Failed to load meetings");
+            Message.Error(UI.Resources.I18n.FailedToLoadMeetings);
         }
     }
 
@@ -111,7 +111,7 @@ public partial class ManageMeetingsModal : ComponentBase
         _meetingForm = new CreateMeetingRequestDto
         {
             BoardId = Guid.Parse(BoardId),
-            CreatedBy = currentUser?.Id != null ? Guid.Parse(currentUser.Id) : Guid.Empty,
+            CreatedBy = currentUser != null ? currentUser.Id : Guid.Empty,
             Domain = Configuration["App:BaseUrl"]!,
             Duration = 60
         };
@@ -137,7 +137,7 @@ public partial class ManageMeetingsModal : ComponentBase
 
     private async Task HandleMeetingFormOk()
     {
-        await HandleMeetingFormSubmit();
+        await HandleMeetingFormSubmit(new EditContext(_meetingForm));
     }
 
     private void HandleMeetingFormCancel()
@@ -147,17 +147,17 @@ public partial class ManageMeetingsModal : ComponentBase
         ResetMeetingForm();
     }
 
-    private async Task HandleMeetingFormSubmit()
+    private async Task HandleMeetingFormSubmit(EditContext editContext)
     {
         if (string.IsNullOrWhiteSpace(_meetingForm.Title))
         {
-            Message.Error("Please enter a meeting title");
+            Message.Error(UI.Resources.I18n.PleaseEnterMeetingTitle);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_meetingForm.Domain))
         {
-            Message.Error("Please enter a meeting domain");
+            Message.Error(UI.Resources.I18n.PleaseEnterMeetingDomain);
             return;
         }
 
@@ -166,7 +166,6 @@ public partial class ManageMeetingsModal : ComponentBase
             _isSubmittingForm = true;
             StateHasChanged();
 
-            // Set form data
             _meetingForm.ScheduledAt = _scheduledAtValue;
             _meetingForm.MemberIds = _selectedMemberIds.Select(Guid.Parse).ToList();
 
@@ -179,18 +178,18 @@ public partial class ManageMeetingsModal : ComponentBase
                     _meetingForm.ScheduledAt ?? DateTime.Now,
                     _meetingForm.Duration ?? 60
                 );
-                Message.Success("Meeting updated successfully");
+                Message.Success(UI.Resources.I18n.MeetingUpdatedSuccess);
             }
             else
             {
                 await MeetingService.CreateMeetingAsync(_meetingForm);
-                Message.Success("Meeting scheduled successfully");
+                Message.Success(string.Format(UI.Resources.I18n.MeetingScheduledSuccess, _meetingForm.Title));
             }
 
             _showMeetingForm = false;
             _editingMeetingId = null;
             await LoadMeetings();
-            
+
             if (OnMeetingChanged.HasDelegate)
             {
                 await OnMeetingChanged.InvokeAsync();
@@ -198,8 +197,7 @@ public partial class ManageMeetingsModal : ComponentBase
         }
         catch (Exception ex)
         {
-            var action = IsEditMode ? "update" : "create";
-            Message.Error($"Failed to {action} meeting: {ex.Message}");
+            Message.Error(string.Format(UI.Resources.I18n.FailedToUpdateMeeting, ex.Message));
         }
         finally
         {
@@ -216,7 +214,7 @@ public partial class ManageMeetingsModal : ComponentBase
             StateHasChanged();
 
             await MeetingService.DeleteMeetingAsync(Guid.Parse(meetingId));
-            Message.Success("Meeting deleted successfully");
+            Message.Success(UI.Resources.I18n.MeetingDeletedSuccess);
             
             await LoadMeetings();
             
@@ -227,7 +225,7 @@ public partial class ManageMeetingsModal : ComponentBase
         }
         catch (Exception ex)
         {
-            Message.Error($"Failed to delete meeting: {ex.Message}");
+            Message.Error(string.Format(UI.Resources.I18n.FailedToDeleteMeeting, ex.Message));
         }
         finally
         {

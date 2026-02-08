@@ -104,13 +104,14 @@ public partial class AddTaskModal : ComponentBase
         }
     }
 
-    private async Task HandleSubmit()
+    private async Task HandleSubmit(EditContext editContext)
     {
         await HandleOk();
     }
 
-    private void HandleSubmitFailed(EditContext editContext)
+    private Task HandleSubmitFailed(EditContext editContext)
     {
+        return Task.CompletedTask;
     }
 
     private void ResetForm()

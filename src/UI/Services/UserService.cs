@@ -10,7 +10,7 @@ public class UserService : IUserService
     private readonly IUserApi _userApi;
     private readonly IAuthService _authService;
     private readonly ILogger<UserService> _logger;
-    private readonly Dictionary<string, UserDto> _userCache = new();
+    private readonly Dictionary<Guid, UserDto> _userCache = new();
     private DateTime _lastCacheUpdate = DateTime.MinValue;
     private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(5);
 
@@ -51,7 +51,7 @@ public class UserService : IUserService
         if (string.IsNullOrEmpty(userId))
             return null;
 
-        if (_userCache.TryGetValue(userId, out var cachedUser) &&
+        if (Guid.TryParse(userId, out var cachedUserId) && _userCache.TryGetValue(cachedUserId, out var cachedUser) &&
             DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
         {
             return cachedUser;
@@ -67,7 +67,7 @@ public class UserService : IUserService
             var user = await _userApi.GetByIdAsync(userGuid);
             if (user != null)
             {
-                _userCache[userId] = user;
+                _userCache[user.Id] = user;
             }
             return user;
         }
@@ -108,7 +108,7 @@ public class UserService : IUserService
 
         foreach (var userId in userIds)
         {
-            if (!string.IsNullOrEmpty(userId) && _userCache.TryGetValue(userId, out var cachedUser) &&
+            if (!string.IsNullOrEmpty(userId) && Guid.TryParse(userId, out var userGuid) && _userCache.TryGetValue(userGuid, out var cachedUser) &&
                 DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
             {
                 result[userId] = cachedUser;
@@ -124,7 +124,7 @@ public class UserService : IUserService
             var allUsers = await GetAllUsersAsync();
             foreach (var userId in missingUserIds)
             {
-                var user = allUsers.FirstOrDefault(u => u.Id == userId);
+                var user = allUsers.FirstOrDefault(u => u.Id.ToString() == userId);
                 if (user != null)
                 {
                     result[userId] = user;

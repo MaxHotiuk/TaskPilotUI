@@ -2,28 +2,28 @@
 @using AntDesign
 @inherits TaskPilotUI.UI.Pages.Board.BoardCallPage
 
-<PageTitle>Board Meeting - @BoardId</PageTitle>
+<PageTitle>@string.Format(UI.Resources.I18n.BoardMeetingPageTitle, BoardId)</PageTitle>
 
 <div class="board-call-container">
     <div class="call-header">
-        <Title Level="2" Style="margin: 0; color: #1890ff;">Board Meeting</Title>
+        <Title Level="2" Style="margin: 0; color: #1890ff;">@UI.Resources.I18n.BoardMeetingTitle</Title>
         <div class="call-status">
             @if (!_connectionReady)
             {
                 <Tag Color=@TagColor.Orange Style="border-radius: 0;">
-                    <Icon Type="loading" /> Connecting...
+                    <Icon Type="loading" /> @UI.Resources.I18n.Connecting
                 </Tag>
             }
             else if (_inCall)
             {
                 <Tag Color=@TagColor.Green Style="border-radius: 0;">
-                    <Icon Type="phone" /> In Call (@_remoteUsers.Count users)
+                    <Icon Type="phone" /> @string.Format(UI.Resources.I18n.InCallWithCount, _remoteUsers.Count)
                 </Tag>
             }
             else
             {
                 <Tag Color=@TagColor.Blue Style="border-radius: 0;">
-                    <Icon Type="check-circle" /> Ready
+                    <Icon Type="check-circle" /> @UI.Resources.I18n.Ready
                 </Tag>
             }
         </div>
@@ -40,7 +40,7 @@
                 Disabled=@(!_connectionReady || _inCall)
                 OnClick=@StartCall
                 Style="border-radius: 0; min-width: 140px;">
-                @(_inCall ? "Connected" : "Start Call")
+                @(_inCall ? UI.Resources.I18n.Connected : UI.Resources.I18n.StartCall)
             </Button>
             
             <Button 
@@ -50,7 +50,7 @@
                 Disabled=@(!_connectionReady)
                 OnClick=@ToggleCamera
                 Style="border-radius: 0; min-width: 130px;">
-                @(_cameraOn ? "Camera On" : "Camera Off")
+                @(_cameraOn ? UI.Resources.I18n.CameraOn : UI.Resources.I18n.CameraOff)
             </Button>
             
             <Button 
@@ -60,7 +60,7 @@
                 Disabled=@(!_connectionReady)
                 OnClick=@ToggleMic
                 Style="border-radius: 0; min-width: 120px;">
-                @(_micOn ? "Mic On" : "Mic Off")
+                @(_micOn ? UI.Resources.I18n.MicOn : UI.Resources.I18n.MicOff)
             </Button>
             
             <Button 
@@ -70,7 +70,7 @@
                 Disabled=@(!_connectionReady)
                 OnClick=@ToggleScreenShare
                 Style="border-radius: 0; min-width: 140px;">
-                @(_screenSharing ? "Stop Share" : "Share Screen")
+                @(_screenSharing ? UI.Resources.I18n.StopShare : UI.Resources.I18n.ShareScreen)
             </Button>
             
             <Button 
@@ -81,7 +81,7 @@
                 Disabled=@(!_inCall)
                 OnClick=@HangUp
                 Style="border-radius: 0; min-width: 120px;">
-                Hang Up
+                @UI.Resources.I18n.HangUp
             </Button>
         </Space>
     </div>
@@ -89,7 +89,7 @@
     @if (!_inCall)
     {
         <div class="videos-section">
-            <Card Title="Video Preview" Style="border-radius: 0;" BodyStyle="padding: 20px;">
+                <Card Title=@UI.Resources.I18n.VideoPreviewTitle Style="border-radius: 0;" BodyStyle="padding: 20px;">
                 <div class="videos-grid single-video">
                     <Card 
                         Class="video-card local-video" 
@@ -98,24 +98,24 @@
                         <video id="localVideo" autoplay playsinline muted class="video-element"></video>
                         <div class="video-overlay">
                             <div class="video-info">
-                                <Text Strong Style="color: white;">You (Preview)</Text>
+                                <Text Strong Style="color: white;">@UI.Resources.I18n.YouPreview</Text>
                                 <div class="video-indicators">
                                     @if (!_cameraOn) 
                                     { 
                                         <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
-                                            <Icon Type="video-camera" /> OFF
+                                            <Icon Type="video-camera" /> @UI.Resources.I18n.OffLabel
                                         </Tag>
                                     }
                                     @if (!_micOn) 
                                     { 
                                         <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
-                                            <Icon Type="audio-muted" /> OFF
+                                            <Icon Type="audio-muted" /> @UI.Resources.I18n.OffLabel
                                         </Tag>
                                     }
                                     @if (_screenSharing) 
                                     { 
                                         <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
-                                            <Icon Type="desktop" /> SCREEN
+                                            <Icon Type="desktop" /> @UI.Resources.I18n.ScreenLabel
                                         </Tag>
                                     }
                                 </div>
@@ -124,7 +124,7 @@
                     </Card>
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
-                    <Text Type=@TextElementType.Secondary Style="font-size: 16px;">Click "Start Call" to begin the video conference</Text>
+                    <Text Type=@TextElementType.Secondary Style="font-size: 16px;">@UI.Resources.I18n.ClickStartCall</Text>
                 </div>
             </Card>
         </div>
@@ -132,7 +132,7 @@
     else
     {
         <div class="videos-section">
-            <Card Title="Video Conference" Style="border-radius: 0;" BodyStyle="padding: 20px;">
+            <Card Title=@UI.Resources.I18n.VideoConferenceTitle Style="border-radius: 0;" BodyStyle="padding: 20px;">
                 <div class="videos-grid">
                     <Card 
                         Class="video-card local-video" 
@@ -141,24 +141,24 @@
                         <video id="localVideo" autoplay playsinline muted class="video-element"></video>
                         <div class="video-overlay">
                             <div class="video-info">
-                                <Text Strong Style="color: white;">You</Text>
+                        <Text Strong Style="color: white;">@UI.Resources.I18n.YouPreview</Text>
                                 <div class="video-indicators">
                                     @if (!_cameraOn) 
                                     { 
                                         <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
-                                            <Icon Type="video-camera" /> OFF
+                                            <Icon Type="video-camera" /> @UI.Resources.I18n.OffLabel
                                         </Tag>
                                     }
                                     @if (!_micOn) 
                                     { 
                                         <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
-                                            <Icon Type="audio-muted" /> OFF
+                                            <Icon Type="audio-muted" /> @UI.Resources.I18n.OffLabel
                                         </Tag>
                                     }
                                     @if (_screenSharing) 
                                     { 
                                         <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
-                                            <Icon Type="desktop" /> SCREEN
+                                            <Icon Type="desktop" /> @UI.Resources.I18n.ScreenLabel
                                         </Tag>
                                     }
                                 </div>
@@ -180,25 +180,25 @@
                                         @if (user.ConnectionStatus == "connecting")
                                         {
                                             <Tag Color=@TagColor.Orange Style="border-radius: 0; margin-left: 8px;">
-                                                <Icon Type="loading" /> CONNECTING
+                                                <Icon Type="loading" /> @UI.Resources.I18n.ConnectingUpper
                                             </Tag>
                                         }
                                         else if (user.ConnectionStatus == "connected")
                                         {
                                             <Tag Color=@TagColor.Green Style="border-radius: 0; margin-left: 8px;">
-                                                <Icon Type="check-circle" /> ONLINE
+                                                <Icon Type="check-circle" /> @UI.Resources.I18n.Online
                                             </Tag>
                                         }
                                         else
                                         {
                                             <Tag Color=@TagColor.Red Style="border-radius: 0; margin-left: 8px;">
-                                                <Icon Type="disconnect" /> RETRY
+                                                <Icon Type="disconnect" /> @UI.Resources.I18n.Retry
                                             </Tag>
                                         }
                                         @if (user.IsScreenSharing)
                                         {
                                             <Tag Color=@TagColor.Purple Style="border-radius: 0; margin-left: 8px;">
-                                                <Icon Type="desktop" /> SCREEN
+                                                <Icon Type="desktop" /> @UI.Resources.I18n.ScreenLabel
                                             </Tag>
                                         }
                                     </div>

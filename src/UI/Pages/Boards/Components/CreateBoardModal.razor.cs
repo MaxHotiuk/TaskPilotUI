@@ -39,7 +39,7 @@ public partial class CreateBoardModal : ComponentBase
     {
         if (string.IsNullOrWhiteSpace(_formModel.Name))
         {
-            _error = "Board name is required";
+            _error = UI.Resources.I18n.BoardNameRequired;
             return;
         }
 
@@ -52,11 +52,11 @@ public partial class CreateBoardModal : ComponentBase
             var currentUser = AuthService.GetCachedUser();
             if (currentUser == null)
             {
-                _error = "User not authenticated";
+                _error = UI.Resources.I18n.UserNotAuthenticated;
                 return;
             }
 
-            _formModel.OwnerId = currentUser.Id;
+            _formModel.OwnerId = currentUser.Id.ToString();
             var boardId = await BoardService.CreateAsync(_formModel);
 
             await OnBoardCreated.InvokeAsync(boardId);
@@ -75,7 +75,7 @@ public partial class CreateBoardModal : ComponentBase
 
     private void HandleSubmitFailed()
     {
-        _error = "Please check the form and try again";
+        _error = UI.Resources.I18n.PleaseCheckFormAndTryAgain;
         StateHasChanged();
     }
 

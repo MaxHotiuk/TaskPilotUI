@@ -80,7 +80,7 @@ public partial class Calendar : ComponentBase
             var currentUser = AuthService.GetCachedUser();
             if (currentUser == null) return;
 
-            var userId = Guid.Parse(currentUser.Id);
+            var userId = currentUser.Id;
             var tasks = await TaskService.GetForCalendarMonthAsync(userId, _currentMonth);
             var startDate = new DateTime(_currentMonth.Year, _currentMonth.Month, 1);
             var endDate = startDate.AddMonths(1).AddDays(-1);

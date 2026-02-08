@@ -60,8 +60,8 @@ public partial class AddMemberModal : ComponentBase
                 .Where(u => u.Email.ToLowerInvariant().Contains(lowerSearchText) || 
                            u.Username.ToLowerInvariant().Contains(lowerSearchText))
                 .Where(u => !FormModel.SelectedUsers.Any(su => su.Id == u.Id))
-                .Where(u => !existingMemberIds.Contains(u.Id))
-                .Where(u => u.Id != BoardOwnerId)
+                .Where(u => !existingMemberIds.Contains(u.Id.ToString()))
+                .Where(u => u.Id.ToString() != BoardOwnerId)
                 .Take(10)
                 .ToList();
 

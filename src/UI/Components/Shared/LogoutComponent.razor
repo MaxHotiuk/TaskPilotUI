@@ -2,14 +2,14 @@
 
 @if (ShowAsDropdownItem)
 {
-    <MenuItem Key="logout" OnClick=@OnLogoutClick Class="logout-menu-item">
+        <MenuItem Key="logout" OnClick=@OnLogoutClick Class="logout-menu-item">
         <Icon Type="logout" />
-        <span>Logout</span>
+        <span>@UI.Resources.I18n.Logout</span>
     </MenuItem>
 }
 else if (ShowAsButton)
 {
-    <Button Type=@ButtonType.Default
+        <Button Type=@ButtonType.Default
             Danger=@DangerButton 
             Size=@Size 
             OnClick=@OnLogoutClick
@@ -18,7 +18,7 @@ else if (ShowAsButton)
         <Icon Type="logout" />
         @if (!IconOnly)
         {
-            <span>Logout</span>
+            <span>@UI.Resources.I18n.Logout</span>
         }
     </Button>
 }
@@ -28,7 +28,7 @@ else if (ShowAsLink)
         <Icon Type="logout" />
         @if (!IconOnly)
         {
-            <span>Logout</span>
+            <span>@UI.Resources.I18n.Logout</span>
         }
     </a>
 }
@@ -39,9 +39,9 @@ else
             <div class="logout-info">
                 <Icon Type="info-circle" Class="info-icon" />
                 <div>
-                    <Text Strong>Sign Out</Text>
+                    <Text Strong>@UI.Resources.I18n.SignOut</Text>
                     <div class="logout-description">
-                        <Text Type=@TextElementType.Secondary>This will log you out of your account and redirect you to the login page.</Text>
+                        <Text Type="@TextElementType.Secondary">@UI.Resources.I18n.SignOutDescription</Text>
                     </div>
                 </div>
             </div>
@@ -54,7 +54,7 @@ else
                         Loading=@_isLoading
                         Class="logout-action-button">
                     <Icon Type="logout" />
-                    Sign Out
+                    @UI.Resources.I18n.SignOut
                 </Button>
             </div>
         </div>

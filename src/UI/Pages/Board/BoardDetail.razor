@@ -16,7 +16,7 @@
              OnRefresh=@RefreshBoard
              OnCreateTask=@ShowCreateTaskModal
              OnArchive=@ShowArchiveBoardModal
-             CurrentUserId=@(_currentUser?.Id)
+             CurrentUserId=@(_currentUser?.Id.ToString())
              OnManageStates=@ShowManageStatesModal
              OnManageTags=@ShowManageTagsModal
              OnCreateMeeting=@ShowCreateMeetingModal
@@ -31,7 +31,7 @@
 <MembersModal IsVisible=@_showMembersModal
               BoardDetail=@_boardDetail
               CanManageMembers=@(CanManageMembers())
-              CurrentUserId=@(_currentUser?.Id)
+              CurrentUserId=@(_currentUser?.Id.ToString())
               OnCancel=@(() => _showMembersModal = false)
               OnAddMember=@ShowAddMemberModal
               OnChangeRole=@HandleChangeRole

@@ -1,40 +1,40 @@
 @using UI.Models.User
 @using AntDesign
 
-<Card Title="Edit Profile" Class="profile-edit-card">
+<Card Title="@UI.Resources.I18n.EditProfile" Class="profile-edit-card">
     <Form Model=@_formModel Layout=@FormLayout.Vertical>
         <div class="form-section">
-            <Text Class="section-title">Basic Information</Text>
+            <Text Class="section-title">@UI.Resources.I18n.BasicInformation</Text>
             
-            <FormItem Label="Username">
+            <FormItem Label=@UI.Resources.I18n.Username>
                 <Input Value=@_currentUser?.Username Disabled Size=@InputSize.Large />
             </FormItem>
             
-            <FormItem Label="Email Address">
+            <FormItem Label=@UI.Resources.I18n.Email>
                 <Input Value=@_currentUser?.Email Disabled Size=@InputSize.Large />
             </FormItem>
             
-            <FormItem Label="Role">
+            <FormItem Label=@UI.Resources.I18n.Role>
                 <Input Value=@_currentUser?.Role Disabled Size=@InputSize.Large />
                 <div class="form-help-text">
-                    <Icon Type="info-circle" /> To change your role, please contact the administrator.
+                    <Icon Type="info-circle" /> @UI.Resources.I18n.ToChangeRoleContactAdmin
                 </div>
             </FormItem>
 
-            <Icon Type="info-circle" /> User info is provided by Microsoft Entra ID.
+            <Icon Type="info-circle" /> @UI.Resources.I18n.UserInfoProvidedByEntra
         </div>
 
         <div class="form-section">
-            <Title Level="5" Class="section-title">Account Details</Title>
+            <Title Level="5" Class="section-title">@UI.Resources.I18n.AccountDetails</Title>
             
             <Row Gutter="16">
                 <AntDesign.Col Span="12">
-                    <FormItem Label="Member Since">
+                    <FormItem Label=@UI.Resources.I18n.MemberSince>
                         <Input Value=@GetFormattedDate(_currentUser?.CreatedAt) Disabled Size="@InputSize.Large" />
                     </FormItem>
                 </AntDesign.Col>
                 <AntDesign.Col Span="12">
-                    <FormItem Label="Last Updated">
+                    <FormItem Label=@UI.Resources.I18n.LastUpdatedLabel>
                         <Input Value=@GetFormattedDate(_currentUser?.UpdatedAt) Disabled Size="@InputSize.Large" />
                     </FormItem>
                 </AntDesign.Col>
