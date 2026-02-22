@@ -108,4 +108,46 @@ public class ChatSystemService : IChatSystemService
 
         return await _chatApi.UploadChatAttachmentAsync(chatId, messageId, userId, streamPart, cancellationToken);
     }
+
+    public async Task<ChatAvatarDto?> GetChatAvatarOrNullAsync(Guid chatId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _chatApi.GetChatAvatarAsync(chatId, userId, cancellationToken);
+        }
+        catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
+
+    public async Task<ChatAvatarDto> UploadChatAvatarAsync(
+        Guid chatId,
+        Guid userId,
+        Stream fileStream,
+        string fileName,
+        string? contentType,
+        CancellationToken cancellationToken = default)
+    {
+        var streamPart = string.IsNullOrWhiteSpace(contentType)
+            ? new StreamPart(fileStream, fileName)
+            : new StreamPart(fileStream, fileName, contentType);
+
+        return await _chatApi.UploadChatAvatarAsync(chatId, userId, streamPart, cancellationToken);
+    }
+
+    public async Task<ChatAvatarDto> UpdateChatAvatarAsync(
+        Guid chatId,
+        Guid userId,
+        Stream fileStream,
+        string fileName,
+        string? contentType,
+        CancellationToken cancellationToken = default)
+    {
+        var streamPart = string.IsNullOrWhiteSpace(contentType)
+            ? new StreamPart(fileStream, fileName)
+            : new StreamPart(fileStream, fileName, contentType);
+
+        return await _chatApi.UpdateChatAvatarAsync(chatId, userId, streamPart, cancellationToken);
+    }
 }

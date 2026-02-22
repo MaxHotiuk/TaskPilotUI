@@ -48,4 +48,19 @@ public interface IChatSystemService
         string fileName,
         string? contentType,
         CancellationToken cancellationToken = default);
+    Task<ChatAvatarDto?> GetChatAvatarOrNullAsync(Guid chatId, Guid userId, CancellationToken cancellationToken = default);
+    Task<ChatAvatarDto> UploadChatAvatarAsync(
+        Guid chatId,
+        Guid userId,
+        Stream fileStream,
+        string fileName,
+        string? contentType,
+        CancellationToken cancellationToken = default);
+    Task<ChatAvatarDto> UpdateChatAvatarAsync(
+        Guid chatId,
+        Guid userId,
+        Stream fileStream,
+        string fileName,
+        string? contentType,
+        CancellationToken cancellationToken = default);
 }

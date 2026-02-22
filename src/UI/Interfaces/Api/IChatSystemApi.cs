@@ -79,4 +79,26 @@ public interface IChatSystemApi
         [AliasAs("userId")] Guid userId,
         [AliasAs("file")] StreamPart file,
         CancellationToken cancellationToken = default);
+
+    [Get("/api/chats/{chatId}/avatar")]
+    Task<ChatAvatarDto> GetChatAvatarAsync(
+        Guid chatId,
+        [AliasAs("userId")] Guid userId,
+        CancellationToken cancellationToken = default);
+
+    [Multipart]
+    [Post("/api/chats/{chatId}/avatar?userId={userId}")]
+    Task<ChatAvatarDto> UploadChatAvatarAsync(
+        Guid chatId,
+        [AliasAs("userId")] Guid userId,
+        [AliasAs("file")] StreamPart file,
+        CancellationToken cancellationToken = default);
+
+    [Multipart]
+    [Put("/api/chats/{chatId}/avatar?userId={userId}")]
+    Task<ChatAvatarDto> UpdateChatAvatarAsync(
+        Guid chatId,
+        [AliasAs("userId")] Guid userId,
+        [AliasAs("file")] StreamPart file,
+        CancellationToken cancellationToken = default);
 }

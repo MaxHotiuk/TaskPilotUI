@@ -13,6 +13,31 @@
     border-bottom: none;
 }
 
+.chat-list-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-list-domain {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.chat-list-domain-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+.chat-list-new-button {
+    width: 100%;
+}
+
 .user-search-dropdown {
     position: absolute;
     top: 100%;
@@ -47,4 +72,52 @@
 .user-tag .email {
     font-size: 11px;
     color: #666;
+}
+
+.chat-avatar-editor {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+}
+
+.chat-avatar-edit-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    color: rgba(0, 0, 0, 0.65);
+    border: 1px solid #d9d9d9;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.chat-avatar-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.chat-avatar-upload {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }

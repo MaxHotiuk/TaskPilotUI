@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using UI.Interfaces.Services;
 using UI.Models.Avatar;
@@ -23,6 +24,8 @@ public partial class ChatMessages : ComponentBase
     [Parameter] public EventCallback OnStopTyping { get; set; }
     [Parameter] public EventCallback OnStartCall { get; set; }
     [Parameter] public EventCallback<string> OnJoinCall { get; set; }
+    [Parameter] public EventCallback OnOpenInfo { get; set; }
+    [Parameter] public string? ChatAvatarUrl { get; set; }
     [Parameter] public IReadOnlyList<string> PendingAttachmentNames { get; set; } = Array.Empty<string>();
     [Parameter] public bool HasPendingAttachments { get; set; }
     [Parameter] public EventCallback<InputFileChangeEventArgs> OnAttachmentsSelected { get; set; }
@@ -75,6 +78,12 @@ public partial class ChatMessages : ComponentBase
                 _ = LoadAvatarAsync(senderId);
             }
         }
+
+        var headerUserId = GetHeaderAvatarUserId();
+        if (headerUserId.HasValue && !_avatarCache.ContainsKey(headerUserId.Value) && !_avatarLoading.Contains(headerUserId.Value))
+        {
+            _ = LoadAvatarAsync(headerUserId.Value);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -113,6 +122,17 @@ public partial class ChatMessages : ComponentBase
     private Task OnMessageBlur()
     {
         return OnStopTyping.InvokeAsync();
+    }
+
+    private async Task OnMessageKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter")
+            return;
+
+        if (string.IsNullOrWhiteSpace(NewMessage) && !HasPendingAttachments)
+            return;
+
+        await OnSend.InvokeAsync();
     }
 
     private Task OnAttachmentsSelectedInternal(InputFileChangeEventArgs e)
@@ -264,6 +284,45 @@ public partial class ChatMessages : ComponentBase
         return false;
     }
 
+    private bool TryGetHeaderAvatarUrl(out string? avatarUrl)
+    {
+        if (ActiveChat?.Type != ChatType.Private)
+        {
+            if (!string.IsNullOrWhiteSpace(ChatAvatarUrl))
+            {
+                avatarUrl = ChatAvatarUrl;
+                return true;
+            }
+
+            avatarUrl = null;
+            return false;
+        }
+
+        var headerUserId = GetHeaderAvatarUserId();
+        if (!headerUserId.HasValue)
+        {
+            avatarUrl = null;
+            return false;
+        }
+
+        if (_avatarCache.TryGetValue(headerUserId.Value, out var avatar) && avatar != null && !string.IsNullOrEmpty(avatar.CompressedUrl))
+        {
+            avatarUrl = avatar.CompressedUrl;
+            return true;
+        }
+
+        avatarUrl = null;
+        return false;
+    }
+
+    private Guid? GetHeaderAvatarUserId()
+    {
+        if (ActiveChat?.Type != ChatType.Private)
+            return null;
+
+        return ActiveChat.Members.FirstOrDefault(member => member.UserId != CurrentUserId)?.UserId;
+    }
+
     private async Task LoadAvatarAsync(Guid userId)
     {
         if (_avatarCache.ContainsKey(userId) || _avatarLoading.Contains(userId))
@@ -302,5 +361,36 @@ public partial class ChatMessages : ComponentBase
             return otherMember.UserName;
 
         return "Chat";
+    }
+
+    private string GetChatAvatarText()
+    {
+        if (ActiveChat == null)
+            return "?";
+
+        if (ActiveChat.Type == ChatType.Private)
+        {
+            var otherMember = ActiveChat.Members.FirstOrDefault(member => member.UserId != CurrentUserId);
+            if (otherMember != null && !string.IsNullOrWhiteSpace(otherMember.UserName))
+            {
+                return GetInitials(otherMember.UserName);
+            }
+        }
+
+        return GetInitials(GetChatTitle());
+    }
+
+    private string GetInitials(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "?";
+
+        var parts = value.Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2)
+            .Select(part => part[0].ToString().ToUpperInvariant())
+            .ToArray();
+
+        return parts.Length == 0 ? "?" : string.Concat(parts);
     }
 }

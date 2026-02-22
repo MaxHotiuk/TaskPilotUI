@@ -42,7 +42,9 @@ public partial class Chat : ComponentBase, IDisposable
     private readonly List<AttachmentMemory> _pendingAttachments = new();
     private readonly List<string> _pendingAttachmentNames = new();
     private string _currentUserName = string.Empty;
-    private bool _isManageChatModalVisible;
+    private ChatAvatarDto? _chatAvatar;
+    private bool _isUploadingChatAvatar;
+    private bool _isChatInfoModalVisible;
     private bool _isUpdatingChat;
     private string _manageChatName = string.Empty;
     private readonly List<UserDto> _manageSelectedUsers = new();
@@ -90,6 +92,14 @@ public partial class Chat : ComponentBase, IDisposable
         return CanManageActiveChat();
     }
 
+    private bool CanManageChatAvatar()
+    {
+        if (_activeChat == null || _activeChat.Type == ChatType.Private)
+            return false;
+
+        return _activeChat.Members.Any(member => member.UserId == _currentUserId && member.Role == ChatMemberRole.Owner);
+    }
+
     private bool CanDeleteActiveChat()
     {
         if (_activeChat == null)
@@ -101,18 +111,19 @@ public partial class Chat : ComponentBase, IDisposable
         return CanManageActiveChat();
     }
 
-    private void OpenManageChatModal()
+    private void OpenChatInfoModal()
     {
-        if (!CanManageActiveChat() || _activeChat == null)
+        if (_activeChat == null)
             return;
 
         ResetManageChatForm();
-        _isManageChatModalVisible = true;
+        _ = LoadChatAvatarAsync();
+        _isChatInfoModalVisible = true;
     }
 
-    private void CloseManageChatModal()
+    private void CloseChatInfoModal()
     {
-        _isManageChatModalVisible = false;
+        _isChatInfoModalVisible = false;
     }
 
     private void ResetManageChatForm()
@@ -142,7 +153,7 @@ public partial class Chat : ComponentBase, IDisposable
 
     private bool CanRemoveMember(ChatMemberDto member)
     {
-        if (_activeChat?.Type != ChatType.Group)
+        if (!CanManageActiveChat() || _activeChat?.Type != ChatType.Group)
             return false;
 
         if (member.UserId == _currentUserId)
@@ -254,7 +265,7 @@ public partial class Chat : ComponentBase, IDisposable
                 });
             }
 
-            _isManageChatModalVisible = false;
+            _isChatInfoModalVisible = false;
             await LoadChatsAsync();
         }
         catch (Exception ex)
@@ -346,6 +357,7 @@ public partial class Chat : ComponentBase, IDisposable
             _messages.Clear();
             _activeChatId = null;
             _activeChat = null;
+            _isChatInfoModalVisible = false;
             _isDeleteChatModalVisible = false;
         }
         catch (Exception ex)
@@ -428,7 +440,6 @@ public partial class Chat : ComponentBase, IDisposable
 
         if (!_organizationId.HasValue)
         {
-            MessageService.Error("Select an organization.");
             return;
         }
 
@@ -484,11 +495,14 @@ public partial class Chat : ComponentBase, IDisposable
         _lastReadAt = null;
         _activeChatId = chat.Id;
         _activeChat = chat;
+        _chatAvatar = null;
         _currentPage = 1;
         _messages.Clear();
         _hasMoreMessages = false;
         _newMessage = string.Empty;
         ClearAttachments();
+
+        await LoadChatAvatarAsync();
 
         await ChatSignalRService.JoinChatGroupAsync(chat.Id.ToString());
         await LoadMessagesAsync(reset: true);
@@ -719,6 +733,59 @@ public partial class Chat : ComponentBase, IDisposable
         _pendingAttachments.Clear();
         _pendingAttachmentNames.Clear();
         StateHasChanged();
+    }
+    private async Task LoadChatAvatarAsync()
+    {
+        if (_activeChat == null || _activeChat.Type == ChatType.Private)
+        {
+            _chatAvatar = null;
+            return;
+        }
+
+        try
+        {
+            _chatAvatar = await ChatService.GetChatAvatarOrNullAsync(_activeChat.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to load chat avatar: {ex.Message}");
+        }
+    }
+
+    private async Task OnChatAvatarSelected(InputFileChangeEventArgs e)
+    {
+        if (_activeChat == null || !CanManageChatAvatar())
+            return;
+
+        if (e.FileCount == 0)
+            return;
+
+        var file = e.GetMultipleFiles(1).FirstOrDefault();
+        if (file == null)
+            return;
+
+        _isUploadingChatAvatar = true;
+        StateHasChanged();
+
+        using var stream = file.OpenReadStream();
+        try
+        {
+            var avatar = _chatAvatar == null
+                ? await ChatService.UploadChatAvatarAsync(_activeChat.Id, _currentUserId, stream, file.Name, file.ContentType)
+                : await ChatService.UpdateChatAvatarAsync(_activeChat.Id, _currentUserId, stream, file.Name, file.ContentType);
+
+            _chatAvatar = avatar;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            MessageService.Error($"Failed to upload chat avatar: {ex.Message}");
+        }
+        finally
+        {
+            _isUploadingChatAvatar = false;
+            StateHasChanged();
+        }
     }
 
     private async Task UploadMessageAttachmentsAsync(Guid messageId)
@@ -1144,6 +1211,44 @@ public partial class Chat : ComponentBase, IDisposable
         chat.UpdatedAt = message.UpdatedAt;
 
         _chats.Sort((left, right) => right.UpdatedAt.CompareTo(left.UpdatedAt));
+    }
+
+    private string GetChatAvatarText()
+    {
+        if (_activeChat == null)
+            return "?";
+
+        if (_activeChat.Type == ChatType.Private)
+        {
+            var otherMember = _activeChat.Members.FirstOrDefault(member => member.UserId != _currentUserId);
+            if (otherMember != null && !string.IsNullOrWhiteSpace(otherMember.UserName))
+            {
+                return GetInitials(otherMember.UserName);
+            }
+        }
+
+        var title = _activeChat.Type switch
+        {
+            ChatType.Board => string.IsNullOrWhiteSpace(_activeChat.Name) ? "Board chat" : _activeChat.Name,
+            ChatType.Group => string.IsNullOrWhiteSpace(_activeChat.Name) ? "Group chat" : _activeChat.Name,
+            _ => "Chat"
+        };
+
+        return GetInitials(title);
+    }
+
+    private string GetInitials(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "?";
+
+        var parts = value.Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2)
+            .Select(part => part[0].ToString().ToUpperInvariant())
+            .ToArray();
+
+        return parts.Length == 0 ? "?" : string.Concat(parts);
     }
 
     public void Dispose()

@@ -8,20 +8,23 @@
     <Row Gutter="16">
         <Col Span="8">
             <Card Title="Chats">
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <Select @bind-Value=@OrganizationId TItemValue="Guid?" TItem="Guid?" Style="width: 100%" Placeholder="Select organization">
-                        <SelectOptions>
-                            @foreach (var organization in _organizations)
-                            {
-                                <SelectOption TItemValue="Guid?" TItem="Guid?" Value=@organization.Id Label=@organization.Name />
-                            }
-                        </SelectOptions>
-                    </Select>
-                    <Space>
-                        <SpaceItem>
-                            <Button OnClick=@OpenCreateChat Disabled=@(!_canLoadChats)>New chat</Button>
-                        </SpaceItem>
-                    </Space>
+                <div class="chat-list-controls">
+                    <div class="chat-list-domain">
+                        <span class="chat-list-domain-label">
+                            <Icon Type="apartment" /> Organization
+                        </span>
+                        <Select @bind-Value=@OrganizationId TItemValue="Guid?" TItem="Guid?" Placeholder="Select organization">
+                            <SelectOptions>
+                                @foreach (var organization in _organizations)
+                                {
+                                    <SelectOption TItemValue="Guid?" TItem="Guid?" Value=@organization.Id Label=@organization.Name />
+                                }
+                            </SelectOptions>
+                        </Select>
+                    </div>
+                    <Button Type=@ButtonType.Primary Icon="plus" OnClick=@OpenCreateChat Disabled=@(!_canLoadChats) Class="chat-list-new-button">
+                        New chat
+                    </Button>
                 </div>
 
                 <Divider />
@@ -42,6 +45,8 @@
                           TypingUsers=@GetTypingUsers()
                           NewMessage=@_newMessage
                           NewMessageChanged=@OnNewMessageChanged
+                          OnOpenInfo=@OpenChatInfoModal
+                          ChatAvatarUrl=@_chatAvatar?.CompressedUrl
                           PendingAttachmentNames=@_pendingAttachmentNames
                           HasPendingAttachments=@_pendingAttachments.Any()
                           OnAttachmentsSelected=@OnAttachmentsSelected
@@ -53,17 +58,9 @@
                           OnJoinCall=@JoinCallAsync
                           OnLoadMore=@LoadMoreMessagesAsync>
                 <HeaderActions>
-                    @if (CanManageActiveChat())
+                    @if (_activeChat != null)
                     {
-                        <Button OnClick=@OpenManageChatModal>Manage chat</Button>
-                    }
-                    @if (CanClearActiveChat())
-                    {
-                        <Button OnClick=@OpenClearChatModal>Clear history</Button>
-                    }
-                    @if (CanDeleteActiveChat())
-                    {
-                        <Button Danger="true" OnClick=@OpenDeleteChatModal>Delete chat</Button>
+                        <Button Type=@ButtonType.Text Icon="info-circle" OnClick=@OpenChatInfoModal />
                     }
                 </HeaderActions>
             </ChatMessages>
@@ -131,83 +128,133 @@
     </Form>
 </Modal>
 
-<Modal Title="Manage chat"
-       Visible=@_isManageChatModalVisible
-       OnOk=@SaveChatManagementAsync
-       OnCancel=@CloseManageChatModal
-       ConfirmLoading=@_isUpdatingChat>
+<Modal Title="Chat info"
+       Visible=@_isChatInfoModalVisible
+       OnCancel=@CloseChatInfoModal
+       Footer=@null>
     @if (_activeChat != null)
     {
         <Form Model=@_activeChat TModel="ChatDto" Layout=@FormLayout.Vertical>
-            <FormItem Label="Chat name">
-                <Input @bind-Value=@_manageChatName Placeholder="Group chat name" />
-            </FormItem>
-            <FormItem Label="Members">
-                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                    @foreach (var member in GetActiveChatMembers())
-                    {
-                        <Tag Closable=@CanRemoveMember(member) OnClose=@(() => MarkMemberForRemoval(member))>
-                            @member.UserName
-                        </Tag>
-                    }
-                </div>
-            </FormItem>
-            @if (_membersToRemove.Any())
+            @if (_activeChat.Type == ChatType.Group || _activeChat.Type == ChatType.Board)
             {
-                <FormItem Label="Removed members">
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                        @foreach (var member in GetRemovedMembers())
+                <FormItem Label="Chat avatar">
+                    <div class="chat-avatar-editor">
+                        <Avatar Src=@_chatAvatar?.CompressedUrl Size=@("64")>
+                            @if (string.IsNullOrWhiteSpace(_chatAvatar?.CompressedUrl))
+                            {
+                                @GetChatAvatarText()
+                            }
+                        </Avatar>
+                        @if (CanManageChatAvatar())
                         {
-                            <Tag Color=@("red")>
-                                @member.UserName
-                                <Button Size=@ButtonSize.Small
-                                        Type=@ButtonType.Text
-                                        OnClick=@(() => UnmarkMemberForRemoval(member))>
-                                    Undo
-                                </Button>
-                            </Tag>
+                            <label class="chat-avatar-upload">
+                                <InputFile OnChange=@OnChatAvatarSelected accept="image/*" style="display: none;" />
+                                <span class="chat-avatar-edit-indicator">
+                                    <Icon Type="edit" />
+                                </span>
+                            </label>
+                            <div class="chat-avatar-overlay">
+                                <Icon Type="camera" />
+                            </div>
                         }
                     </div>
                 </FormItem>
             }
-            <FormItem Label="Add members">
-                <div style="position: relative;">
-                    <Input @bind-Value=@_manageSearchText
-                           @oninput=@OnManageSearchInput
-                           Placeholder="Search users" />
-
-                    @if (_manageSearchResults.Any() && !string.IsNullOrWhiteSpace(_manageSearchText))
-                    {
-                        <div class="user-search-dropdown">
-                            @foreach (var user in _manageSearchResults)
+            <FormItem Label="Chat name">
+                <Input @bind-Value=@_manageChatName
+                       Placeholder="Chat name"
+                       Disabled=@(!CanManageActiveChat()) />
+            </FormItem>
+            @if (_activeChat.Type == ChatType.Group || _activeChat.Type == ChatType.Board)
+            {
+                <FormItem Label="Members">
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        @foreach (var member in GetActiveChatMembers())
+                        {
+                            <Tag Closable=@CanRemoveMember(member)
+                                 OnClose=@(() => MarkMemberForRemoval(member))>
+                                @member.UserName
+                            </Tag>
+                        }
+                    </div>
+                </FormItem>
+                @if (_activeChat.Type == ChatType.Group && _membersToRemove.Any())
+                {
+                    <FormItem Label="Removed members">
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            @foreach (var member in GetRemovedMembers())
                             {
-                                <div @onclick=@(() => SelectManageUser(user)) class="user-search-item">
-                                    <div style="font-weight: 500;">@user.Username</div>
-                                    <div style="font-size: 12px; color: #999;">@user.Email</div>
+                                <Tag Color=@("red")>
+                                    @member.UserName
+                                    <Button Size=@ButtonSize.Small
+                                            Type=@ButtonType.Text
+                                            OnClick=@(() => UnmarkMemberForRemoval(member))>
+                                        Undo
+                                    </Button>
+                                </Tag>
+                            }
+                        </div>
+                    </FormItem>
+                }
+                @if (_activeChat.Type == ChatType.Group && CanManageActiveChat())
+                {
+                    <FormItem Label="Add members">
+                        <div style="position: relative;">
+                            <Input @bind-Value=@_manageSearchText
+                                   @oninput=@OnManageSearchInput
+                                   Placeholder="Search users" />
+
+                            @if (_manageSearchResults.Any() && !string.IsNullOrWhiteSpace(_manageSearchText))
+                            {
+                                <div class="user-search-dropdown">
+                                    @foreach (var user in _manageSearchResults)
+                                    {
+                                        <div @onclick=@(() => SelectManageUser(user)) class="user-search-item">
+                                            <div style="font-weight: 500;">@user.Username</div>
+                                            <div style="font-size: 12px; color: #999;">@user.Email</div>
+                                        </div>
+                                    }
                                 </div>
                             }
                         </div>
-                    }
-                </div>
-            </FormItem>
+                    </FormItem>
 
-            @if (_manageSelectedUsers.Any())
-            {
-                <FormItem Label="Selected users">
-                    <div class="selected-users-container">
-                        @foreach (var user in _manageSelectedUsers)
-                        {
-                            <Tag Closable="true" OnClose=@(() => RemoveManageUser(user))>
-                                <div class="user-tag">
-                                    <span class="username">@user.Username</span>
-                                    <span class="email">(@user.Email)</span>
-                                </div>
-                            </Tag>
-                        }
-                    </div>
-                </FormItem>
+                    @if (_manageSelectedUsers.Any())
+                    {
+                        <FormItem Label="Selected users">
+                            <div class="selected-users-container">
+                                @foreach (var user in _manageSelectedUsers)
+                                {
+                                    <Tag Closable="true" OnClose=@(() => RemoveManageUser(user))>
+                                        <div class="user-tag">
+                                            <span class="username">@user.Username</span>
+                                            <span class="email">(@user.Email)</span>
+                                        </div>
+                                    </Tag>
+                                }
+                            </div>
+                        </FormItem>
+                    }
+                }
             }
         </Form>
+        <Divider />
+        <Space>
+            @if (CanManageActiveChat())
+            {
+                <Button Type=@ButtonType.Primary OnClick=@SaveChatManagementAsync Loading=@_isUpdatingChat>
+                    Save changes
+                </Button>
+            }
+            @if (CanClearActiveChat())
+            {
+                <Button OnClick=@OpenClearChatModal>Clear history</Button>
+            }
+            @if (CanDeleteActiveChat())
+            {
+                <Button Danger="true" OnClick=@OpenDeleteChatModal>Delete chat</Button>
+            }
+        </Space>
     }
 </Modal>
 

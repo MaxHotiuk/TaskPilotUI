@@ -13,9 +13,12 @@ public partial class ChatList : ComponentBase
     [Parameter] public EventCallback<ChatDto> OnSelectChat { get; set; }
 
     [Inject] private IAvatarService AvatarService { get; set; } = default!;
+    [Inject] private IChatSystemService ChatService { get; set; } = default!;
 
     private readonly Dictionary<Guid, AvatarDto?> _avatarCache = new();
     private readonly HashSet<Guid> _avatarLoading = new();
+    private readonly Dictionary<Guid, ChatAvatarDto?> _chatAvatarCache = new();
+    private readonly HashSet<Guid> _chatAvatarLoading = new();
 
     protected override void OnParametersSet()
     {
@@ -25,6 +28,11 @@ public partial class ChatList : ComponentBase
             if (otherMemberId.HasValue)
             {
                 _ = LoadAvatarAsync(otherMemberId.Value);
+            }
+
+            if (chat.Type != ChatType.Private)
+            {
+                _ = LoadChatAvatarAsync(chat.Id);
             }
         }
     }
@@ -47,38 +55,39 @@ public partial class ChatList : ComponentBase
     private string GetChatInitials(ChatDto chat)
     {
         if (chat.Type == ChatType.Board)
-            return "B";
+            return GetInitials(string.IsNullOrWhiteSpace(chat.Name) ? "Board" : chat.Name);
 
         if (chat.Type == ChatType.Group)
-            return "G";
+            return GetInitials(string.IsNullOrWhiteSpace(chat.Name) ? "Group" : chat.Name);
 
         var member = chat.Members.FirstOrDefault(m => m.UserId != CurrentUserId);
         if (member == null || string.IsNullOrWhiteSpace(member.UserName))
             return "P";
 
-        return member.UserName.Trim()[0].ToString().ToUpperInvariant();
-    }
-
-    private string? GetChatIcon(ChatDto chat)
-    {
-        return chat.Type switch
-        {
-            ChatType.Group => "team",
-            ChatType.Board => "appstore",
-            _ => null
-        };
+        return GetInitials(member.UserName);
     }
 
     private bool TryGetChatAvatar(ChatDto chat, out string? avatarUrl)
     {
         avatarUrl = null;
-        var otherMemberId = GetOtherMemberId(chat);
-        if (!otherMemberId.HasValue)
-            return false;
-
-        if (_avatarCache.TryGetValue(otherMemberId.Value, out var avatar) && avatar != null && !string.IsNullOrEmpty(avatar.CompressedUrl))
+        if (chat.Type == ChatType.Private)
         {
-            avatarUrl = avatar.CompressedUrl;
+            var otherMemberId = GetOtherMemberId(chat);
+            if (!otherMemberId.HasValue)
+                return false;
+
+            if (_avatarCache.TryGetValue(otherMemberId.Value, out var avatar) && avatar != null && !string.IsNullOrEmpty(avatar.CompressedUrl))
+            {
+                avatarUrl = avatar.CompressedUrl;
+                return true;
+            }
+
+            return false;
+        }
+
+        if (_chatAvatarCache.TryGetValue(chat.Id, out var chatAvatar) && chatAvatar != null && !string.IsNullOrEmpty(chatAvatar.CompressedUrl))
+        {
+            avatarUrl = chatAvatar.CompressedUrl;
             return true;
         }
 
@@ -198,5 +207,44 @@ public partial class ChatList : ComponentBase
             _avatarLoading.Remove(userId);
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private async Task LoadChatAvatarAsync(Guid chatId)
+    {
+        if (CurrentUserId == Guid.Empty)
+            return;
+
+        if (_chatAvatarCache.ContainsKey(chatId) || _chatAvatarLoading.Contains(chatId))
+            return;
+
+        _chatAvatarLoading.Add(chatId);
+        try
+        {
+            var avatar = await ChatService.GetChatAvatarOrNullAsync(chatId, CurrentUserId);
+            _chatAvatarCache[chatId] = avatar;
+        }
+        catch
+        {
+            _chatAvatarCache[chatId] = null;
+        }
+        finally
+        {
+            _chatAvatarLoading.Remove(chatId);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetInitials(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "?";
+
+        var parts = value.Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2)
+            .Select(part => part[0].ToString().ToUpperInvariant())
+            .ToArray();
+
+        return parts.Length == 0 ? "?" : string.Concat(parts);
     }
 }

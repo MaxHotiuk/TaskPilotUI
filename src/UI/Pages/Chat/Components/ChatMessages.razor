@@ -13,7 +13,19 @@ else
 {
     <Card>
         <div class="chat-header">
-            <div class="chat-title">@GetChatTitle()</div>
+            <div class="chat-header-left" @onclick=@OnOpenInfo role="button">
+                <div class="chat-header-avatar">
+                    @if (TryGetHeaderAvatarUrl(out var headerAvatarUrl))
+                    {
+                        <Avatar Src=@headerAvatarUrl Size=@AvatarSize.Default />
+                    }
+                    else
+                    {
+                        <Avatar Size=@AvatarSize.Default>@GetChatAvatarText()</Avatar>
+                    }
+                </div>
+                <div class="chat-title">@GetChatTitle()</div>
+            </div>
             <Space>
                 @if (HeaderActions != null)
                 {
@@ -21,12 +33,10 @@ else
                 }
                 @if (OnStartCall.HasDelegate)
                 {
-                    <Button Type=@ButtonType.Primary
+                    <Button Type=@ButtonType.Text
                             Icon="phone"
                             OnClick=@OnStartCall
-                            Disabled=@(ActiveChat == null)>
-                        Start call
-                    </Button>
+                            Disabled=@(ActiveChat == null) />
                 }
             </Space>
         </div>
@@ -163,12 +173,6 @@ else
 
         <div>
             <div class="attachment-row" style="margin-bottom: 4px; gap: 4px; display: flex; flex-wrap: wrap; align-items: center;">
-                <label class="attachment-upload-label" style="margin-bottom: 0;">
-                    <InputFile OnChange=@OnAttachmentsSelectedInternal multiple style="display: none;" />
-                    <span class="avatar-upload-btn attachment-btn" style="font-size: 13px; padding: 2px 6px;">
-                        <Icon Type="paper-clip" /> Attach
-                    </span>
-                </label>
                 @if (PendingAttachmentNames.Any())
                 {
                     @for (var i = 0; i < PendingAttachmentNames.Count; i++)
@@ -186,15 +190,23 @@ else
                     <Button Size=@ButtonSize.Small OnClick=@OnClearAttachments Type=@ButtonType.Text class="remove-attachment-btn" style="font-size: 12px; padding: 0 4px;">Remove all</Button>
                 }
             </div>
-            <TextArea @bind-Value=NewMessage
-                      @oninput=@OnMessageInput
-                      @onblur=@OnMessageBlur
-                      Rows="3"
-                      Placeholder="Type a message..." />
-            <div style="text-align: right; margin-top: 8px;">
-                <Button Type=@ButtonType.Primary OnClick=@OnSend Disabled=@(string.IsNullOrWhiteSpace(NewMessage) && !HasPendingAttachments) Loading=@IsSending>
-                    Send
-                </Button>
+            <div class="chat-input-row">
+                <label class="chat-attach-button">
+                    <InputFile OnChange=@OnAttachmentsSelectedInternal multiple style="display: none;" />
+                    <span class="chat-attach-icon">
+                        <Icon Type="paper-clip" />
+                    </span>
+                </label>
+                <Input @bind-Value=NewMessage
+                       @oninput=@OnMessageInput
+                       @onblur=@OnMessageBlur
+                       @onkeydown=@OnMessageKeyDown
+                       Placeholder="Type a message..." />
+                <Button Type=@ButtonType.Primary
+                        Icon="send"
+                        OnClick=@OnSend
+                        Disabled=@(string.IsNullOrWhiteSpace(NewMessage) && !HasPendingAttachments)
+                        Loading=@IsSending />
             </div>
         </div>
     </Card>
