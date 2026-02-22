@@ -12,9 +12,10 @@ namespace UI.Pages.Board.Components;
 public partial class MembersModal : ComponentBase
 {
     [Inject] private IUserService UserService { get; set; } = default!;
-    
+
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public BoardDetailDto? BoardDetail { get; set; }
+    [Parameter] public List<UserDto>? OrganizationUsers { get; set; } // Pre-loaded users
     [Parameter] public bool CanManageMembers { get; set; }
     [Parameter] public string? CurrentUserId { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -30,10 +31,16 @@ public partial class MembersModal : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        if (IsVisible && BoardDetail?.Members.Any() == true && !_usersLoaded)
+        if (IsVisible && OrganizationUsers != null && OrganizationUsers.Any())
+        {
+            _userCache = OrganizationUsers.ToDictionary(u => u.Id.ToString(), u => u);
+            _usersLoaded = true;
+        }
+        else if (IsVisible && BoardDetail?.Members.Any() == true && !_usersLoaded)
         {
             await LoadUsersAsync();
         }
+
         if (IsVisible && BoardDetail?.Members.Any() == true)
         {
             foreach (var member in BoardDetail.Members)

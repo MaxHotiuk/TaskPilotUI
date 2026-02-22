@@ -1,0 +1,51 @@
+@using UI.Models.Organization
+@using AntDesign
+
+@if (ShowLabel)
+{
+    <FormItem Label="Organization" Required="@Required">
+        <Select TItem="OrganizationSummaryDto"
+                TItemValue="Guid"
+                DataSource="@_filteredOrganizations"
+                Value="@(_selectedValue)"
+                ValueName="@nameof(OrganizationSummaryDto.Id)"
+                LabelName="@nameof(OrganizationSummaryDto.Name)"
+                Placeholder="@(Placeholder ?? "Select an organization")"
+                Loading="@_isLoading"
+                AllowClear="false"
+                Style="width: 100%;"
+                OnSelectedItemChanged="@HandleSelectedItemChanged">
+        </Select>
+        @if (ExcludeGuestOrganizations && _filteredOrganizations.Count == 0 && !_isLoading)
+        {
+            <Alert Type="@AlertType.Warning"
+                   Message="No organizations available"
+                   Description="You can only create boards in organizations where you are a Member or Manager. Guest users cannot create boards."
+                   ShowIcon="true"
+                   Style="margin-top: 8px;" />
+        }
+    </FormItem>
+}
+else
+{
+    <Select TItem="OrganizationSummaryDto"
+            TItemValue="Guid"
+            DataSource="@_filteredOrganizations"
+            Value="@(_selectedValue)"
+            ValueName="@nameof(OrganizationSummaryDto.Id)"
+            LabelName="@nameof(OrganizationSummaryDto.Name)"
+            Placeholder="@(Placeholder ?? "Select an organization")"
+            Loading="@_isLoading"
+            AllowClear="false"
+            Style="width: 100%;"
+            OnSelectedItemChanged="@HandleSelectedItemChanged">
+    </Select>
+    @if (ExcludeGuestOrganizations && _filteredOrganizations.Count == 0 && !_isLoading)
+    {
+        <Alert Type="@AlertType.Warning"
+               Message="No organizations available"
+               Description="You can only create boards in organizations where you are a Member or Manager. Guest users cannot create boards."
+               ShowIcon="true"
+               Style="margin-top: 8px;" />
+    }
+}

@@ -2,12 +2,12 @@
 @using UI.Models.User
 @using UI.Interfaces.Services
 
-<Modal Title="@UI.Resources.I18n.AddGuestToOrganization"
+<Modal Title="Invite Guest to Organization"
        Visible="@Visible"
        OnOk="@HandleOk"
        OnCancel="@HandleCancel"
        ConfirmLoading="@_isLoading"
-       OkText="@UI.Resources.I18n.Add"
+       OkText="@("Send Invitation")"
        CancelText="@UI.Resources.I18n.Cancel"
        Width="600">
 

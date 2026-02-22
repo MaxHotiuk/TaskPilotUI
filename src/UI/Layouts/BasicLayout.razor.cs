@@ -24,11 +24,13 @@ namespace UI.Layouts
         private bool _notificationHandlersRegistered;
         private bool _isConnectingSignalR;
         private readonly HashSet<Guid> _joinedChatIds = new();
+        private int _invitationsCount = 0;
 
         [Inject] private ReuseTabsService TabService { get; set; } = default!;
         [Inject] private IAuthService AuthService { get; set; } = default!;
         [Inject] private IChatSignalRService ChatSignalRService { get; set; } = default!;
         [Inject] private IChatSystemService ChatSystemService { get; set; } = default!;
+        [Inject] private IInvitationService InvitationService { get; set; } = default!;
 
         public LinkItem[] Links => Array.Empty<LinkItem>();
 
@@ -79,6 +81,13 @@ namespace UI.Layouts
                     Name = "Notifications",
                     Key = "notifications",
                     Icon = "bell"
+                },
+                new MenuDataItem
+                {
+                    Path = "/invitations",
+                    Name = _invitationsCount > 0 ? $"Invitations ({_invitationsCount})" : "Invitations",
+                    Key = "invitations",
+                    Icon = "mail"
                 },
                 new MenuDataItem
                 {
@@ -349,6 +358,24 @@ namespace UI.Layouts
         {
             showChatNotification = false;
             StateHasChanged();
+        }
+
+        private async Task LoadInvitationsCountAsync()
+        {
+            try
+            {
+                var currentUser = await AuthService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
+                var invitations = await InvitationService.GetPendingInvitationsAsync();
+                _invitationsCount = invitations.BoardInvitations.Count + invitations.OrganizationInvitations.Count;
+                await BuildMenuDataAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load invitations count: {ex.Message}");
+            }
         }
     }
 }

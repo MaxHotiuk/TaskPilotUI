@@ -173,8 +173,8 @@ public partial class OrganizationMembers : BaseComponentWithLoading
 
     private async Task HandleGuestAdded()
     {
-        _successMessage = UI.Resources.I18n.GuestAddedSuccessfully;
-        await LoadMembersAsync();
+        _successMessage = "Guest invitation sent successfully";
+        StateHasChanged();
     }
 
     private async Task HandleManagerRequestSent()
