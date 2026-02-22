@@ -1,0 +1,33 @@
+@using AntDesign
+@using UI.Models.User
+@using UI.Interfaces.Services
+
+<Modal Title="@UI.Resources.I18n.AddGuestToOrganization"
+       Visible="@Visible"
+       OnOk="@HandleOk"
+       OnCancel="@HandleCancel"
+       ConfirmLoading="@_isLoading"
+       OkText="@UI.Resources.I18n.Add"
+       CancelText="@UI.Resources.I18n.Cancel"
+       Width="600">
+
+    <Form Model="@_formModel"
+          Layout="@FormLayout.Vertical">
+
+        <FormItem Label="@UI.Resources.I18n.SearchUserByEmail" Required>
+            <Input @bind-Value="@_formModel.UserEmail"
+                   Placeholder="@UI.Resources.I18n.EnterUserEmail"
+                   MaxLength="100" />
+        </FormItem>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <Alert Type="@AlertType.Error"
+                   Message="@_error"
+                   ShowIcon="@true"
+                   Closable="@true"
+                   OnClose="@(() => _error = string.Empty)"
+                   Style="margin-bottom: 16px;" />
+        }
+    </Form>
+</Modal>

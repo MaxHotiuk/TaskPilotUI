@@ -374,4 +374,60 @@ public static class I18n
     public const string ArchiveBoardTitle = "Архівувати дошку";
     public const string ArchiveBoardConfirm = "Ви впевнені, що хочете архівувати цю дошку?";
     public const string QuickActions = "Швидкі дії";
+
+    // Organization Management
+    public const string OrganizationMembers = "Учасники організації";
+    public const string AddGuest = "Додати гостя";
+    public const string RequestManagerRole = "Запросити роль менеджера";
+    public const string AddGuestToOrganization = "Додати гостя до організації";
+    public const string SearchUserByEmail = "Електронна пошта користувача";
+    public const string EnterUserEmail = "Введіть електронну пошту користувача";
+    public const string PleaseSelectUser = "Будь ласка, виберіть користувача";
+    public const string EmailRequired = "Електронна пошта обов'язкова";
+    public const string InvalidEmailFormat = "Невірний формат електронної пошти";
+    public const string PrimaryOrganization = "Основна організація";
+    public const string Add = "Додати";
+    public const string Invited = "Запрошений";
+    public const string JoinedAt = "Приєднався";
+    public const string Actions = "Дії";
+    public const string PromoteToManager = "Підвищити до менеджера";
+    public const string DemoteToMember = "Понизити до учасника";
+    public const string ConfirmDemoteManager = "Ви впевнені, що хочете понизити цього менеджера до учасника?";
+    public const string GuestAddedSuccessfully = "Гість успішно доданий до організації";
+    public const string MemberPromotedSuccessfully = "Учасник успішно підвищений до менеджера";
+    public const string MemberDemotedSuccessfully = "Менеджер успішно понижений до учасника";
+
+    // Manager Requests
+    public const string ManagerRequestInfo = "Ваш запит буде розглянуто адміністраторами системи. Будь ласка, надайте обґрунтування вашого запиту.";
+    public const string RequestMessage = "Повідомлення запиту";
+    public const string ExplainWhyYouWantToBeManager = "Поясніть, чому ви хочете стати менеджером цієї організації...";
+    public const string MessageRequired = "Повідомлення обов'язкове";
+    public const string MessageTooLong = "Повідомлення занадто довге (максимум 1000 символів)";
+    public const string Send = "Надіслати";
+    public const string ManagerRequestSentSuccessfully = "Запит надіслано! Адміністратори розглянуть його найближчим часом.";
+
+    // Admin - Manager Requests
+    public const string ManagerRequests = "Запити на роль менеджера";
+    public const string ReviewPendingRequests = "Розгляд очікуючих запитів";
+    public const string NoPendingRequests = "Немає очікуючих запитів";
+    public const string User = "Користувач";
+    public const string Organization = "Організація";
+    public const string CreatedAt = "Створено";
+    public const string Approve = "Підтвердити";
+    public const string Reject = "Відхилити";
+    public const string ConfirmApproveRequest = "Ви впевнені, що хочете підтвердити цей запит?";
+    public const string RequestApprovedSuccessfully = "Запит успішно підтверджено";
+    public const string RequestRejectedSuccessfully = "Запит успішно відхилено";
+
+    // Reject Request Modal
+    public const string RejectManagerRequest = "Відхилити запит на роль менеджера";
+    public const string RejectingRequestFrom = "Відхилення запиту від";
+    public const string RejectionNotes = "Примітки про відхилення";
+    public const string OptionalRejectionReason = "Необов'язково: вкажіть причину відхилення...";
+    public const string NoRequestSelected = "Запит не вибрано";
+
+    // Navigation menu
+    public const string Organizations = "Організації";
+    public const string Admin = "Адміністрування";
+    public const string ManagerRequestsMenu = "Запити менеджерів";
 }

@@ -140,4 +140,51 @@ public class UserService : IUserService
         _userCache.Clear();
         _lastCacheUpdate = DateTime.MinValue;
     }
+
+    public async Task<UserDto?> GetByIdAsync(Guid userId)
+    {
+        if (_userCache.TryGetValue(userId, out var cachedUser) &&
+            DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
+        {
+            return cachedUser;
+        }
+
+        try
+        {
+            var user = await _userApi.GetByIdAsync(userId);
+            if (user != null)
+            {
+                _userCache[user.Id] = user;
+            }
+            return user;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching user by ID: {UserId}", userId);
+            return null;
+        }
+    }
+
+    public async Task<List<UserDto>> SearchUsersAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return new List<UserDto>();
+
+        try
+        {
+            var users = await _userApi.SearchAsync(query);
+
+            foreach (var user in users)
+            {
+                _userCache[user.Id] = user;
+            }
+
+            return users;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching users with query: {Query}", query);
+            return new List<UserDto>();
+        }
+    }
 }

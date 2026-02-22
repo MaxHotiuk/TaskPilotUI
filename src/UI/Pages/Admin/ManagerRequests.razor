@@ -1,0 +1,95 @@
+@page "/admin/manager-requests"
+@using UI.Models.Organization
+@using UI.Interfaces.Services
+@using AntDesign
+@using UI.Pages.Admin.Components
+@inherits UI.Components.Base.BaseComponentWithLoading
+
+<PageHeader Title="@UI.Resources.I18n.ManagerRequests" SubTitle="@UI.Resources.I18n.ReviewPendingRequests" />
+
+<Spin Spinning="@IsLoading">
+    <div class="manager-requests-container">
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <Alert Type="@AlertType.Error"
+                   Message="@_errorMessage"
+                   ShowIcon="@true"
+                   Closable="@true"
+                   OnClose="@(() => _errorMessage = string.Empty)"
+                   Style="margin-bottom: 16px;" />
+        }
+
+        @if (_successMessage != null)
+        {
+            <Alert Type="@AlertType.Success"
+                   Message="@_successMessage"
+                   ShowIcon="@true"
+                   Closable="@true"
+                   OnClose="@(() => _successMessage = null)"
+                   Style="margin-bottom: 16px;" />
+        }
+
+        <Card>
+            @if (!_requests.Any())
+            {
+                <Empty Description="@UI.Resources.I18n.NoPendingRequests" />
+            }
+            else
+            {
+                <div class="requests-list">
+                    @foreach (var request in _requests)
+                    {
+                        <div class="request-item">
+                            <div class="request-info-section">
+                                <div class="request-details">
+                                    <div class="user-info">
+                                        <Text Strong>@request.UserName</Text>
+                                        <br/>
+                                        <Text Type="@TextElementType.Secondary">@request.UserEmail</Text>
+                                    </div>
+                                    <div class="org-tag">
+                                        <Tag Color="@("blue")">@request.OrganizationName</Tag>
+                                    </div>
+                                    <div class="request-message">
+                                        <Text>@request.Message</Text>
+                                    </div>
+                                    <div class="request-date">
+                                        <Text Type="@TextElementType.Secondary">
+                                            @UI.Resources.I18n.CreatedAt: @request.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy HH:mm")
+                                        </Text>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="request-actions-section">
+                                <Space>
+                                    <SpaceItem>
+                                        <Popconfirm Title="@UI.Resources.I18n.ConfirmApproveRequest"
+                                                    OnConfirm="@(() => ApproveRequest(request.Id))">
+                                            <Button Size="@ButtonSize.Small"
+                                                    Type="@ButtonType.Primary">
+                                                <Icon Type="check" />
+                                                @UI.Resources.I18n.Approve
+                                            </Button>
+                                        </Popconfirm>
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <Button Size="@ButtonSize.Small"
+                                                Danger
+                                                OnClick="@(() => ShowRejectModal(request))">
+                                            <Icon Type="close" />
+                                            @UI.Resources.I18n.Reject
+                                        </Button>
+                                    </SpaceItem>
+                                </Space>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </Card>
+    </div>
+</Spin>
+
+<RejectRequestModal @bind-Visible="_showRejectModal"
+                    Request="@_selectedRequest"
+                    OnRequestRejected="@HandleRequestRejected" />

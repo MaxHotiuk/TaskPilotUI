@@ -1,0 +1,42 @@
+.manager-requests-container {
+    padding: 24px;
+    background-color: #f0f2f5;
+    min-height: calc(100vh - 200px);
+}
+
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.request-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s;
+}
+
+.request-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.request-info-section {
+    flex: 1;
+    padding-right: 16px;
+}
+
+.request-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.request-actions-section {
+    display: flex;
+    align-items: flex-start;
+}

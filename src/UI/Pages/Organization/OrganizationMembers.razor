@@ -1,0 +1,151 @@
+@page "/organization/{OrganizationId}"
+@using UI.Models.Organization
+@using UI.Interfaces.Services
+@using AntDesign
+@using UI.Pages.Organization.Components
+@inherits UI.Components.Base.BaseComponentWithLoading
+
+<PageHeader Title="@_organizationName" SubTitle="@UI.Resources.I18n.OrganizationMembers">
+    <PageHeaderExtra>
+        @if (_currentUserRole == "Manager")
+        {
+            <Space>
+                <SpaceItem>
+                    <Button Type="@ButtonType.Primary" OnClick="@ShowAddGuestModal">
+                        <Icon Type="user-add" />
+                        @UI.Resources.I18n.AddGuest
+                    </Button>
+                </SpaceItem>
+            </Space>
+        }
+        @if (_currentUserRole == "Member" && !_hasManagers)
+        {
+            <Space>
+                <SpaceItem>
+                    <Button Type="@ButtonType.Primary" OnClick="@ShowManagerRequestModal">
+                        <Icon Type="crown" />
+                        @UI.Resources.I18n.RequestManagerRole
+                    </Button>
+                </SpaceItem>
+            </Space>
+        }
+    </PageHeaderExtra>
+</PageHeader>
+
+<Spin Spinning="@IsLoading">
+    <div class="organization-members-container">
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <Alert Type="@AlertType.Error"
+                   Message="@_errorMessage"
+                   ShowIcon="@true"
+                   Closable="@true"
+                   OnClose="@(() => _errorMessage = string.Empty)"
+                   Style="margin-bottom: 16px;" />
+        }
+
+        @if (_successMessage != null)
+        {
+            <Alert Type="@AlertType.Success"
+                   Message="@_successMessage"
+                   ShowIcon="@true"
+                   Closable="@true"
+                   OnClose="@(() => _successMessage = null)"
+                   Style="margin-bottom: 16px;" />
+        }
+
+        <Card>
+            @if (!_members.Any())
+            {
+                <Empty Description="@UI.Resources.I18n.NoMembersFound" />
+            }
+            else
+            {
+                <div class="members-list">
+                    @foreach (var member in _members)
+                    {
+                        <div class="member-item">
+                            <div class="member-info-section">
+                                <Space>
+                                    <SpaceItem>
+                                        <Avatar>@member.Username.Substring(0, 1).ToUpper()</Avatar>
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <div>
+                                            <div>
+                                                <Text Strong>@member.Username</Text>
+                                            </div>
+                                            <div>
+                                                <Text Type="@TextElementType.Secondary">@member.Email</Text>
+                                            </div>
+                                            <div>
+                                                @{
+                                                    var tagColor = member.Role switch
+                                                    {
+                                                        "Manager" => "purple",
+                                                        "Member" => "blue",
+                                                        "Guest" => "orange",
+                                                        _ => "default"
+                                                    };
+                                                }
+                                                <Tag Color="@tagColor">@member.Role</Tag>
+                                                @if (member.IsInvited)
+                                                {
+                                                    <Tag Color="@("cyan")">@UI.Resources.I18n.Invited</Tag>
+                                                }
+                                                <Text Type="@TextElementType.Secondary" Style="margin-left: 8px;">
+                                                    @UI.Resources.I18n.JoinedAt: @member.JoinedAt.ToLocalTime().ToString("MMM dd, yyyy")
+                                                </Text>
+                                            </div>
+                                        </div>
+                                    </SpaceItem>
+                                </Space>
+                            </div>
+                            <div class="member-actions-section">
+                                @if (_currentUserRole == "Manager" || _isAdmin)
+                                {
+                                    <Space>
+                                        @if (member.Role == "Member")
+                                        {
+                                            <SpaceItem>
+                                                <Button Size="@ButtonSize.Small"
+                                                        Type="@ButtonType.Link"
+                                                        OnClick="@(() => PromoteMember(member.UserId))">
+                                                    <Icon Type="arrow-up" />
+                                                    @UI.Resources.I18n.PromoteToManager
+                                                </Button>
+                                            </SpaceItem>
+                                        }
+                                        @if (member.Role == "Manager" && !IsLastManager(member.UserId))
+                                        {
+                                            <SpaceItem>
+                                                <Popconfirm Title="@UI.Resources.I18n.ConfirmDemoteManager"
+                                                            OnConfirm="@(() => DemoteMember(member.UserId))">
+                                                    <Button Size="@ButtonSize.Small"
+                                                            Type="@ButtonType.Link"
+                                                            Danger>
+                                                        <Icon Type="arrow-down" />
+                                                        @UI.Resources.I18n.DemoteToMember
+                                                    </Button>
+                                                </Popconfirm>
+                                            </SpaceItem>
+                                        }
+                                    </Space>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </Card>
+    </div>
+</Spin>
+
+<AddGuestModal @bind-Visible="_showAddGuestModal"
+               OrganizationId="@Guid.Parse(OrganizationId)"
+               OnGuestAdded="@HandleGuestAdded" />
+
+<ManagerRequestModal @bind-Visible="_showManagerRequestModal"
+                     OrganizationId="@Guid.Parse(OrganizationId)"
+                     UserId="@_currentUserId"
+                     OnRequestSent="@HandleManagerRequestSent" />
