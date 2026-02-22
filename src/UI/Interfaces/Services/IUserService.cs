@@ -6,7 +6,9 @@ public interface IUserService
 {
     Task<List<UserDto>> GetAllUsersAsync();
     Task<UserDto?> GetByIdAsync(string userId);
+    Task<UserDto?> GetByIdAsync(Guid userId);
     Task<UserDto?> GetByEmailAsync(string email);
     Task<Dictionary<string, UserDto>> GetByIdsAsync(IEnumerable<string> userIds);
+    Task<List<UserDto>> SearchUsersAsync(string query);
     void ClearCache();
 }

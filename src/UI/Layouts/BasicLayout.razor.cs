@@ -34,7 +34,17 @@ namespace UI.Layouts
 
         protected override async Task OnInitializedAsync()
         {
-            _menuData = new[] {
+            await BuildMenuDataAsync();
+
+            AuthService.OnAuthStateChanged += HandleAuthStateChanged;
+
+            await EnsureSignalRConnectionsAsync();
+        }
+
+        private async Task BuildMenuDataAsync()
+        {
+            var menuItems = new List<MenuDataItem>
+            {
                 new MenuDataItem
                 {
                     Path = "/",
@@ -79,9 +89,54 @@ namespace UI.Layouts
                 }
             };
 
-            AuthService.OnAuthStateChanged += HandleAuthStateChanged;
+            // Add organization management
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser != null && currentUser.Organizations?.Any() == true)
+            {
+                var organizationMenuItems = new List<MenuDataItem>();
 
-            await EnsureSignalRConnectionsAsync();
+                foreach (var org in currentUser.Organizations)
+                {
+                    organizationMenuItems.Add(new MenuDataItem
+                    {
+                        Path = $"/organization/{org.Id}",
+                        Name = org.Name,
+                        Key = $"org-{org.Id}",
+                        Icon = "team"
+                    });
+                }
+
+                menuItems.Add(new MenuDataItem
+                {
+                    Name = UI.Resources.I18n.Organizations,
+                    Key = "organizations",
+                    Icon = "apartment",
+                    Children = organizationMenuItems.ToArray()
+                });
+            }
+
+            // Add admin menu for admins
+            if (currentUser?.Role == "Admin")
+            {
+                menuItems.Add(new MenuDataItem
+                {
+                    Name = UI.Resources.I18n.Admin,
+                    Key = "admin",
+                    Icon = "setting",
+                    Children = new[]
+                    {
+                        new MenuDataItem
+                        {
+                            Path = "/admin/manager-requests",
+                            Name = UI.Resources.I18n.ManagerRequestsMenu,
+                            Key = "admin-manager-requests",
+                            Icon = "crown"
+                        }
+                    }
+                });
+            }
+
+            _menuData = menuItems.ToArray();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -137,7 +192,12 @@ namespace UI.Layouts
 
         private void HandleAuthStateChanged()
         {
-            _ = InvokeAsync(EnsureSignalRConnectionsAsync);
+            _ = InvokeAsync(async () =>
+            {
+                await BuildMenuDataAsync();
+                await EnsureSignalRConnectionsAsync();
+                StateHasChanged();
+            });
         }
 
         private async Task EnsureSignalRConnectionsAsync()

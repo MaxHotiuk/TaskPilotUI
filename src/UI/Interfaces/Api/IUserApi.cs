@@ -20,4 +20,7 @@ public interface IUserApi
 
     [Get("/api/users/{id}")]
     Task<UserDto> GetByIdAsync(Guid id);
+
+    [Get("/api/users/search")]
+    Task<List<UserDto>> SearchAsync([Query] string query);
 }

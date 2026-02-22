@@ -1,0 +1,40 @@
+@using AntDesign
+@using UI.Interfaces.Services
+
+<Modal Title="@UI.Resources.I18n.RequestManagerRole"
+       Visible="@Visible"
+       OnOk="@HandleOk"
+       OnCancel="@HandleCancel"
+       ConfirmLoading="@_isLoading"
+       OkText="@UI.Resources.I18n.Send"
+       CancelText="@UI.Resources.I18n.Cancel"
+       Width="600">
+
+    <Form Model="@_formModel"
+          Layout="@FormLayout.Vertical"
+          OnFinish="@HandleSubmit">
+
+        <Alert Type="@AlertType.Info"
+               Message="@UI.Resources.I18n.ManagerRequestInfo"
+               ShowIcon="@true"
+               Style="margin-bottom: 16px;" />
+
+        <FormItem Label="@UI.Resources.I18n.RequestMessage" Required>
+            <TextArea @bind-Value="@_formModel.Message"
+                      Placeholder="@UI.Resources.I18n.ExplainWhyYouWantToBeManager"
+                      Rows="5"
+                      MaxLength="1000"
+                      ShowCount="@true" />
+        </FormItem>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <Alert Type="@AlertType.Error"
+                   Message="@_error"
+                   ShowIcon="@true"
+                   Closable="@true"
+                   OnClose="@(() => _error = string.Empty)"
+                   Style="margin-bottom: 16px;" />
+        }
+    </Form>
+</Modal>
