@@ -21,7 +21,7 @@
     @if (IsLoading && !_boards.Any())
     {
         <div class="loading-container">
-            <Spin Size=@SpinSize.Large Tip="Loading your boards...">
+            <Spin Size=@SpinSize.Large Tip="@UI.Resources.I18n.LoadingYourBoards">
                 <div style="height: 200px;"></div>
             </Spin>
         </div>
@@ -53,7 +53,7 @@
                             Block=@false
                             Style="margin-top: 24px; min-width: 150px;">
                         <Icon Type="down" Style="margin-right: 8px;" />
-                        Load More Boards
+                        @UI.Resources.I18n.LoadMoreBoards
                     </Button>
                 </div>
             }
@@ -61,7 +61,7 @@
             @if (_isSearching && _boards.Any())
             {
                 <div class="loading-more-container">
-                    <Spin Size=@SpinSize.Small Tip="Loading more boards...">
+                    <Spin Size=@SpinSize.Small Tip="@UI.Resources.I18n.LoadingMoreBoards">
                         <div style="height: 50px;"></div>
                     </Spin>
                 </div>
@@ -82,7 +82,7 @@
                                         Size=@ButtonSize.Large
                                         Icon="plus" 
                                         OnClick=@ShowCreateModal>
-                                    Create Your First Board
+                                    @UI.Resources.I18n.CreateYourFirstBoard
                                 </Button>
                             </SpaceItem>
                         </Space>
@@ -92,14 +92,14 @@
                         <Space>
                             <SpaceItem>
                                 <Button Type=@ButtonType.Default OnClick=@ClearFilters>
-                                    Clear Filters
+                                    @UI.Resources.I18n.ClearFilters
                                 </Button>
                             </SpaceItem>
                             <SpaceItem>
                                 <Button Type=@ButtonType.Primary
                                         Icon="plus" 
                                         OnClick=@ShowCreateModal>
-                                    Create New Board
+                                    @UI.Resources.I18n.CreateNewBoard
                                 </Button>
                             </SpaceItem>
                         </Space>

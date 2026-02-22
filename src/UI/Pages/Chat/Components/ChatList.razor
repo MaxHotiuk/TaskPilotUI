@@ -1,0 +1,55 @@
+@using UI.Models.Chat
+
+@if (!Chats.Any())
+{
+    <div style="text-align: center; padding: 24px; color: rgba(0,0,0,0.45);">
+        No chats available
+    </div>
+}
+else
+{
+    <AntList DataSource=@Chats
+             ItemLayout=@ListItemLayout.Horizontal
+             Size=@ListSize.Small>
+        <ChildContent Context="chat">
+            <ListItem>
+                <div style="width: 100%; cursor: pointer;" @onclick="() => OnSelectChat.InvokeAsync(chat)">
+                    <ListItemMeta>
+                        <AvatarTemplate>
+                            @if (TryGetChatAvatar(chat, out var avatarUrl))
+                            {
+                                <Avatar Src=@avatarUrl />
+                            }
+                            else
+                            {
+                                <Avatar>@GetChatInitials(chat)</Avatar>
+                            }
+                        </AvatarTemplate>
+                        <TitleTemplate>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style=@($"font-weight: {(chat.Id == SelectedChatId ? "600" : "400")};")>
+                                    @GetChatTitle(chat)
+                                </span>
+                                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(0,0,0,0.45);">
+                                    @if (IsChatUnread(chat))
+                                    {
+                                        <Badge Dot="true" />
+                                    }
+                                    <span>@chat.UpdatedAt.ToString("g")</span>
+                                </span>
+                            </div>
+                        </TitleTemplate>
+                        <DescriptionTemplate>
+                            @if (chat.LastMessage != null)
+                            {
+                                <div style="color: rgba(0,0,0,0.65); font-size: 12px; margin-top: 4px;">
+                                    @GetLastMessagePreviewText(chat, chat.LastMessage)
+                                </div>
+                            }
+                        </DescriptionTemplate>
+                    </ListItemMeta>
+                </div>
+            </ListItem>
+        </ChildContent>
+    </AntList>
+}

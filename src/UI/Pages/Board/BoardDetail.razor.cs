@@ -18,6 +18,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
 {
     [Inject] private ISignalRService SignalRService { get; set; } = default!;
     [Parameter] public string BoardId { get; set; } = string.Empty;
+    [SupplyParameterFromQuery(Name = "taskId")] public string? TaskId { get; set; }
     [CascadingParameter] public IGlobalLoadingService LoadingService { get; set; } = default!;
 
     [Inject] private IBoardService BoardService { get; set; } = default!;
@@ -49,6 +50,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private CreateStateRequest _addStateForm = new();
     private CreateTaskRequest _addTaskForm = new();
     public bool IsOnlyMine { get; set; } = false;
+    private string? _lastTaskId;
 
     private bool _showArchiveBoardModal = false;
     private bool _isArchivingBoard = false;
@@ -111,6 +113,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         await LoadCurrentUser();
         await LoadBoardDetail();
+        await TryOpenTaskFromRouteAsync(TaskId);
 
         await SignalRService.ConnectAsync();
         await SignalRService.JoinBoardGroupAsync(BoardId);
@@ -119,6 +122,16 @@ public partial class BoardDetail : ComponentBase, IDisposable
         {
             await InvokeAsync(async () => await LoadBoardDetail());
         });
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        if (!string.IsNullOrWhiteSpace(TaskId) && TaskId != _lastTaskId)
+        {
+            await TryOpenTaskFromRouteAsync(TaskId);
+        }
     }
 
     public void Dispose()
@@ -163,13 +176,13 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
                 if (_boardDetail == null)
                 {
-                    Message.Error("Board not found or access denied");
+                    Message.Error(UI.Resources.I18n.BoardNotFoundOrAccessDeniedMessage);
                     return;
                 }
 
                 if (!HasBoardAccess())
                 {
-                    Message.Error("You don't have access to this board");
+                    Message.Error(UI.Resources.I18n.YouDontHaveAccessToBoard);
                     Navigation.NavigateTo("/boards");
                     return;
                 }
@@ -177,16 +190,18 @@ public partial class BoardDetail : ComponentBase, IDisposable
                 for (int i = 0; i < _boardDetail.Tasks.Count; i++)
                 {
                     var task = _boardDetail.Tasks[i];
-                    if (task.AssigneeId != _currentUser?.Id)
+                    if (task.AssigneeId != _currentUser?.Id.ToString())
                     {
                         _boardDetail.Tasks.RemoveAt(i);
                         i--;
                     }
                 }
+
+                await TryOpenTaskFromRouteAsync(TaskId);
             },
             onError: ex =>
             {
-                Message.Error($"Failed to load board: {ex.Message}");
+                Message.Error(string.Format(UI.Resources.I18n.FailedToLoadBoard, ex.Message));
                 return Task.CompletedTask;
             },
             onFinally: () =>
@@ -216,6 +231,8 @@ public partial class BoardDetail : ComponentBase, IDisposable
                     Navigation.NavigateTo("/boards");
                     return;
                 }
+
+                await TryOpenTaskFromRouteAsync(TaskId);
             },
             onError: ex =>
             {
@@ -229,15 +246,52 @@ public partial class BoardDetail : ComponentBase, IDisposable
             });
     }
 
+    private async Task TryOpenTaskFromRouteAsync(string? taskId)
+    {
+        if (string.IsNullOrWhiteSpace(taskId) || _boardDetail == null)
+            return;
+
+        if (taskId == _lastTaskId && _showTaskDetailsModal)
+            return;
+
+        _lastTaskId = taskId;
+        TaskItemDto? task = _boardDetail.Tasks.FirstOrDefault(item => item.Id == taskId);
+
+        if (task == null)
+        {
+            try
+            {
+                _isTaskDetailsLoading = true;
+                StateHasChanged();
+                task = await TaskService.GetByIdAsync(taskId);
+            }
+            catch (Exception ex)
+            {
+                _isTaskDetailsLoading = false;
+                Message.Error($"Failed to load task: {ex.Message}");
+                return;
+            }
+        }
+
+        _isTaskDetailsLoading = false;
+
+        if (task == null || !string.Equals(task.BoardId, BoardId, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _selectedTask = task;
+        _showTaskDetailsModal = true;
+        StateHasChanged();
+    }
+
     private bool HasBoardAccess()
     {
         if (_boardDetail == null || _currentUser == null)
             return false;
 
-        if (_boardDetail.OwnerId == _currentUser.Id)
+        if (_boardDetail.OwnerId == _currentUser.Id.ToString())
             return true;
 
-        return _boardDetail.Members.Any(m => m.UserId == _currentUser.Id);
+        return _boardDetail.Members.Any(m => m.UserId == _currentUser.Id.ToString());
     }
 
     private bool CanManageMembers()
@@ -245,7 +299,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
         if (_boardDetail == null || _currentUser == null)
             return false;
 
-        return _boardDetail.OwnerId == _currentUser.Id;
+        return _boardDetail.OwnerId == _currentUser.Id.ToString();
     }
 
     private async Task RefreshBoard()
@@ -267,7 +321,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (!CanManageMembers())
         {
-            Message.Warning("Only board owners can add members");
+            Message.Warning(UI.Resources.I18n.OnlyBoardOwnersCanAddMembers);
             return;
         }
 
@@ -278,7 +332,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (!CanManageTasks())
         {
-            Message.Warning("Only board owners and members can add tasks");
+            Message.Warning(UI.Resources.I18n.OnlyOwnersAndMembersCanAddTasks);
             return;
         }
 
@@ -290,7 +344,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (!CanManageStates())
         {
-            Message.Warning("Only board owners and members can manage states");
+            Message.Warning(UI.Resources.I18n.OnlyOwnersAndMembersCanManageStates);
             return;
         }
         _showManageStatesModal = true;
@@ -300,7 +354,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (!CanManageStates())
         {
-            Message.Warning("Only board owners and members can manage tags");
+            Message.Warning(UI.Resources.I18n.OnlyOwnersAndMembersCanManageTags);
             return;
         }
         _showManageTagsModal = true;
@@ -308,9 +362,9 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
     private void ShowArchiveBoardModal()
     {
-        if (_boardDetail == null || _currentUser == null || _boardDetail.OwnerId != _currentUser.Id)
+        if (_boardDetail == null || _currentUser == null || _boardDetail.OwnerId != _currentUser.Id.ToString())
         {
-            Message.Warning("Only the board owner can archive the board");
+            Message.Warning(UI.Resources.I18n.OnlyBoardOwnerCanArchive);
             return;
         }
         _showArchiveBoardModal = true;
@@ -325,12 +379,12 @@ public partial class BoardDetail : ComponentBase, IDisposable
         {
             _isArchivingBoard = true;
             await BoardService.ArchiveBoardAsync(_boardDetail.Id);
-            Message.Success("Board archived successfully");
+            Message.Success(UI.Resources.I18n.BoardArchivedSuccess);
             Navigation.NavigateTo("/boards");
         }
         catch (Exception ex)
         {
-            Message.Error($"Failed to archive board: {ex.Message}");
+            Message.Error(string.Format(UI.Resources.I18n.FailedToArchiveBoard, ex.Message));
         }
         finally
         {
@@ -388,7 +442,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             {
                 try
                 {
-                    if (_boardDetail?.Members.Any(m => m.UserId == user.Id) == true)
+                    if (_boardDetail?.Members.Any(m => m.UserId == user.Id.ToString()) == true)
                     {
                         errorMessages.Add($"{user.Username} is already a member of this board");
                         continue;
@@ -396,7 +450,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
                     var request = new AddBoardMemberRequest
                     {
-                        UserId = user.Id,
+                        UserId = user.Id.ToString(),
                         Role = _addMemberForm.Role
                     };
 
@@ -491,8 +545,8 @@ public partial class BoardDetail : ComponentBase, IDisposable
         if (_boardDetail == null || _currentUser == null)
             return false;
 
-        return _boardDetail.OwnerId == _currentUser.Id ||
-               _boardDetail.Members.Any(m => m.UserId == _currentUser.Id);
+        return _boardDetail.OwnerId == _currentUser.Id.ToString() ||
+               _boardDetail.Members.Any(m => m.UserId == _currentUser.Id.ToString());
     }
 
     private void ResetAddStateForm()
@@ -513,8 +567,8 @@ public partial class BoardDetail : ComponentBase, IDisposable
         if (_boardDetail == null || _currentUser == null)
             return false;
 
-        return _boardDetail.OwnerId == _currentUser.Id ||
-               _boardDetail.Members.Any(m => m.UserId == _currentUser.Id);
+        return _boardDetail.OwnerId == _currentUser.Id.ToString() ||
+               _boardDetail.Members.Any(m => m.UserId == _currentUser.Id.ToString());
     }
 
     private void ResetAddTaskForm()
@@ -534,13 +588,13 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (string.IsNullOrWhiteSpace(_addTaskForm.Title))
         {
-            Message.Error("Please enter a task title");
+            Message.Error(UI.Resources.I18n.PleaseEnterTaskTitle);
             return;
         }
 
         if (_addTaskForm.StateId == 0)
         {
-            Message.Error("Please select a state for the task");
+            Message.Error(UI.Resources.I18n.PleaseSelectState);
             return;
         }
 
@@ -554,11 +608,11 @@ public partial class BoardDetail : ComponentBase, IDisposable
             await LoadBoardDetailOrMine();
 
             _showAddTaskModal = false;
-            Message.Success($"Task '{_addTaskForm.Title}' created successfully");
+            Message.Success(string.Format(UI.Resources.I18n.TaskCreatedSuccess, _addTaskForm.Title));
         }
         catch (Exception ex)
         {
-            Message.Error($"Failed to create task: {ex.Message}");
+            Message.Error(string.Format(UI.Resources.I18n.FailedToCreateTask, ex.Message));
         }
         finally
         {
@@ -571,7 +625,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (!CanManageTasks())
         {
-            Message.Warning("Only board owners and members can schedule meetings");
+            Message.Warning(UI.Resources.I18n.OnlyOwnersCanScheduleMeetings);
             return;
         }
 
@@ -584,7 +638,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
         _addMeetingForm = new CreateMeetingRequestDto
         {
             BoardId = Guid.Parse(BoardId),
-            CreatedBy = _currentUser?.Id != null ? Guid.Parse(_currentUser.Id) : Guid.Empty,
+            CreatedBy = _currentUser != null ? _currentUser.Id : Guid.Empty,
             Duration = 60 // Default to 1 hour
         };
     }
@@ -593,13 +647,13 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (string.IsNullOrWhiteSpace(_addMeetingForm.Title))
         {
-            Message.Error("Please enter a meeting title");
+            Message.Error(UI.Resources.I18n.PleaseEnterMeetingTitle);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_addMeetingForm.Domain))
         {
-            Message.Error("Please enter a meeting domain");
+            Message.Error(UI.Resources.I18n.PleaseEnterMeetingDomain);
             return;
         }
 
@@ -611,7 +665,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
             var meetingId = await MeetingService.CreateMeetingAsync(_addMeetingForm);
 
             _showAddMeetingModal = false;
-            Message.Success($"Meeting '{_addMeetingForm.Title}' scheduled successfully");
+            Message.Success(string.Format(UI.Resources.I18n.MeetingScheduledSuccess, _addMeetingForm.Title));
 
             await LoadBoardDetailOrMine();
         }
@@ -630,10 +684,10 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         if (!CanManageTasks())
         {
-            Message.Warning("Only board owners and members can manage meetings");
+            Message.Warning(UI.Resources.I18n.OnlyOwnersCanScheduleMeetings);
             return;
         }
-        
+
         _showManageMeetingsModal = true;
     }
 

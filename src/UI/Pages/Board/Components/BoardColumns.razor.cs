@@ -58,7 +58,7 @@ public partial class BoardColumns : ComponentBase
         }
 
         var member = BoardDetail?.Members.FirstOrDefault(m => m.UserId == assigneeId);
-        return member != null ? "User" : "Unknown";
+        return member != null ? UI.Resources.I18n.UserLabel : UI.Resources.I18n.UnknownLabel;
     }
 
     private string TruncateDescription(string description)
@@ -91,11 +91,11 @@ public partial class BoardColumns : ComponentBase
     {
         return priority switch
         {
-            1 => "Low",
-            2 => "Normal",
-            3 => "High",
-            4 => "Immediate",
-            _ => "Unknown"
+            1 => UI.Resources.I18n.PriorityLowLabel,
+            2 => UI.Resources.I18n.PriorityNormalLabel,
+            3 => UI.Resources.I18n.PriorityHighLabel,
+            4 => UI.Resources.I18n.PriorityImmediateLabel,
+            _ => UI.Resources.I18n.UnknownLabel
         };
     }
 

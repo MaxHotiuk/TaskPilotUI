@@ -92,13 +92,14 @@ public partial class AddMeetingModal : ComponentBase
         }
     }
 
-    private async Task HandleSubmit()
+    private async Task HandleSubmit(EditContext editContext)
     {
         await HandleOk();
     }
 
-    private void HandleSubmitFailed()
+    private Task HandleSubmitFailed(EditContext editContext)
     {
+        return Task.CompletedTask;
     }
 
     private void ResetForm()

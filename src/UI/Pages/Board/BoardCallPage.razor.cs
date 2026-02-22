@@ -41,7 +41,7 @@ namespace TaskPilotUI.UI.Pages.Board
                     var user = await AuthService.GetCurrentUserAsync();
                     if (user == null)
                     {
-                        Console.WriteLine("User not authenticated.");
+                        Console.WriteLine(I18n.UserNotAuthenticated);
                         return;
                     }
 
@@ -50,7 +50,7 @@ namespace TaskPilotUI.UI.Pages.Board
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error initializing BoardCallInterop: {ex.Message}");
+                    Console.WriteLine(string.Format(I18n.ErrorInitializingBoardCallInterop, ex.Message));
                 }
             }
 
@@ -63,7 +63,7 @@ namespace TaskPilotUI.UI.Pages.Board
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error ensuring local video after render: {ex.Message}");
+                    Console.WriteLine(string.Format(I18n.ErrorEnsuringLocalVideoAfterRender, ex.Message));
                 }
             }
         }
@@ -85,7 +85,7 @@ namespace TaskPilotUI.UI.Pages.Board
                     {
                         var meetingMembers = await MeetingMemberService.GetMeetingMembersByMeetingIdAsync(meetingGuid);
 
-                        if (!meetingMembers.Any(m => m.UserId.ToString() == user!.Id))
+                        if (!meetingMembers.Any(m => m.UserId.ToString() == user!.Id.ToString()))
                         {
                             _forbidden = true;
                             NavigationManager.NavigateTo("/forbidden");
@@ -99,7 +99,7 @@ namespace TaskPilotUI.UI.Pages.Board
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error initializing BoardCallPage: {ex.Message}");
+                    Console.WriteLine(string.Format(I18n.ErrorInitializingBoardCallPage, ex.Message));
                 }
             }
         }
@@ -199,7 +199,7 @@ namespace TaskPilotUI.UI.Pages.Board
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error starting call: {ex.Message}");
+                Console.WriteLine(string.Format(I18n.ErrorStartingCall, ex.Message));
             }
         }
 
@@ -222,7 +222,7 @@ namespace TaskPilotUI.UI.Pages.Board
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error hanging up: {ex.Message}");
+                Console.WriteLine(string.Format(I18n.ErrorHangingUp, ex.Message));
             }
         }
 
@@ -239,7 +239,7 @@ namespace TaskPilotUI.UI.Pages.Board
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error toggling camera: {ex.Message}");
+                Console.WriteLine(string.Format(I18n.ErrorTogglingCamera, ex.Message));
             }
         }
 
@@ -256,7 +256,7 @@ namespace TaskPilotUI.UI.Pages.Board
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error toggling mic: {ex.Message}");
+                Console.WriteLine(string.Format(I18n.ErrorTogglingMic, ex.Message));
             }
         }
 
@@ -271,7 +271,7 @@ namespace TaskPilotUI.UI.Pages.Board
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error toggling screen share: {ex.Message}");
+                Console.WriteLine(string.Format(I18n.ErrorTogglingScreenShare, ex.Message));
             }
         }
 
@@ -285,12 +285,12 @@ namespace TaskPilotUI.UI.Pages.Board
                     
                     await JS.InvokeVoidAsync("BoardCallInterop.toggleCamera", _cameraOn);
                     
-                    Console.WriteLine("Local video stream restored successfully");
+                    Console.WriteLine(I18n.LocalVideoRestored);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error restoring local video stream: {ex.Message}");
+                Console.WriteLine(string.Format(I18n.ErrorRestoringLocalVideo, ex.Message));
             }
         }
 
@@ -305,7 +305,7 @@ namespace TaskPilotUI.UI.Pages.Board
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error ensuring local video visibility: {ex.Message}");
+                Console.WriteLine(string.Format(I18n.ErrorEnsuringLocalVideoVisibility, ex.Message));
             }
         }
 

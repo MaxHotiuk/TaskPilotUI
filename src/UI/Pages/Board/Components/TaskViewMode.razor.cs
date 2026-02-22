@@ -86,7 +86,7 @@ public partial class TaskViewMode : ComponentBase
 
     private string GetAssigneeInitials(string assigneeId)
     {
-        var user = AllUsers.FirstOrDefault(u => u.Id == assigneeId);
+        var user = AllUsers.FirstOrDefault(u => u.Id.ToString() == assigneeId);
         if (user == null) return "U";
         var parts = user.Username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length >= 2)
@@ -120,7 +120,7 @@ public partial class TaskViewMode : ComponentBase
 
     private string GetAssigneeName(string assigneeId)
     {
-        var user = AllUsers.FirstOrDefault(u => u.Id == assigneeId);
+        var user = AllUsers.FirstOrDefault(u => u.Id.ToString() == assigneeId);
         return user?.Username ?? "Unknown User";
     }
 

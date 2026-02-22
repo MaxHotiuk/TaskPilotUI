@@ -1,12 +1,12 @@
 @using AntDesign
 @using UI.Models.Board
 
-<Modal Title="Archive Board"
+<Modal Title="@UI.Resources.I18n.ArchiveBoard"
        Visible=@IsVisible
        ConfirmLoading=@IsLoading
        OnOk=@OnOkClicked
        OnCancel=@OnCancelClicked>
     <div class="archive-board-modal-content">
-        <p class="archive-warning">Are you sure you want to archive this board?</p>
+        <p class="archive-warning">@UI.Resources.I18n.ArchiveBoardConfirm</p>
     </div>
 </Modal>

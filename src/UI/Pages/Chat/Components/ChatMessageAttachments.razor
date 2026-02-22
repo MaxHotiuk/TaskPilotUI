@@ -1,0 +1,117 @@
+@using UI.Models.Attachment
+@inject UI.Interfaces.Services.IAttachmentService AttachmentService
+@inject UI.Interfaces.Services.IAuthService AuthService
+
+@if (IsLoading)
+{
+    <div style="margin-top: 4px; color: #aaa; font-size: 12px;">Loading attachments...</div>
+}
+else if (Attachments?.Any() == true)
+{
+    <div style="margin-top: 6px;">
+        <ul style="margin: 0; padding-left: 0; list-style: none;">
+            @foreach (var att in Attachments)
+            {
+                <li style="margin-bottom: 4px;">
+                    @if (IsImage(att.FileName))
+                    {
+                        <span style="cursor: pointer; display: inline-flex; align-items: center;" @onclick=@(() => ShowImagePreview(att.Url))>
+                            <img src=@att.Url alt=@att.FileName style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px; margin-right: 8px; border: 1px solid #eee;" />
+                            <span style="font-size: 12px; color: #555;">@att.FileName</span>
+                        </span>
+                    }
+                    else
+                    {
+                        <a href=@att.Url target="_blank" rel="noopener" style="font-size: 12px; color: #1677ff; text-decoration: none;">📎 @att.FileName</a>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+<Modal Title="Attachment preview" Visible=@IsPreviewVisible OnCancel="ClosePreview" Footer="null" Width="800">
+    @if (!string.IsNullOrEmpty(PreviewImageUrl))
+    {
+        <img src=@PreviewImageUrl alt="Attachment preview" style="max-width: 90vw; max-height: 70vh; display: block; margin: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" />
+    }
+</Modal>
+
+@code {
+    [Parameter] public Guid MessageId { get; set; }
+
+    private List<AttachmentDto> Attachments = new();
+    private bool IsLoading = true;
+    private int _retryCount;
+    private const int MaxRetries = 3;
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1.5);
+    private bool IsPreviewVisible = false;
+    private string? PreviewImageUrl;
+    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (MessageId == Guid.Empty)
+        {
+            IsLoading = false;
+            return;
+        }
+
+        await LoadAttachmentsAsync();
+    }
+
+    private async Task LoadAttachmentsAsync()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser != null && currentUser.Id != Guid.Empty)
+            {
+                Attachments = await AttachmentService.GetAsync(MessageId, currentUser.Id);
+                return;
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            Attachments = new List<AttachmentDto>();
+            if (_retryCount < MaxRetries)
+            {
+                _retryCount++;
+                await Task.Delay(RetryDelay);
+                await LoadAttachmentsAsync();
+                return;
+            }
+        }
+        catch
+        {
+            Attachments = new List<AttachmentDto>();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void ShowImagePreview(string url)
+    {
+        PreviewImageUrl = url;
+        IsPreviewVisible = true;
+    }
+
+    private void ClosePreview()
+    {
+        IsPreviewVisible = false;
+        PreviewImageUrl = null;
+    }
+
+    private static bool IsImage(string fileName)
+    {
+        var ext = Path.GetExtension(fileName);
+        return AllowedImageExtensions.Contains(ext);
+    }
+}

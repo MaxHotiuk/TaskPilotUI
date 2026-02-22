@@ -67,11 +67,11 @@ public partial class ProfileEditForm : ComponentBase
         }
     }
 
-    private string GetFormattedDate(string? dateString)
+    private string GetFormattedDate(DateTime? date)
     {
-        if (string.IsNullOrEmpty(dateString) || !DateTime.TryParse(dateString, out var date))
+        if (date == null)
             return "N/A";
         
-        return date.ToString("MMM dd, yyyy");
+        return date.Value.ToString("MMM dd, yyyy");
     }
 }

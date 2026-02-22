@@ -8,7 +8,7 @@
     @if (IsLoading && BoardDetail == null)
     {
         <div class="loading-container">
-            <Spin Size=@SpinSize.Large Tip="Loading board...">
+            <Spin Size=@SpinSize.Large Tip=@UI.Resources.I18n.LoadingBoard>
                 <div style="height: 400px;"></div>
             </Spin>
         </div>
@@ -94,7 +94,7 @@
                         else
                         {
                             <div class="empty-state">
-                                No tasks in this state
+                                @UI.Resources.I18n.NoTasksInState
                             </div>
                         }
                     </div>
@@ -105,10 +105,10 @@
     else
     {
         <div class="error-container">
-            <h3>Board Not Found</h3>
-            <p>The board you're looking for doesn't exist or you don't have access to it.</p>
+            <h3>@UI.Resources.I18n.BoardNotFoundTitle</h3>
+            <p>@UI.Resources.I18n.BoardNotFoundDescription</p>
             <Button Type=@ButtonType.Primary OnClick=@(() => OnGoBack.InvokeAsync())>
-                Go Back
+                @UI.Resources.I18n.GoBack
             </Button>
         </div>
     }

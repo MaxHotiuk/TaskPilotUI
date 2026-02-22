@@ -1,0 +1,396 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using UI.Interfaces.Services;
+using UI.Models.Avatar;
+using UI.Models.Chat;
+
+namespace UI.Pages.Chat.Components;
+
+public partial class ChatMessages : ComponentBase
+{
+    [Parameter] public ChatDto? ActiveChat { get; set; }
+    [Parameter] public IReadOnlyList<ChatMessageDto> Messages { get; set; } = Array.Empty<ChatMessageDto>();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsSending { get; set; }
+    [Parameter] public bool HasMoreMessages { get; set; }
+    [Parameter] public Guid CurrentUserId { get; set; }
+    [Parameter] public string NewMessage { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyList<string> TypingUsers { get; set; } = Array.Empty<string>();
+    [Parameter] public EventCallback<string> NewMessageChanged { get; set; }
+    [Parameter] public EventCallback OnSend { get; set; }
+    [Parameter] public EventCallback OnLoadMore { get; set; }
+    [Parameter] public EventCallback OnStopTyping { get; set; }
+    [Parameter] public EventCallback OnStartCall { get; set; }
+    [Parameter] public EventCallback<string> OnJoinCall { get; set; }
+    [Parameter] public EventCallback OnOpenInfo { get; set; }
+    [Parameter] public string? ChatAvatarUrl { get; set; }
+    [Parameter] public IReadOnlyList<string> PendingAttachmentNames { get; set; } = Array.Empty<string>();
+    [Parameter] public bool HasPendingAttachments { get; set; }
+    [Parameter] public EventCallback<InputFileChangeEventArgs> OnAttachmentsSelected { get; set; }
+    [Parameter] public EventCallback<int> OnRemoveAttachment { get; set; }
+    [Parameter] public EventCallback OnClearAttachments { get; set; }
+    [Parameter] public RenderFragment? HeaderActions { get; set; }
+
+    [Inject] private IAvatarService AvatarService { get; set; } = default!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    private readonly Dictionary<Guid, AvatarDto?> _avatarCache = new();
+    private readonly HashSet<Guid> _avatarLoading = new();
+    private ElementReference _threadRef;
+    private Guid? _lastChatId;
+    private int _lastMessageCount;
+    private bool _forceScrollToBottom;
+    private bool _messagesChanged;
+    private bool _isPinnedToBottom = true;
+    private bool _isLoadingOlder;
+    private double? _previousScrollHeight;
+    private double? _previousScrollTop;
+    protected override void OnParametersSet()
+    {
+        if (_lastChatId != ActiveChat?.Id)
+        {
+            _lastChatId = ActiveChat?.Id;
+            _forceScrollToBottom = true;
+            _isPinnedToBottom = true;
+            _lastMessageCount = 0;
+            _avatarCache.Clear();
+            _avatarLoading.Clear();
+        }
+
+        if (_lastMessageCount != Messages.Count)
+        {
+            _messagesChanged = true;
+            _lastMessageCount = Messages.Count;
+        }
+
+        var senderIds = Messages
+            .Select(message => message.SenderId)
+            .Where(senderId => senderId != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        foreach (var senderId in senderIds)
+        {
+            if (!_avatarCache.ContainsKey(senderId) && !_avatarLoading.Contains(senderId))
+            {
+                _ = LoadAvatarAsync(senderId);
+            }
+        }
+
+        var headerUserId = GetHeaderAvatarUserId();
+        if (headerUserId.HasValue && !_avatarCache.ContainsKey(headerUserId.Value) && !_avatarLoading.Contains(headerUserId.Value))
+        {
+            _ = LoadAvatarAsync(headerUserId.Value);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_threadRef.Equals(default))
+            return;
+
+        if (_isLoadingOlder && _previousScrollHeight.HasValue && _previousScrollTop.HasValue)
+        {
+            var info = await JsRuntime.InvokeAsync<ScrollInfo>("chatHelpers.getScrollInfo", _threadRef);
+            var newScrollTop = _previousScrollTop.Value + (info.ScrollHeight - _previousScrollHeight.Value);
+            await JsRuntime.InvokeVoidAsync("chatHelpers.setScrollTop", _threadRef, newScrollTop);
+            _isLoadingOlder = false;
+        }
+
+        if ((firstRender || _forceScrollToBottom || (_messagesChanged && _isPinnedToBottom)) && Messages.Any())
+        {
+            await JsRuntime.InvokeVoidAsync("chatHelpers.scrollToBottom", _threadRef);
+            _forceScrollToBottom = false;
+            _messagesChanged = false;
+            _isPinnedToBottom = true;
+        }
+        else
+        {
+            _messagesChanged = false;
+        }
+    }
+
+    private Task OnMessageInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? string.Empty;
+        NewMessage = value;
+        return NewMessageChanged.InvokeAsync(value);
+    }
+
+    private Task OnMessageBlur()
+    {
+        return OnStopTyping.InvokeAsync();
+    }
+
+    private async Task OnMessageKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter")
+            return;
+
+        if (string.IsNullOrWhiteSpace(NewMessage) && !HasPendingAttachments)
+            return;
+
+        await OnSend.InvokeAsync();
+    }
+
+    private Task OnAttachmentsSelectedInternal(InputFileChangeEventArgs e)
+    {
+        return OnAttachmentsSelected.InvokeAsync(e);
+    }
+
+    private async Task HandleScrollAsync()
+    {
+        if (_threadRef.Equals(default))
+            return;
+
+        _isPinnedToBottom = await JsRuntime.InvokeAsync<bool>("chatHelpers.isNearBottom", _threadRef, 80);
+        var isNearTop = await JsRuntime.InvokeAsync<bool>("chatHelpers.isNearTop", _threadRef, 40);
+
+        if (isNearTop && HasMoreMessages && !IsLoading && !_isLoadingOlder)
+        {
+            _isLoadingOlder = true;
+            var info = await JsRuntime.InvokeAsync<ScrollInfo>("chatHelpers.getScrollInfo", _threadRef);
+            _previousScrollHeight = info.ScrollHeight;
+            _previousScrollTop = info.ScrollTop;
+            await OnLoadMore.InvokeAsync();
+        }
+    }
+
+    private string GetSenderInitials(string senderName)
+    {
+        if (string.IsNullOrWhiteSpace(senderName))
+            return "?";
+
+        return senderName.Trim()[0].ToString().ToUpperInvariant();
+    }
+
+    private bool IsOwnMessage(ChatMessageDto message)
+    {
+        return message.SenderId == CurrentUserId;
+    }
+
+    private bool ShouldShowSender(ChatMessageDto message)
+    {
+        return (ActiveChat?.Type == ChatType.Group || ActiveChat?.Type == ChatType.Board) && !IsOwnMessage(message) && !IsTaskMessage(message) && !IsUpdateMessage(message);
+    }
+
+    private bool ShouldShowReadStatus(ChatMessageDto message)
+    {
+        return IsOwnMessage(message);
+    }
+
+    private bool IsCallMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Call", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsTaskMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Task", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsUpdateMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Update", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetTaskMessageContent(ChatMessageDto message)
+    {
+        return string.IsNullOrWhiteSpace(message.Content) ? "Task update" : message.Content;
+    }
+
+    private string GetTaskAssigneeName(ChatMessageDto message)
+    {
+        if (message.AssigneeId == null)
+            return "Unassigned";
+
+        var assignee = ActiveChat?.Members.FirstOrDefault(member => member.UserId == message.AssigneeId.Value);
+        if (assignee != null && !string.IsNullOrWhiteSpace(assignee.UserName))
+            return assignee.UserName;
+
+        if (message.AssigneeId == CurrentUserId)
+            return "you";
+
+        return "Someone";
+    }
+
+    private string GetTaskMessageSender(ChatMessageDto message)
+    {
+        if (message.SenderId == CurrentUserId)
+            return "you";
+
+        return string.IsNullOrWhiteSpace(message.SenderName) ? "someone" : message.SenderName;
+    }
+
+    private string GetUpdateMessageContent(ChatMessageDto message)
+    {
+        return string.IsNullOrWhiteSpace(message.Content) ? "Chat updated" : message.Content;
+    }
+
+    private void OpenTaskFromMessage(ChatMessageDto message)
+    {
+        if (ActiveChat?.BoardId == null || message.TaskId == null)
+            return;
+
+        var url = $"/board/{ActiveChat.BoardId}?taskId={message.TaskId}";
+        Navigation.NavigateTo(url);
+    }
+
+    private string GetReadStatus(ChatMessageDto message)
+    {
+        if (ActiveChat == null)
+            return string.Empty;
+
+        var otherMembers = ActiveChat.Members.Where(member => member.UserId != CurrentUserId).ToList();
+        if (!otherMembers.Any())
+            return string.Empty;
+
+        var isRead = otherMembers.All(member => member.LastReadAt.HasValue && member.LastReadAt.Value >= message.CreatedAt);
+        return isRead ? "Read" : "Sent";
+    }
+
+    private string GetTypingText()
+    {
+        if (!TypingUsers.Any())
+            return string.Empty;
+
+        if (TypingUsers.Count == 1)
+            return $"{TypingUsers[0]} is typing...";
+
+        if (TypingUsers.Count == 2)
+            return $"{TypingUsers[0]} and {TypingUsers[1]} are typing...";
+
+        return $"{TypingUsers.Count} people are typing...";
+    }
+
+    private sealed class ScrollInfo
+    {
+        public double ScrollTop { get; set; }
+        public double ScrollHeight { get; set; }
+        public double ClientHeight { get; set; }
+    }
+
+    private bool TryGetAvatar(ChatMessageDto message, out string? avatarUrl)
+    {
+        if (_avatarCache.TryGetValue(message.SenderId, out var avatar) && avatar != null && !string.IsNullOrEmpty(avatar.CompressedUrl))
+        {
+            avatarUrl = avatar.CompressedUrl;
+            return true;
+        }
+
+        avatarUrl = null;
+        return false;
+    }
+
+    private bool TryGetHeaderAvatarUrl(out string? avatarUrl)
+    {
+        if (ActiveChat?.Type != ChatType.Private)
+        {
+            if (!string.IsNullOrWhiteSpace(ChatAvatarUrl))
+            {
+                avatarUrl = ChatAvatarUrl;
+                return true;
+            }
+
+            avatarUrl = null;
+            return false;
+        }
+
+        var headerUserId = GetHeaderAvatarUserId();
+        if (!headerUserId.HasValue)
+        {
+            avatarUrl = null;
+            return false;
+        }
+
+        if (_avatarCache.TryGetValue(headerUserId.Value, out var avatar) && avatar != null && !string.IsNullOrEmpty(avatar.CompressedUrl))
+        {
+            avatarUrl = avatar.CompressedUrl;
+            return true;
+        }
+
+        avatarUrl = null;
+        return false;
+    }
+
+    private Guid? GetHeaderAvatarUserId()
+    {
+        if (ActiveChat?.Type != ChatType.Private)
+            return null;
+
+        return ActiveChat.Members.FirstOrDefault(member => member.UserId != CurrentUserId)?.UserId;
+    }
+
+    private async Task LoadAvatarAsync(Guid userId)
+    {
+        if (_avatarCache.ContainsKey(userId) || _avatarLoading.Contains(userId))
+            return;
+
+        _avatarLoading.Add(userId);
+        try
+        {
+            var avatar = await AvatarService.GetAvatarOrNullAsync(userId);
+            _avatarCache[userId] = avatar;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            _avatarCache[userId] = null;
+        }
+        finally
+        {
+            _avatarLoading.Remove(userId);
+        }
+    }
+
+    private string GetChatTitle()
+    {
+        if (ActiveChat == null)
+            return "Chat";
+
+        if (ActiveChat.Type == ChatType.Board)
+            return string.IsNullOrWhiteSpace(ActiveChat.Name) ? "Board chat" : ActiveChat.Name;
+
+        if (ActiveChat.Type == ChatType.Group)
+            return string.IsNullOrWhiteSpace(ActiveChat.Name) ? "Group chat" : ActiveChat.Name;
+
+        var otherMember = ActiveChat.Members.FirstOrDefault(member => member.UserId != CurrentUserId);
+        if (otherMember != null && !string.IsNullOrWhiteSpace(otherMember.UserName))
+            return otherMember.UserName;
+
+        return "Chat";
+    }
+
+    private string GetChatAvatarText()
+    {
+        if (ActiveChat == null)
+            return "?";
+
+        if (ActiveChat.Type == ChatType.Private)
+        {
+            var otherMember = ActiveChat.Members.FirstOrDefault(member => member.UserId != CurrentUserId);
+            if (otherMember != null && !string.IsNullOrWhiteSpace(otherMember.UserName))
+            {
+                return GetInitials(otherMember.UserName);
+            }
+        }
+
+        return GetInitials(GetChatTitle());
+    }
+
+    private string GetInitials(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "?";
+
+        var parts = value.Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2)
+            .Select(part => part[0].ToString().ToUpperInvariant())
+            .ToArray();
+
+        return parts.Length == 0 ? "?" : string.Concat(parts);
+    }
+}

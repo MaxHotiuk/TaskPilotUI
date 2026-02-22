@@ -49,13 +49,9 @@ namespace UI.Pages
             Navigation.NavigateTo("/login", true);
         }
 
-        private string GetFormattedDate(string dateString)
+    private string GetFormattedDate(DateTime date)
         {
-            if (DateTime.TryParse(dateString, out var date))
-            {
-                return date.ToString("MMMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture);
-            }
-            return dateString;
+        return date.ToString("MMMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 }

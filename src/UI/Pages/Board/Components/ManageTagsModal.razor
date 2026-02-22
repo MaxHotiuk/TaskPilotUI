@@ -1,28 +1,28 @@
 @using AntDesign
 @using UI.Models.Tag
 
-<Modal Title="Manage Tags"
+<Modal Title="@UI.Resources.I18n.ManageTags"
        Visible=@IsVisible
        OnCancel=@OnCancel
        Footer="null"
        Width="600">
     <div class="manage-tags-header">
-        <Button Type=@ButtonType.Primary Icon="plus" OnClick=@ShowAddTagModal>Add Tag</Button>
+        <Button Type=@ButtonType.Primary Icon="plus" OnClick=@ShowAddTagModal>@UI.Resources.I18n.AddTagButton</Button>
     </div>
     <Table DataSource=@Tags RowKey=@(tag => tag.Id) Bordered Size=@TableSize.Middle>
-        <AntDesign.Column TData=@TagDto Title="Name">
+        <AntDesign.Column TData=@TagDto Title=@UI.Resources.I18n.NameLabel>
             <Template>
                 <AntDesign.Input TValue="string" @bind-Value=@context.Name MaxLength="50" Size=@InputSize.Small OnBlur=@(() => OnNameChanged(context)) />
             </Template>
         </AntDesign.Column>
-        <AntDesign.Column TData=@TagDto Title="Color">
+        <AntDesign.Column TData=@TagDto Title=@UI.Resources.I18n.ColorLabel>
             <Template>
                 <input type="color" @bind-value=@context.Color @bind-value:event="onchange" @bind-value:after="() => OnColorChanged(context)" />
             </Template>
         </AntDesign.Column>
-        <AntDesign.Column TData=@TagDto Title="Actions" Width="120">
+        <AntDesign.Column TData=@TagDto Title=@UI.Resources.I18n.ActionsLabel Width="120">
             <Template>
-                <Button Danger Size=@ButtonSize.Small Icon="delete" OnClick=@(() => OnDeleteTag(context))>Delete</Button>
+                <Button Danger Size=@ButtonSize.Small Icon="delete" OnClick=@(() => OnDeleteTag(context))>@UI.Resources.I18n.DeleteLabel</Button>
             </Template>
         </AntDesign.Column>
     </Table>

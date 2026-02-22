@@ -334,14 +334,14 @@ public class AuthService : IAuthService
 
             var user = new UserDto
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid(),
                 EntraId = graphData.TryGetProperty("id", out var id) ? id.GetString() ?? "" : "",
                 Username = graphData.TryGetProperty("displayName", out var name) ? name.GetString() ?? "" : "",
-                Email = graphData.TryGetProperty("mail", out var mail) ? mail.GetString() ?? "" : 
+                Email = graphData.TryGetProperty("mail", out var mail) ? mail.GetString() ?? "" :
                        (graphData.TryGetProperty("userPrincipalName", out var upn) ? upn.GetString() ?? "" : ""),
                 Role = "User",
-                CreatedAt = DateTime.UtcNow.ToString("O"),
-                UpdatedAt = DateTime.UtcNow.ToString("O")
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _logger.LogInformation("Created user from Microsoft Graph: {Email}", user.Email);
@@ -363,13 +363,13 @@ public class AuthService : IAuthService
     {
         return new UserDto
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = Guid.NewGuid(),
             EntraId = "test-entra-id",
             Username = "Test User",
             Email = "test@example.com",
             Role = "User",
-            CreatedAt = DateTime.UtcNow.ToString("O"),
-            UpdatedAt = DateTime.UtcNow.ToString("O")
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
     }
 

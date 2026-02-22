@@ -29,6 +29,12 @@
             NotificationType=@notificationType
             OnClick=@(() => Navigation.NavigateTo("/notifications"))
             OnClose=@HideNotification />
+        <NotificationToast 
+            IsVisible=@showChatNotification
+            Message=@chatNotificationMessage
+            NotificationType=@chatNotificationType
+            OnClick=@(() => Navigation.NavigateTo("/chats"))
+            OnClose=@HideChatNotification />
         @Body
     </ChildContent>
     <FooterRender>

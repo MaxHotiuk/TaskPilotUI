@@ -116,7 +116,7 @@ public partial class TaskDetailsModal : ComponentBase
         try
         {
             var currentUser = await AuthService.GetCurrentUserAsync();
-            CurrentUserId = currentUser?.Id;
+            CurrentUserId = currentUser?.Id.ToString();
         }
         catch (Exception)
         {
@@ -162,8 +162,8 @@ public partial class TaskDetailsModal : ComponentBase
 
             await NotificationService.Success(new NotificationConfig()
             {
-                Message = "Success",
-                Description = "Task archived successfully!"
+                Message = UI.Resources.I18n.Dashboard,
+                Description = UI.Resources.I18n.TaskArchivedSuccess
             });
 
             if (OnTaskUpdated.HasDelegate)
@@ -235,8 +235,8 @@ public partial class TaskDetailsModal : ComponentBase
 
             _ = NotificationService.Success(new NotificationConfig()
             {
-                Message = "Success",
-                Description = "Task updated successfully!"
+                Message = UI.Resources.I18n.Dashboard,
+                Description = UI.Resources.I18n.TaskUpdatedSuccess
             });
 
             if (OnTaskUpdated.HasDelegate)
@@ -267,8 +267,8 @@ public partial class TaskDetailsModal : ComponentBase
 
             _ = NotificationService.Success(new NotificationConfig()
             {
-                Message = "Success",
-                Description = "Task deleted successfully!"
+                Message = UI.Resources.I18n.Dashboard,
+                Description = UI.Resources.I18n.TaskDeletedSuccess
             });
 
             if (OnTaskDeleted.HasDelegate)
@@ -315,8 +315,8 @@ public partial class TaskDetailsModal : ComponentBase
 
             await NotificationService.Success(new NotificationConfig()
             {
-                Message = "Success",
-                Description = $"Task moved to {States.FirstOrDefault(s => s.Id == newStateId)?.Name ?? "Unknown"} successfully!"
+                Message = UI.Resources.I18n.Success,
+                Description = string.Format(UI.Resources.I18n.TaskMovedSuccess, States.FirstOrDefault(s => s.Id == newStateId)?.Name ?? UI.Resources.I18n.Unknown)
             });
 
             if (OnTaskUpdated.HasDelegate)
@@ -334,7 +334,7 @@ public partial class TaskDetailsModal : ComponentBase
         }
     }
 
-    private async Task HandleSubmit()
+    private async Task HandleSubmit(EditContext editContext)
     {
         await SaveChanges();
         await LoadAllUsers();
@@ -343,9 +343,9 @@ public partial class TaskDetailsModal : ComponentBase
         StateHasChanged();
     }
 
-    private void HandleSubmitFailed(EditContext editContext)
+    private Task HandleSubmitFailed(EditContext editContext)
     {
-        // Form validation failed - could add logic here if needed
+        return Task.CompletedTask;
     }
 
     private string FormatDate(string dateString)

@@ -38,7 +38,7 @@ public partial class BoardSearchCard
     {
         await BoardService.DearchiveBoardAsync(Board.Id);
         StateHasChanged();
-        MessageService.Info("Refresh to see changes");
+        MessageService.Info(UI.Resources.I18n.RefreshToSeeChanges);
     }
 
     private string GetRelativeTime(string dateTimeString)
@@ -50,21 +50,21 @@ public partial class BoardSearchCard
             if (timeSpan.Days > 365)
             {
                 var years = timeSpan.Days / 365;
-                return $"{years} year{(years == 1 ? "" : "s")} ago";
+                return string.Format(UI.Resources.I18n.YearsAgo, years);
             }
             if (timeSpan.Days > 30)
             {
                 var months = timeSpan.Days / 30;
-                return $"{months} month{(months == 1 ? "" : "s")} ago";
+                return string.Format(UI.Resources.I18n.MonthsAgo, months);
             }
             if (timeSpan.Days > 0)
-                return $"{timeSpan.Days} day{(timeSpan.Days == 1 ? "" : "s")} ago";
+                return $"{timeSpan.Days} дн тому";
             if (timeSpan.Hours > 0)
-                return $"{timeSpan.Hours} hour{(timeSpan.Hours == 1 ? "" : "s")} ago";
+                return $"{timeSpan.Hours} год тому";
             if (timeSpan.Minutes > 0)
-                return $"{timeSpan.Minutes} minute{(timeSpan.Minutes == 1 ? "" : "s")} ago";
+                return $"{timeSpan.Minutes} хв тому";
 
-            return "Just now";
+            return UI.Resources.I18n.JustNow;
         }
 
         return "Unknown";
@@ -78,13 +78,13 @@ public partial class BoardSearchCard
         {
             builder.OpenElement(0, "div");
             builder.AddAttribute(1, "class", "board-action-btn board-action-view");
-            builder.AddAttribute(2, "title", "View Board");
+            builder.AddAttribute(2, "title", UI.Resources.I18n.View);
             builder.AddAttribute(3, "onclick", EventCallback.Factory.Create(this, HandleViewClick));
             builder.OpenComponent(4, typeof(Icon));
             builder.AddAttribute(5, "Type", "eye");
             builder.CloseComponent();
             builder.OpenElement(6, "span");
-            builder.AddContent(7, "View");
+            builder.AddContent(7, UI.Resources.I18n.View);
             builder.CloseElement();
             builder.CloseElement();
         });
@@ -95,13 +95,13 @@ public partial class BoardSearchCard
             {
                 builder.OpenElement(0, "div");
                 builder.AddAttribute(1, "class", "board-action-btn board-action-delete");
-                builder.AddAttribute(2, "title", "Delete Board");
+                builder.AddAttribute(2, "title", UI.Resources.I18n.DeleteBoardTitle);
                 builder.AddAttribute(3, "onclick", EventCallback.Factory.Create(this, HandleDeleteClick));
                 builder.OpenComponent(4, typeof(Icon));
                 builder.AddAttribute(5, "Type", "delete");
                 builder.CloseComponent();
                 builder.OpenElement(6, "span");
-                builder.AddContent(7, "Delete");
+                builder.AddContent(7, UI.Resources.I18n.DeleteLabel);
                 builder.CloseElement();
                 builder.CloseElement();
             });

@@ -5,28 +5,28 @@
 
 <div class="login-container">
     <div class="login-content">
-        <Card class="login-card" Title="Sign in to TaskPilot">
+        <Card class="login-card" Title="@UI.Resources.I18n.SignInToTaskPilot">
             <div class="login-header">
                 <Avatar Size=@AvatarSize.Large Icon="user" style="margin-bottom: 16px;" />
-                <Title Level="3">Welcome to TaskPilot</Title>
+                <Title Level="3">@UI.Resources.I18n.WelcomeToTaskPilot</Title>
                 <Text Type=@TextElementType.Secondary>
-                    Sign in with your Microsoft account to access your boards and tasks
+                    @UI.Resources.I18n.SignInWithMicrosoftDescription
                 </Text>
             </div>
 
             @if (_isLoading)
             {
                 <div class="login-loading">
-                    <Spin Size=@SpinSize.Large Tip="Signing you in...">
+                <Spin Size=@SpinSize.Large Tip="@UI.Resources.I18n.SigningYouIn">
                         <div style="height: 100px;"></div>
                     </Spin>
                 </div>
             }
             else if (_error != null)
             {
-                <Alert
+                    <Alert
                     Type=@AlertType.Error
-                    Message="Authentication Error"
+                    Message="@UI.Resources.I18n.AuthenticationError"
                     Description=@_error
                     ShowIcon=@true
                     Closable=@true
@@ -35,7 +35,7 @@
             }
 
             <div class="login-actions">
-                <Button
+                    <Button
                     Type=@ButtonType.Primary
                     Size=@ButtonSize.Large
                     Icon="microsoft"
@@ -43,13 +43,13 @@
                     OnClick=@HandleLogin
                     Block=@true
                     Style="height: 48px; font-size: 16px;">
-                    Sign in with Microsoft
+                    @UI.Resources.I18n.SignInWithMicrosoft
                 </Button>
             </div>
 
             <Divider>
                 <Text Type=@TextElementType.Secondary Style="font-size: 12px;">
-                    Secure authentication powered by Azure AD
+                    @UI.Resources.I18n.SecureAuthPoweredByAzure
                 </Text>
             </Divider>
 
@@ -57,15 +57,15 @@
                 <div class="info-items">
                     <div class="info-item">
                         <Icon Type="check-circle" />
-                        <Text Type=@TextElementType.Secondary>Secure single sign-on</Text>
+                        <Text Type=@TextElementType.Secondary>@UI.Resources.I18n.SecureSingleSignOn</Text>
                     </div>
                     <div class="info-item">
                         <Icon Type="shield" />
-                        <Text Type=@TextElementType.Secondary>Enterprise-grade security</Text>
+                        <Text Type=@TextElementType.Secondary>@UI.Resources.I18n.EnterpriseGradeSecurity</Text>
                     </div>
                     <div class="info-item">
                         <Icon Type="team" />
-                        <Text Type=@TextElementType.Secondary>Team collaboration ready</Text>
+                        <Text Type=@TextElementType.Secondary>@UI.Resources.I18n.TeamCollaborationReady</Text>
                     </div>
                 </div>
             </div>

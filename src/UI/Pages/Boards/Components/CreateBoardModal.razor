@@ -2,13 +2,13 @@
 @using UI.Models
 @using UI.Interfaces.Services
 
-<Modal Title="Create New Board"
+<Modal Title="@UI.Resources.I18n.CreateNewBoard"
        Visible=@Visible
        OnOk=@HandleOk
        OnCancel=@HandleCancel
        ConfirmLoading=@_isLoading
-       OkText='"Create Board"'
-       CancelText='"Cancel"'
+       OkText=@UI.Resources.I18n.CreateBoardOk
+       CancelText=@UI.Resources.I18n.Cancel
        Width="500">
     
     <Form Model=@_formModel
@@ -16,15 +16,15 @@
           OnFinish=@HandleSubmit
           OnFinishFailed=@HandleSubmitFailed>
         
-        <FormItem Label="Board Name" Required>
+        <FormItem Label=@UI.Resources.I18n.BoardNameLabel Required>
             <Input @bind-Value=@_formModel.Name
-                   Placeholder="Enter board name"
+                   Placeholder=@UI.Resources.I18n.EnterBoardName
                    MaxLength="100" />
         </FormItem>
         
-        <FormItem Label="Description">
+        <FormItem Label=@UI.Resources.I18n.DescriptionLabel>
             <TextArea @bind-Value=@_formModel.Description
-                      Placeholder="Enter board description (optional)"
+                      Placeholder=@UI.Resources.I18n.EnterBoardDescription
                       Rows="3"
                       MaxLength="500" />
         </FormItem>

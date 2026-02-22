@@ -129,7 +129,7 @@ public class BoardService : IBoardService
                 TaskCount = tasks.Count,
                 MemberCount = members.Count,
                 Members = members,
-                IsOwner = currentUser != null && board.OwnerId == currentUser.Id
+                IsOwner = currentUser != null && board.OwnerId == currentUser.Id.ToString()
             };
 
             await _localStorage.SetItemAsync($"{BOARD_STATS_CACHE_PREFIX}{boardId}", boardWithStats);

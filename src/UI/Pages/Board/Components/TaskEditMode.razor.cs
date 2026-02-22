@@ -16,7 +16,7 @@ public partial class TaskEditMode : ComponentBase
     [Parameter, EditorRequired] public List<BoardMemberDto> BoardMembers { get; set; } = new();
     [Parameter, EditorRequired] public List<UserDto> AllUsers { get; set; } = new();
     [Parameter, EditorRequired] public bool CanManageTask { get; set; }
-    [Parameter, EditorRequired] public EventCallback OnFormSubmit { get; set; }
+    [Parameter, EditorRequired] public EventCallback<EditContext> OnFormSubmit { get; set; }
     [Parameter, EditorRequired] public EventCallback<EditContext> OnFormSubmitFailed { get; set; }
 
     protected override void OnInitialized()

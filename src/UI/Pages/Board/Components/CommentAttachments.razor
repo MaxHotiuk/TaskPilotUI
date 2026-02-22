@@ -3,12 +3,12 @@
 
 @if (IsLoading)
 {
-    <div class="loading-attachments">Loading attachments...</div>
+    <div class="loading-attachments">@UI.Resources.I18n.Loading</div>
 }
 else if (Attachments?.Any() == true)
 {
     <div class="attachments-container">
-        <span class="attachments-label">Attachments:</span>
+        <span class="attachments-label">@UI.Resources.I18n.AttachmentsLabel</span>
         <ul class="attachments-list">
             @foreach (var att in Attachments)
             {
@@ -30,9 +30,9 @@ else if (Attachments?.Any() == true)
     </div>
 }
 
-<Modal Title="Attachment Preview" Visible=@IsPreviewVisible OnCancel="ClosePreview" Footer="null" Width="800">
+<Modal Title=@UI.Resources.I18n.AttachmentPreviewTitle Visible=@IsPreviewVisible OnCancel="ClosePreview" Footer="null" Width="800">
     @if (!string.IsNullOrEmpty(PreviewImageUrl))
     {
-        <img src=@PreviewImageUrl alt="Preview" class="attachment-modal-image" />
+        <img src=@PreviewImageUrl alt=@UI.Resources.I18n.PreviewAlt class="attachment-modal-image" />
     }
 </Modal>
