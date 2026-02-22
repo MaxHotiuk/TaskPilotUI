@@ -4,6 +4,7 @@ public class ChatDto
 {
     public Guid Id { get; set; }
     public Guid OrganizationId { get; set; }
+    public Guid? BoardId { get; set; }
     public string? Name { get; set; }
     public ChatType Type { get; set; }
     public Guid CreatedById { get; set; }

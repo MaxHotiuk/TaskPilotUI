@@ -22,9 +22,7 @@ else
                             }
                             else
                             {
-                                <Avatar Icon=@GetChatIcon(chat)>
-                                    @GetChatInitials(chat)
-                                </Avatar>
+                                <Avatar>@GetChatInitials(chat)</Avatar>
                             }
                         </AvatarTemplate>
                         <TitleTemplate>
@@ -45,7 +43,7 @@ else
                             @if (chat.LastMessage != null)
                             {
                                 <div style="color: rgba(0,0,0,0.65); font-size: 12px; margin-top: 4px;">
-                                    @chat.LastMessage.SenderName: @GetLastMessagePreview(chat.LastMessage)
+                                    @GetLastMessagePreviewText(chat, chat.LastMessage)
                                 </div>
                             }
                         </DescriptionTemplate>

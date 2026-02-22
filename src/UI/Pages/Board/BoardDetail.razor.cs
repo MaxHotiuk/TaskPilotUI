@@ -18,6 +18,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
 {
     [Inject] private ISignalRService SignalRService { get; set; } = default!;
     [Parameter] public string BoardId { get; set; } = string.Empty;
+    [SupplyParameterFromQuery(Name = "taskId")] public string? TaskId { get; set; }
     [CascadingParameter] public IGlobalLoadingService LoadingService { get; set; } = default!;
 
     [Inject] private IBoardService BoardService { get; set; } = default!;
@@ -49,6 +50,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     private CreateStateRequest _addStateForm = new();
     private CreateTaskRequest _addTaskForm = new();
     public bool IsOnlyMine { get; set; } = false;
+    private string? _lastTaskId;
 
     private bool _showArchiveBoardModal = false;
     private bool _isArchivingBoard = false;
@@ -111,6 +113,7 @@ public partial class BoardDetail : ComponentBase, IDisposable
     {
         await LoadCurrentUser();
         await LoadBoardDetail();
+        await TryOpenTaskFromRouteAsync(TaskId);
 
         await SignalRService.ConnectAsync();
         await SignalRService.JoinBoardGroupAsync(BoardId);
@@ -119,6 +122,16 @@ public partial class BoardDetail : ComponentBase, IDisposable
         {
             await InvokeAsync(async () => await LoadBoardDetail());
         });
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        if (!string.IsNullOrWhiteSpace(TaskId) && TaskId != _lastTaskId)
+        {
+            await TryOpenTaskFromRouteAsync(TaskId);
+        }
     }
 
     public void Dispose()
@@ -183,6 +196,8 @@ public partial class BoardDetail : ComponentBase, IDisposable
                         i--;
                     }
                 }
+
+                await TryOpenTaskFromRouteAsync(TaskId);
             },
             onError: ex =>
             {
@@ -216,6 +231,8 @@ public partial class BoardDetail : ComponentBase, IDisposable
                     Navigation.NavigateTo("/boards");
                     return;
                 }
+
+                await TryOpenTaskFromRouteAsync(TaskId);
             },
             onError: ex =>
             {
@@ -227,6 +244,43 @@ public partial class BoardDetail : ComponentBase, IDisposable
                 StateHasChanged();
                 return Task.CompletedTask;
             });
+    }
+
+    private async Task TryOpenTaskFromRouteAsync(string? taskId)
+    {
+        if (string.IsNullOrWhiteSpace(taskId) || _boardDetail == null)
+            return;
+
+        if (taskId == _lastTaskId && _showTaskDetailsModal)
+            return;
+
+        _lastTaskId = taskId;
+        TaskItemDto? task = _boardDetail.Tasks.FirstOrDefault(item => item.Id == taskId);
+
+        if (task == null)
+        {
+            try
+            {
+                _isTaskDetailsLoading = true;
+                StateHasChanged();
+                task = await TaskService.GetByIdAsync(taskId);
+            }
+            catch (Exception ex)
+            {
+                _isTaskDetailsLoading = false;
+                Message.Error($"Failed to load task: {ex.Message}");
+                return;
+            }
+        }
+
+        _isTaskDetailsLoading = false;
+
+        if (task == null || !string.Equals(task.BoardId, BoardId, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _selectedTask = task;
+        _showTaskDetailsModal = true;
+        StateHasChanged();
     }
 
     private bool HasBoardAccess()

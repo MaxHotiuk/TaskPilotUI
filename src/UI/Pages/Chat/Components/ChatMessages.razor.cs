@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using UI.Interfaces.Services;
 using UI.Models.Avatar;
@@ -23,14 +24,18 @@ public partial class ChatMessages : ComponentBase
     [Parameter] public EventCallback OnStopTyping { get; set; }
     [Parameter] public EventCallback OnStartCall { get; set; }
     [Parameter] public EventCallback<string> OnJoinCall { get; set; }
+    [Parameter] public EventCallback OnOpenInfo { get; set; }
+    [Parameter] public string? ChatAvatarUrl { get; set; }
     [Parameter] public IReadOnlyList<string> PendingAttachmentNames { get; set; } = Array.Empty<string>();
     [Parameter] public bool HasPendingAttachments { get; set; }
     [Parameter] public EventCallback<InputFileChangeEventArgs> OnAttachmentsSelected { get; set; }
     [Parameter] public EventCallback<int> OnRemoveAttachment { get; set; }
     [Parameter] public EventCallback OnClearAttachments { get; set; }
+    [Parameter] public RenderFragment? HeaderActions { get; set; }
 
     [Inject] private IAvatarService AvatarService { get; set; } = default!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
     private readonly Dictionary<Guid, AvatarDto?> _avatarCache = new();
     private readonly HashSet<Guid> _avatarLoading = new();
     private ElementReference _threadRef;
@@ -73,6 +78,12 @@ public partial class ChatMessages : ComponentBase
                 _ = LoadAvatarAsync(senderId);
             }
         }
+
+        var headerUserId = GetHeaderAvatarUserId();
+        if (headerUserId.HasValue && !_avatarCache.ContainsKey(headerUserId.Value) && !_avatarLoading.Contains(headerUserId.Value))
+        {
+            _ = LoadAvatarAsync(headerUserId.Value);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -113,6 +124,17 @@ public partial class ChatMessages : ComponentBase
         return OnStopTyping.InvokeAsync();
     }
 
+    private async Task OnMessageKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter")
+            return;
+
+        if (string.IsNullOrWhiteSpace(NewMessage) && !HasPendingAttachments)
+            return;
+
+        await OnSend.InvokeAsync();
+    }
+
     private Task OnAttachmentsSelectedInternal(InputFileChangeEventArgs e)
     {
         return OnAttachmentsSelected.InvokeAsync(e);
@@ -151,7 +173,7 @@ public partial class ChatMessages : ComponentBase
 
     private bool ShouldShowSender(ChatMessageDto message)
     {
-        return ActiveChat?.Type == ChatType.Group && !IsOwnMessage(message);
+        return (ActiveChat?.Type == ChatType.Group || ActiveChat?.Type == ChatType.Board) && !IsOwnMessage(message) && !IsTaskMessage(message) && !IsUpdateMessage(message);
     }
 
     private bool ShouldShowReadStatus(ChatMessageDto message)
@@ -162,6 +184,58 @@ public partial class ChatMessages : ComponentBase
     private bool IsCallMessage(ChatMessageDto message)
     {
         return string.Equals(message.MessageType, "Call", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsTaskMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Task", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsUpdateMessage(ChatMessageDto message)
+    {
+        return string.Equals(message.MessageType, "Update", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetTaskMessageContent(ChatMessageDto message)
+    {
+        return string.IsNullOrWhiteSpace(message.Content) ? "Task update" : message.Content;
+    }
+
+    private string GetTaskAssigneeName(ChatMessageDto message)
+    {
+        if (message.AssigneeId == null)
+            return "Unassigned";
+
+        var assignee = ActiveChat?.Members.FirstOrDefault(member => member.UserId == message.AssigneeId.Value);
+        if (assignee != null && !string.IsNullOrWhiteSpace(assignee.UserName))
+            return assignee.UserName;
+
+        if (message.AssigneeId == CurrentUserId)
+            return "you";
+
+        return "Someone";
+    }
+
+    private string GetTaskMessageSender(ChatMessageDto message)
+    {
+        if (message.SenderId == CurrentUserId)
+            return "you";
+
+        return string.IsNullOrWhiteSpace(message.SenderName) ? "someone" : message.SenderName;
+    }
+
+    private string GetUpdateMessageContent(ChatMessageDto message)
+    {
+        return string.IsNullOrWhiteSpace(message.Content) ? "Chat updated" : message.Content;
+    }
+
+    private void OpenTaskFromMessage(ChatMessageDto message)
+    {
+        if (ActiveChat?.BoardId == null || message.TaskId == null)
+            return;
+
+        var url = $"/board/{ActiveChat.BoardId}?taskId={message.TaskId}";
+        Navigation.NavigateTo(url);
     }
 
     private string GetReadStatus(ChatMessageDto message)
@@ -210,6 +284,45 @@ public partial class ChatMessages : ComponentBase
         return false;
     }
 
+    private bool TryGetHeaderAvatarUrl(out string? avatarUrl)
+    {
+        if (ActiveChat?.Type != ChatType.Private)
+        {
+            if (!string.IsNullOrWhiteSpace(ChatAvatarUrl))
+            {
+                avatarUrl = ChatAvatarUrl;
+                return true;
+            }
+
+            avatarUrl = null;
+            return false;
+        }
+
+        var headerUserId = GetHeaderAvatarUserId();
+        if (!headerUserId.HasValue)
+        {
+            avatarUrl = null;
+            return false;
+        }
+
+        if (_avatarCache.TryGetValue(headerUserId.Value, out var avatar) && avatar != null && !string.IsNullOrEmpty(avatar.CompressedUrl))
+        {
+            avatarUrl = avatar.CompressedUrl;
+            return true;
+        }
+
+        avatarUrl = null;
+        return false;
+    }
+
+    private Guid? GetHeaderAvatarUserId()
+    {
+        if (ActiveChat?.Type != ChatType.Private)
+            return null;
+
+        return ActiveChat.Members.FirstOrDefault(member => member.UserId != CurrentUserId)?.UserId;
+    }
+
     private async Task LoadAvatarAsync(Guid userId)
     {
         if (_avatarCache.ContainsKey(userId) || _avatarLoading.Contains(userId))
@@ -237,6 +350,9 @@ public partial class ChatMessages : ComponentBase
         if (ActiveChat == null)
             return "Chat";
 
+        if (ActiveChat.Type == ChatType.Board)
+            return string.IsNullOrWhiteSpace(ActiveChat.Name) ? "Board chat" : ActiveChat.Name;
+
         if (ActiveChat.Type == ChatType.Group)
             return string.IsNullOrWhiteSpace(ActiveChat.Name) ? "Group chat" : ActiveChat.Name;
 
@@ -245,5 +361,36 @@ public partial class ChatMessages : ComponentBase
             return otherMember.UserName;
 
         return "Chat";
+    }
+
+    private string GetChatAvatarText()
+    {
+        if (ActiveChat == null)
+            return "?";
+
+        if (ActiveChat.Type == ChatType.Private)
+        {
+            var otherMember = ActiveChat.Members.FirstOrDefault(member => member.UserId != CurrentUserId);
+            if (otherMember != null && !string.IsNullOrWhiteSpace(otherMember.UserName))
+            {
+                return GetInitials(otherMember.UserName);
+            }
+        }
+
+        return GetInitials(GetChatTitle());
+    }
+
+    private string GetInitials(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "?";
+
+        var parts = value.Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2)
+            .Select(part => part[0].ToString().ToUpperInvariant())
+            .ToArray();
+
+        return parts.Length == 0 ? "?" : string.Concat(parts);
     }
 }
