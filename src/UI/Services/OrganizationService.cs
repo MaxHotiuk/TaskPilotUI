@@ -13,6 +13,11 @@ public class OrganizationService : IOrganizationService
         _organizationApi = organizationApi;
     }
 
+    public async Task<OrganizationDto> GetOrganizationAsync(Guid organizationId)
+    {
+        return await _organizationApi.GetOrganizationAsync(organizationId);
+    }
+
     public async Task<IEnumerable<OrganizationMemberDto>> GetMembersAsync(Guid organizationId)
     {
         return await _organizationApi.GetMembersAsync(organizationId);

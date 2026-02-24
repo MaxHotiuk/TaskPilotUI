@@ -5,6 +5,9 @@ namespace UI.Interfaces.Api;
 
 public interface IOrganizationApi
 {
+    [Get("/api/organizations/{organizationId}")]
+    Task<OrganizationDto> GetOrganizationAsync(Guid organizationId);
+
     [Get("/api/organizations/{organizationId}/members")]
     Task<IEnumerable<OrganizationMemberDto>> GetMembersAsync(Guid organizationId);
 

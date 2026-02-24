@@ -4,6 +4,7 @@ namespace UI.Interfaces.Services;
 
 public interface IOrganizationService
 {
+    Task<OrganizationDto> GetOrganizationAsync(Guid organizationId);
     Task<IEnumerable<OrganizationMemberDto>> GetMembersAsync(Guid organizationId);
     Task AddGuestAsync(Guid organizationId, string userEmail);
     Task SendManagerRequestAsync(Guid organizationId, Guid userId, string message);

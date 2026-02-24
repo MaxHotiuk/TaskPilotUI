@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Components;
 using UI.Interfaces.Services;
+using UI.Services;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace UI.Pages.Organization.Components;
 
 public partial class AddGuestModal : ComponentBase
 {
     [Inject] private IOrganizationService OrganizationService { get; set; } = default!;
+    [Inject] private IPublicDomainService PublicDomainService { get; set; } = default!;
 
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
@@ -21,6 +24,8 @@ public partial class AddGuestModal : ComponentBase
     private FormModel _formModel = new();
     private bool _isLoading = false;
     private string _error = string.Empty;
+    private bool _isPublicDomain = false;
+    private string _emailDomain = string.Empty;
 
     private static readonly Regex EmailRegex = new(
         @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
@@ -92,5 +97,28 @@ public partial class AddGuestModal : ComponentBase
         _formModel = new FormModel();
         _error = string.Empty;
         _isLoading = false;
+        _isPublicDomain = false;
+        _emailDomain = string.Empty;
+    }
+
+    private void HandleEmailInput(ChangeEventArgs e)
+    {
+        var email = e.Value?.ToString() ?? string.Empty;
+
+        if (EmailRegex.IsMatch(email))
+        {
+            var domain = email.Split('@').LastOrDefault();
+            if (!string.IsNullOrEmpty(domain))
+            {
+                _emailDomain = domain;
+                _isPublicDomain = PublicDomainService.IsPublicDomain(domain);
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            _isPublicDomain = false;
+            _emailDomain = string.Empty;
+        }
     }
 }

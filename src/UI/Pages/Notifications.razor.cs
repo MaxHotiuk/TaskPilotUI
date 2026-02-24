@@ -147,8 +147,8 @@ public partial class Notifications : ComponentBase
             
             notifications.ForEach(n => n.IsRead = true);
             StateHasChanged();
-            
-            MessageService.Success("All notifications marked as read");
+
+            MessageService.Success(UI.Resources.I18n.AllNotificationsMarkedRead);
         }
         catch (Exception ex)
         {

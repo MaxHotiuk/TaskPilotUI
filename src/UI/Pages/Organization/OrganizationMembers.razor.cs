@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using UI.Models.Organization;
 using UI.Interfaces.Services;
+using UI.Services;
 using UI.Components.Base;
 
 namespace UI.Pages.Organization;
@@ -10,11 +11,14 @@ public partial class OrganizationMembers : BaseComponentWithLoading
     [Inject] private IOrganizationService OrganizationService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private IUserService UserService { get; set; } = default!;
+    [Inject] private IPublicDomainService PublicDomainService { get; set; } = default!;
 
     [Parameter] public string OrganizationId { get; set; } = string.Empty;
 
     private List<OrganizationMemberDto> _members = new();
     private string _organizationName = string.Empty;
+    private string _organizationDomain = string.Empty;
+    private bool _isPublicOrganization = false;
     private string _currentUserRole = string.Empty;
     private Guid _currentUserId = Guid.Empty;
     private bool _isAdmin = false;
@@ -87,6 +91,9 @@ public partial class OrganizationMembers : BaseComponentWithLoading
                     if (org != null)
                     {
                         _organizationName = org.Name;
+                        // Organization name IS the domain
+                        _organizationDomain = org.Name;
+                        _isPublicOrganization = PublicDomainService.IsPublicDomain(org.Name);
                     }
                 }
 

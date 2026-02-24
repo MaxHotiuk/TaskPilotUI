@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using UI.Interfaces.Services;
 using UI.Models.Organization;
+using UI.Services;
 
 namespace UI.Components.Shared;
 
@@ -8,6 +9,7 @@ public partial class OrganizationSelector : ComponentBase
 {
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private ILocalStorageService LocalStorageService { get; set; } = default!;
+    [Inject] private IPublicDomainService PublicDomainService { get; set; } = default!;
 
     [Parameter] public Guid? SelectedOrganizationId { get; set; }
     [Parameter] public EventCallback<Guid> SelectedOrganizationIdChanged { get; set; }
@@ -21,6 +23,8 @@ public partial class OrganizationSelector : ComponentBase
     private List<OrganizationSummaryDto> _filteredOrganizations = new();
     private bool _isLoading = true;
     private Guid _selectedValue = Guid.Empty;
+    private bool _isSelectedOrgPublic = false;
+    private string _selectedOrgDomain = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -108,6 +112,20 @@ public partial class OrganizationSelector : ComponentBase
 
         _selectedValue = organizationId;
         SelectedOrganizationId = organizationId;
+
+        // Check if selected organization is public (organization name IS the domain)
+        var selectedOrg = _filteredOrganizations.FirstOrDefault(o => o.Id == organizationId);
+        if (selectedOrg != null)
+        {
+            _selectedOrgDomain = selectedOrg.Name;
+            _isSelectedOrgPublic = PublicDomainService.IsPublicDomain(selectedOrg.Name);
+        }
+        else
+        {
+            _selectedOrgDomain = string.Empty;
+            _isSelectedOrgPublic = false;
+        }
+
         await LocalStorageService.SetItemAsync(SELECTED_ORG_KEY, organizationId);
         await SelectedOrganizationIdChanged.InvokeAsync(organizationId);
         Console.WriteLine($"Organization selected: {organizationId}");
@@ -126,6 +144,20 @@ public partial class OrganizationSelector : ComponentBase
         if (SelectedOrganizationId.HasValue && SelectedOrganizationId.Value != Guid.Empty)
         {
             _selectedValue = SelectedOrganizationId.Value;
+
+            // Check if selected organization is public (organization name IS the domain)
+            var selectedOrg = _filteredOrganizations.FirstOrDefault(o => o.Id == SelectedOrganizationId.Value);
+            if (selectedOrg != null)
+            {
+                _selectedOrgDomain = selectedOrg.Name;
+                _isSelectedOrgPublic = PublicDomainService.IsPublicDomain(selectedOrg.Name);
+            }
+            else
+            {
+                _selectedOrgDomain = string.Empty;
+                _isSelectedOrgPublic = false;
+            }
+
             Console.WriteLine($"OrganizationSelector initialized with: {SelectedOrganizationId.Value}");
         }
     }

@@ -2,11 +2,11 @@
 @using UI.Models.Invitation
 @using AntDesign
 
-<PageTitle>Invitations</PageTitle>
+<PageTitle>@UI.Resources.I18n.InvitationsTitle</PageTitle>
 
 <div style="padding: 24px; background: #fff; min-height: calc(100vh - 64px);">
-    <PageHeader Title="Invitations" 
-                SubTitle="Manage your pending invitations">
+    <PageHeader Title="@UI.Resources.I18n.InvitationsTitle" 
+                SubTitle="@UI.Resources.I18n.ManageYourPendingInvitations">
     </PageHeader>
 
     @if (_isLoading)
@@ -17,11 +17,11 @@
     }
     else if (_invitations != null && GetTotalInvitationsCount() == 0)
     {
-        <Empty Description="@("No pending invitations")" 
+        <Empty Description="@UI.Resources.I18n.NoPendingInvitations" 
                Style="margin-top: 50px;">
             <ChildContent>
                 <p style="color: #999; margin-top: 16px;">
-                    You don't have any pending invitations at the moment.
+                    @UI.Resources.I18n.NoPendingInvitationsDescription
                 </p>
             </ChildContent>
         </Empty>
@@ -31,7 +31,7 @@
         @if (_invitations.BoardInvitations.Any())
         {
             <div style="margin-bottom: 32px;">
-                <Title Level="3">Board Invitations</Title>
+                <Title Level="3">@UI.Resources.I18n.BoardInvitations</Title>
                 @foreach (var invitation in _invitations.BoardInvitations)
                 {
                     <Card Style="margin-bottom: 16px;">
@@ -47,7 +47,7 @@
                                             <Space Direction="@SpaceDirection.Vertical" Size="@("4")">
                                                 <SpaceItem>
                                                     <Text Type="@TextElementType.Secondary">
-                                                        Invited by <Text Strong>@invitation.InviterName</Text>
+                                                        @UI.Resources.I18n.InvitedBy <Text Strong>@invitation.InviterName</Text>
                                                     </Text>
                                                 </SpaceItem>
                                                 <SpaceItem>
@@ -64,10 +64,10 @@
                             <AntDesign.Col>
                                 <Space>
                                     <SpaceItem>
-                                        <Button Type="@ButtonType.Primary" OnClick="@(() => AcceptBoardInvitation(invitation.Id))">Accept</Button>
+                                        <Button Type="@ButtonType.Primary" OnClick="@(() => AcceptBoardInvitation(invitation.Id))">@UI.Resources.I18n.Accept</Button>
                                     </SpaceItem>
                                     <SpaceItem>
-                                        <Button Danger OnClick="@(() => RejectBoardInvitation(invitation.Id))">Reject</Button>
+                                        <Button Danger OnClick="@(() => RejectBoardInvitation(invitation.Id))">@UI.Resources.I18n.Reject</Button>
                                     </SpaceItem>
                                 </Space>
                             </AntDesign.Col>
@@ -80,7 +80,7 @@
         @if (_invitations.OrganizationInvitations.Any())
         {
             <div style="margin-bottom: 32px;">
-                <Title Level="3">Organization Invitations</Title>
+                <Title Level="3">@UI.Resources.I18n.OrganizationInvitations</Title>
                 @foreach (var invitation in _invitations.OrganizationInvitations)
                 {
                     <Card Style="margin-bottom: 16px;">
@@ -96,7 +96,7 @@
                                             <Space Direction="@SpaceDirection.Vertical" Size="@("4")">
                                                 <SpaceItem>
                                                     <Text Type="@TextElementType.Secondary">
-                                                        Invited by <Text Strong>@invitation.InviterName</Text>
+                                                        @UI.Resources.I18n.InvitedBy <Text Strong>@invitation.InviterName</Text>
                                                     </Text>
                                                 </SpaceItem>
                                                 <SpaceItem>
@@ -115,10 +115,10 @@
                             <AntDesign.Col>
                                 <Space>
                                     <SpaceItem>
-                                        <Button Type="@ButtonType.Primary" OnClick="@(() => AcceptOrganizationInvitation(invitation.Id))">Accept</Button>
+                                        <Button Type="@ButtonType.Primary" OnClick="@(() => AcceptOrganizationInvitation(invitation.Id))">@UI.Resources.I18n.Accept</Button>
                                     </SpaceItem>
                                     <SpaceItem>
-                                        <Button Danger OnClick="@(() => RejectOrganizationInvitation(invitation.Id))">Reject</Button>
+                                        <Button Danger OnClick="@(() => RejectOrganizationInvitation(invitation.Id))">@UI.Resources.I18n.Reject</Button>
                                     </SpaceItem>
                                 </Space>
                             </AntDesign.Col>

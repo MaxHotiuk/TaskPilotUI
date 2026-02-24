@@ -54,6 +54,15 @@
                    Style="margin-bottom: 16px;" />
         }
 
+        @if (_isPublicOrganization)
+        {
+            <Alert Type="@AlertType.Warning"
+                   Message="@UI.Resources.I18n.PublicOrganization"
+                   Description="@string.Format(UI.Resources.I18n.PublicOrganizationWarning, _organizationDomain)"
+                   ShowIcon="@true"
+                   Style="margin-bottom: 16px;" />
+        }
+
         <Card>
             @if (!_members.Any())
             {

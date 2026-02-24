@@ -129,6 +129,7 @@ namespace UI.Extensions
             services.AddScoped<IMeetingMemberService, MeetingMemberService>();
             services.AddScoped<IOrganizationService, OrganizationService>();
             services.AddScoped<IInvitationService, InvitationService>();
+            services.AddSingleton<IPublicDomainService, PublicDomainService>();
             services.AddScoped<INotificationSignalRService>(sp =>
             {
                 var config = sp.GetRequiredService<IConfiguration>();
