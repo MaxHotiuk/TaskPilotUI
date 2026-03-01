@@ -28,6 +28,7 @@ public partial class Boards : ComponentBase
     private BoardSearchDto? _selectedBoard = null;
     private string _deleteConfirmation = string.Empty;
     private System.Timers.Timer? _searchTimer;
+    private Guid? _selectedOrganizationId;
 
     protected bool IsLoading => LoadingService?.IsLoading ?? false;
 
@@ -83,6 +84,15 @@ public partial class Boards : ComponentBase
 
         if (!_hasMoreData) return;
 
+        if (!_selectedOrganizationId.HasValue)
+        {
+            // No organization selected - clear boards
+            _boards.Clear();
+            _hasMoreData = false;
+            StateHasChanged();
+            return;
+        }
+
         try
         {
             _isSearching = true;
@@ -97,12 +107,12 @@ public partial class Boards : ComponentBase
             if (_filterType == "owner")
             {
                 results = await BoardService.SearchBoardsRangeForOwnerAsync(
-                    userId, _searchTerm, _currentPage, _pageSize);
+                    userId, _selectedOrganizationId.Value, _searchTerm, _currentPage, _pageSize);
             }
             else if (_filterType == "member")
             {
                 results = await BoardService.SearchBoardsRangeForMemberAsync(
-                    userId, _searchTerm, _currentPage, _pageSize);
+                    userId, _selectedOrganizationId.Value, _searchTerm, _currentPage, _pageSize);
             }
             else if (_filterType == "archived")
             {
@@ -112,11 +122,11 @@ public partial class Boards : ComponentBase
             else
             {
                 results = await BoardService.SearchBoardsRangeForUserAsync(
-                    userId, _searchTerm, _currentPage, _pageSize);
+                    userId, _selectedOrganizationId.Value, _searchTerm, _currentPage, _pageSize);
             }
 
             var resultsList = results.ToList();
-            
+
             if (reset)
             {
                 _boards = resultsList;
@@ -127,7 +137,7 @@ public partial class Boards : ComponentBase
             }
 
             _hasMoreData = resultsList.Count == _pageSize;
-            
+
             if (!reset)
             {
                 _currentPage++;
@@ -184,6 +194,12 @@ public partial class Boards : ComponentBase
     private void ShowCreateModal()
     {
         _showCreateModal = true;
+    }
+
+    private async Task OnOrganizationChanged(Guid organizationId)
+    {
+        _selectedOrganizationId = organizationId;
+        await SearchBoards(reset: true);
     }
 
     private async Task HandleBoardCreated(string boardId)

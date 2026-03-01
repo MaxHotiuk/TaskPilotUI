@@ -1,0 +1,131 @@
+@page "/invitations"
+@using UI.Models.Invitation
+@using AntDesign
+
+<PageTitle>@UI.Resources.I18n.InvitationsTitle</PageTitle>
+
+<div style="padding: 24px; background: #fff; min-height: calc(100vh - 64px);">
+    <PageHeader Title="@UI.Resources.I18n.InvitationsTitle" 
+                SubTitle="@UI.Resources.I18n.ManageYourPendingInvitations">
+    </PageHeader>
+
+    @if (_isLoading)
+    {
+        <div style="text-align: center; padding: 50px;">
+            <Spin Size="@SpinSize.Large" />
+        </div>
+    }
+    else if (_invitations != null && GetTotalInvitationsCount() == 0)
+    {
+        <Empty Description="@UI.Resources.I18n.NoPendingInvitations" 
+               Style="margin-top: 50px;">
+            <ChildContent>
+                <p style="color: #999; margin-top: 16px;">
+                    @UI.Resources.I18n.NoPendingInvitationsDescription
+                </p>
+            </ChildContent>
+        </Empty>
+    }
+    else if (_invitations != null)
+    {
+        @if (_invitations.BoardInvitations.Any())
+        {
+            <div style="margin-bottom: 32px;">
+                <Title Level="3">@UI.Resources.I18n.BoardInvitations</Title>
+                @foreach (var invitation in _invitations.BoardInvitations)
+                {
+                    <Card Style="margin-bottom: 16px;">
+                        <Row Justify="@RowJustify.SpaceBetween" Align="@RowAlign.Middle">
+                            <AntDesign.Col Flex="@("auto")">
+                                <Space Direction="@SpaceDirection.Horizontal" Align="@SpaceAlign.Center">
+                                    <SpaceItem>
+                                        <Avatar Icon="@IconType.Outline.Team" Style="background-color: #1890ff;" />
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <div>
+                                            <Title Level="4" Style="margin-bottom: 4px;">@invitation.BoardName</Title>
+                                            <Space Direction="@SpaceDirection.Vertical" Size="@("4")">
+                                                <SpaceItem>
+                                                    <Text Type="@TextElementType.Secondary">
+                                                        @UI.Resources.I18n.InvitedBy <Text Strong>@invitation.InviterName</Text>
+                                                    </Text>
+                                                </SpaceItem>
+                                                <SpaceItem>
+                                                    <Tag Color="@("blue")">@invitation.Role</Tag>
+                                                    <Text Type="@TextElementType.Secondary">
+                                                        • @invitation.CreatedAt.ToString("MMM dd, yyyy")
+                                                    </Text>
+                                                </SpaceItem>
+                                            </Space>
+                                        </div>
+                                    </SpaceItem>
+                                </Space>
+                            </AntDesign.Col>
+                            <AntDesign.Col>
+                                <Space>
+                                    <SpaceItem>
+                                        <Button Type="@ButtonType.Primary" OnClick="@(() => AcceptBoardInvitation(invitation.Id))">@UI.Resources.I18n.Accept</Button>
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <Button Danger OnClick="@(() => RejectBoardInvitation(invitation.Id))">@UI.Resources.I18n.Reject</Button>
+                                    </SpaceItem>
+                                </Space>
+                            </AntDesign.Col>
+                        </Row>
+                    </Card>
+                }
+            </div>
+        }
+
+        @if (_invitations.OrganizationInvitations.Any())
+        {
+            <div style="margin-bottom: 32px;">
+                <Title Level="3">@UI.Resources.I18n.OrganizationInvitations</Title>
+                @foreach (var invitation in _invitations.OrganizationInvitations)
+                {
+                    <Card Style="margin-bottom: 16px;">
+                        <Row Justify="@RowJustify.SpaceBetween" Align="@RowAlign.Middle">
+                            <AntDesign.Col Flex="@("auto")">
+                                <Space Direction="@SpaceDirection.Horizontal" Align="@SpaceAlign.Center">
+                                    <SpaceItem>
+                                        <Avatar Icon="@IconType.Outline.Bank" Style="background-color: #52c41a;" />
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <div>
+                                            <Title Level="4" Style="margin-bottom: 4px;">@invitation.OrganizationName</Title>
+                                            <Space Direction="@SpaceDirection.Vertical" Size="@("4")">
+                                                <SpaceItem>
+                                                    <Text Type="@TextElementType.Secondary">
+                                                        @UI.Resources.I18n.InvitedBy <Text Strong>@invitation.InviterName</Text>
+                                                    </Text>
+                                                </SpaceItem>
+                                                <SpaceItem>
+                                                    <Tag Color="@(invitation.Role == "Guest" ? "orange" : invitation.Role == "Manager" ? "purple" : "green")">
+                                                        @invitation.Role
+                                                    </Tag>
+                                                    <Text Type="@TextElementType.Secondary">
+                                                        • @invitation.CreatedAt.ToString("MMM dd, yyyy")
+                                                    </Text>
+                                                </SpaceItem>
+                                            </Space>
+                                        </div>
+                                    </SpaceItem>
+                                </Space>
+                            </AntDesign.Col>
+                            <AntDesign.Col>
+                                <Space>
+                                    <SpaceItem>
+                                        <Button Type="@ButtonType.Primary" OnClick="@(() => AcceptOrganizationInvitation(invitation.Id))">@UI.Resources.I18n.Accept</Button>
+                                    </SpaceItem>
+                                    <SpaceItem>
+                                        <Button Danger OnClick="@(() => RejectOrganizationInvitation(invitation.Id))">@UI.Resources.I18n.Reject</Button>
+                                    </SpaceItem>
+                                </Space>
+                            </AntDesign.Col>
+                        </Row>
+                    </Card>
+                }
+            </div>
+        }
+    }
+</div>

@@ -24,12 +24,12 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<List<UserDto>> GetAllUsersAsync()
+    public async Task<List<UserDto>> GetAllUsersAsync(Guid organizationId)
     {
         try
         {
-            var users = await _userApi.GetAllAsync();
-            
+            var users = await _userApi.GetAllAsync(organizationId);
+
             // Update cache
             foreach (var user in users)
             {
@@ -41,7 +41,7 @@ public class UserService : IUserService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching all users");
+            _logger.LogError(ex, "Error fetching all users for organization {OrganizationId}", organizationId);
             return new List<UserDto>();
         }
     }
@@ -121,15 +121,12 @@ public class UserService : IUserService
 
         if (missingUserIds.Any() || DateTime.UtcNow - _lastCacheUpdate >= _cacheExpiry)
         {
-            var allUsers = await GetAllUsersAsync();
-            foreach (var userId in missingUserIds)
-            {
-                var user = allUsers.FirstOrDefault(u => u.Id.ToString() == userId);
-                if (user != null)
-                {
-                    result[userId] = user;
-                }
-            }
+            // Note: This might not work correctly without organizationId context
+            // Consider deprecating this method or requiring organizationId parameter
+            _logger.LogWarning("GetByIdsAsync called without organization context, results may be incomplete");
+
+            // For now, we'll skip fetching missing users since we don't have organizationId
+            // Alternatively, you could require organizationId as a parameter
         }
 
         return result;

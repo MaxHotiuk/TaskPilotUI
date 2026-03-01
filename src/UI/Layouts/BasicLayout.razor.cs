@@ -24,11 +24,13 @@ namespace UI.Layouts
         private bool _notificationHandlersRegistered;
         private bool _isConnectingSignalR;
         private readonly HashSet<Guid> _joinedChatIds = new();
+        private int _invitationsCount = 0;
 
         [Inject] private ReuseTabsService TabService { get; set; } = default!;
         [Inject] private IAuthService AuthService { get; set; } = default!;
         [Inject] private IChatSignalRService ChatSignalRService { get; set; } = default!;
         [Inject] private IChatSystemService ChatSystemService { get; set; } = default!;
+        [Inject] private IInvitationService InvitationService { get; set; } = default!;
 
         public LinkItem[] Links => Array.Empty<LinkItem>();
 
@@ -48,42 +50,49 @@ namespace UI.Layouts
                 new MenuDataItem
                 {
                     Path = "/",
-                    Name = "Boards",
+                    Name = UI.Resources.I18n.BoardsMenu,
                     Key = "boards",
                     Icon = "appstore",
                 },
                 new MenuDataItem
                 {
                     Path = "/profile",
-                    Name = "Profile",
+                    Name = UI.Resources.I18n.ProfileMenu,
                     Key = "profile",
                     Icon = "user",
                 },
                 new MenuDataItem
                 {
                     Path = "/ai-assistant",
-                    Name = "Ask AI",
+                    Name = UI.Resources.I18n.AskAIMenu,
                     Key = "aiAssistant",
                     Icon = "robot"
                 },
                 new MenuDataItem
                 {
                     Path = "/chats",
-                    Name = "Chats",
+                    Name = UI.Resources.I18n.ChatsMenu,
                     Key = "chats",
                     Icon = "message"
                 },
                 new MenuDataItem
                 {
                     Path = "/notifications",
-                    Name = "Notifications",
+                    Name = UI.Resources.I18n.NotificationsMenu,
                     Key = "notifications",
                     Icon = "bell"
                 },
                 new MenuDataItem
                 {
+                    Path = "/invitations",
+                    Name = _invitationsCount > 0 ? string.Format(UI.Resources.I18n.InvitationsMenuWithCount, _invitationsCount) : UI.Resources.I18n.InvitationsMenu,
+                    Key = "invitations",
+                    Icon = "mail"
+                },
+                new MenuDataItem
+                {
                     Path = "/calendar",
-                    Name = "Calendar",
+                    Name = UI.Resources.I18n.CalendarMenu,
                     Key = "calendar",
                     Icon = "calendar"
                 }
@@ -349,6 +358,24 @@ namespace UI.Layouts
         {
             showChatNotification = false;
             StateHasChanged();
+        }
+
+        private async Task LoadInvitationsCountAsync()
+        {
+            try
+            {
+                var currentUser = await AuthService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
+                var invitations = await InvitationService.GetPendingInvitationsAsync();
+                _invitationsCount = invitations.BoardInvitations.Count + invitations.OrganizationInvitations.Count;
+                await BuildMenuDataAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load invitations count: {ex.Message}");
+            }
         }
     }
 }

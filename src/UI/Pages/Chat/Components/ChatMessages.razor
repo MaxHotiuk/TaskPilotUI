@@ -5,7 +5,7 @@
 {
     <Card>
         <div style="text-align: center; padding: 24px; color: rgba(0,0,0,0.45);">
-            Select a chat to start messaging
+            @UI.Resources.I18n.SelectChatToStart
         </div>
     </Card>
 }
@@ -49,7 +49,7 @@ else
         else if (!Messages.Any())
         {
             <div style="text-align: center; padding: 24px; color: rgba(0,0,0,0.45);">
-                No messages yet
+                @UI.Resources.I18n.NoMessagesYet
             </div>
         }
         else
@@ -120,12 +120,12 @@ else
                                 @if (IsCallMessage(message))
                                 {
                                     <div class="chat-message-bubble chat-call-bubble">
-                                        <span>Call started</span>
+                                        <span>@UI.Resources.I18n.CallStarted</span>
                                         <Button Size=@ButtonSize.Small
                                                 Type=@ButtonType.Primary
                                                 Disabled=@(string.IsNullOrWhiteSpace(message.Content) || !OnJoinCall.HasDelegate)
                                                 OnClick=@(() => OnJoinCall.InvokeAsync(message.Content))>
-                                            Join
+                                            @UI.Resources.I18n.Join
                                         </Button>
                                     </div>
                                 }
@@ -187,7 +187,7 @@ else
                             </Button>
                         </span>
                     }
-                    <Button Size=@ButtonSize.Small OnClick=@OnClearAttachments Type=@ButtonType.Text class="remove-attachment-btn" style="font-size: 12px; padding: 0 4px;">Remove all</Button>
+                    <Button Size=@ButtonSize.Small OnClick=@OnClearAttachments Type=@ButtonType.Text class="remove-attachment-btn" style="font-size: 12px; padding: 0 4px;">@UI.Resources.I18n.RemoveAllAttachments</Button>
                 }
             </div>
             <div class="chat-input-row">

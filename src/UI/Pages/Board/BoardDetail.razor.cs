@@ -29,9 +29,12 @@ public partial class BoardDetail : ComponentBase, IDisposable
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IMessageService Message { get; set; } = default!;
     [Inject] private IMeetingService MeetingService { get; set; } = default!;
+    [Inject] private IUserService UserService { get; set; } = default!;
 
     private BoardDetailDto? _boardDetail;
     private UserDto? _currentUser;
+    private List<UserDto> _organizationUsers = new(); // Cache of all org users
+    private bool _organizationUsersLoaded = false; // Track if users are loaded
     private bool _showMembersModal = false;
     private bool _showAddMemberModal = false;
     private bool _isAddingMember = false;
@@ -166,6 +169,34 @@ public partial class BoardDetail : ComponentBase, IDisposable
         }
     }
 
+    private async Task LoadOrganizationUsers()
+    {
+        _organizationUsersLoaded = false;
+
+        if (_boardDetail == null || _boardDetail.OrganizationId == Guid.Empty)
+        {
+            Console.WriteLine($"ERROR: BoardDetail.OrganizationId is missing or empty!");
+            Console.WriteLine($"Board ID: {BoardId}, Board Name: {_boardDetail?.Name ?? "null"}");
+            Console.WriteLine($"OrganizationId: {_boardDetail?.OrganizationId.ToString() ?? "null"}");
+            Console.WriteLine($"Backend must return organizationId in /api/boards/{{id}} response");
+            _organizationUsers = new List<UserDto>();
+            return;
+        }
+
+        try
+        {
+            _organizationUsers = await UserService.GetAllUsersAsync(_boardDetail.OrganizationId);
+            _organizationUsersLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"BoardDetail - Error loading organization users: {ex.Message}");
+            _organizationUsers = new List<UserDto>();
+            _organizationUsersLoaded = false;
+        }
+    }
+
     private async Task LoadBoardDetailOnlyMine()
     {
         await BoardService.ExecuteWithGlobalLoadingAndErrorHandlingAsync(
@@ -186,6 +217,9 @@ public partial class BoardDetail : ComponentBase, IDisposable
                     Navigation.NavigateTo("/boards");
                     return;
                 }
+
+                // Load all organization users once to avoid multiple API calls
+                await LoadOrganizationUsers();
 
                 for (int i = 0; i < _boardDetail.Tasks.Count; i++)
                 {
@@ -231,6 +265,9 @@ public partial class BoardDetail : ComponentBase, IDisposable
                     Navigation.NavigateTo("/boards");
                     return;
                 }
+
+                // Load all organization users once to avoid multiple API calls
+                await LoadOrganizationUsers();
 
                 await TryOpenTaskFromRouteAsync(TaskId);
             },
@@ -459,15 +496,15 @@ public partial class BoardDetail : ComponentBase, IDisposable
                 }
                 catch (Exception ex)
                 {
-                    errorMessages.Add($"Failed to add {user.Username}: {ex.Message}");
+                    errorMessages.Add($"Failed to invite {user.Username}: {ex.Message}");
                 }
             }
 
             if (successCount > 0)
             {
                 var message = successCount == 1
-                    ? $"Successfully added 1 member to the board"
-                    : $"Successfully added {successCount} members to the board";
+                    ? $"Successfully sent 1 invitation"
+                    : $"Successfully sent {successCount} invitations";
                 Message.Success(message);
             }
 
@@ -481,11 +518,10 @@ public partial class BoardDetail : ComponentBase, IDisposable
 
             _showAddMemberModal = false;
             ResetAddMemberForm();
-            await LoadBoardDetailOrMine();
         }
         catch (Exception ex)
         {
-            Message.Error($"Failed to add members: {ex.Message}");
+            Message.Error($"Failed to send invitations: {ex.Message}");
         }
         finally
         {

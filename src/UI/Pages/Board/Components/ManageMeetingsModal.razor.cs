@@ -14,6 +14,8 @@ public partial class ManageMeetingsModal : ComponentBase
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public List<BoardMemberDto> BoardMembers { get; set; } = new();
     [Parameter] public string BoardId { get; set; } = string.Empty;
+    [Parameter] public Guid? OrganizationId { get; set; }
+    [Parameter] public List<UserDto>? OrganizationUsers { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback OnMeetingChanged { get; set; }
 
@@ -40,7 +42,14 @@ public partial class ManageMeetingsModal : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAllUsers();
+        if (OrganizationUsers != null && OrganizationUsers.Any())
+        {
+            AllUsers = OrganizationUsers;
+        }
+        else
+        {
+            await LoadAllUsers();
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -62,9 +71,13 @@ public partial class ManageMeetingsModal : ComponentBase
         try
         {
             var isAuthenticated = await AuthService.IsAuthenticatedAsync();
-            if (isAuthenticated)
+            if (isAuthenticated && OrganizationId.HasValue)
             {
-                AllUsers = await UserService.GetAllUsersAsync();
+                AllUsers = await UserService.GetAllUsersAsync(OrganizationId.Value);
+            }
+            else if (!OrganizationId.HasValue)
+            {
+                Console.WriteLine($"ManageMeetingsModal - OrganizationId is not set, cannot load users");
             }
         }
         catch (Exception ex)

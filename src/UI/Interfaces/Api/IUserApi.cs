@@ -16,7 +16,7 @@ public interface IUserApi
     Task<UserDto> GetByEmailAsync([Query] string email);
 
     [Get("/api/users")]
-    Task<List<UserDto>> GetAllAsync();
+    Task<List<UserDto>> GetAllAsync([Query] Guid organizationId);
 
     [Get("/api/users/{id}")]
     Task<UserDto> GetByIdAsync(Guid id);

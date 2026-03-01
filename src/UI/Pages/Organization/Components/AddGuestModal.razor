@@ -2,12 +2,12 @@
 @using UI.Models.User
 @using UI.Interfaces.Services
 
-<Modal Title="@UI.Resources.I18n.AddGuestToOrganization"
+<Modal Title="Invite Guest to Organization"
        Visible="@Visible"
        OnOk="@HandleOk"
        OnCancel="@HandleCancel"
        ConfirmLoading="@_isLoading"
-       OkText="@UI.Resources.I18n.Add"
+       OkText="@("Send Invitation")"
        CancelText="@UI.Resources.I18n.Cancel"
        Width="600">
 
@@ -17,8 +17,18 @@
         <FormItem Label="@UI.Resources.I18n.SearchUserByEmail" Required>
             <Input @bind-Value="@_formModel.UserEmail"
                    Placeholder="@UI.Resources.I18n.EnterUserEmail"
-                   MaxLength="100" />
+                   MaxLength="100"
+                   OnInput="@HandleEmailInput" />
         </FormItem>
+
+        @if (_isPublicDomain && !string.IsNullOrEmpty(_emailDomain))
+        {
+            <Alert Type="@AlertType.Warning"
+                   Message="@UI.Resources.I18n.PublicOrganization"
+                   Description="@string.Format(UI.Resources.I18n.PublicOrganizationWarning, _emailDomain)"
+                   ShowIcon="@true"
+                   Style="margin-bottom: 16px;" />
+        }
 
         @if (!string.IsNullOrEmpty(_error))
         {
