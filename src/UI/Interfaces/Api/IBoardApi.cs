@@ -21,6 +21,7 @@ public interface IBoardApi
     [Get("/api/boards/owner/search")]
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForOwnerAsync(
         [Query] Guid ownerId,
+        [Query] Guid organizationId,
         [Query] string searchTerm,
         [Query] int page,
         [Query] int pageSize);
@@ -28,6 +29,7 @@ public interface IBoardApi
     [Get("/api/boards/user/search")]
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForUserAsync(
         [Query] Guid userId,
+        [Query] Guid organizationId,
         [Query] string searchTerm,
         [Query] int page,
         [Query] int pageSize);
@@ -35,6 +37,7 @@ public interface IBoardApi
     [Get("/api/boards/member/search")]
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForMemberAsync(
         [Query] Guid userId,
+        [Query] Guid organizationId,
         [Query] string searchTerm,
         [Query] int page,
         [Query] int pageSize);

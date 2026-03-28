@@ -12,6 +12,8 @@ public partial class AddMemberModal : ComponentBase
     [Parameter] public AddMemberForm FormModel { get; set; } = new();
     [Parameter] public List<BoardMemberDto> ExistingMembers { get; set; } = new();
     [Parameter] public string? BoardOwnerId { get; set; }
+    [Parameter] public Guid? OrganizationId { get; set; }
+    [Parameter] public List<UserDto>? OrganizationUsers { get; set; } // Pre-loaded users
     [Parameter] public EventCallback OnOk { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
@@ -24,7 +26,14 @@ public partial class AddMemberModal : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAllUsers();
+        if (OrganizationUsers != null && OrganizationUsers.Any())
+        {
+            AllUsers = OrganizationUsers;
+        }
+        else
+        {
+            await LoadAllUsers();
+        }
     }
 
     private async Task LoadAllUsers()
@@ -32,9 +41,13 @@ public partial class AddMemberModal : ComponentBase
         try
         {
             var isAuthenticated = await AuthService.IsAuthenticatedAsync();
-            if (isAuthenticated)
+            if (isAuthenticated && OrganizationId.HasValue)
             {
-                AllUsers = await UserService.GetAllUsersAsync();
+                AllUsers = await UserService.GetAllUsersAsync(OrganizationId.Value);
+            }
+            else if (!OrganizationId.HasValue)
+            {
+                Console.WriteLine($"AddMemberModal - OrganizationId is not set, cannot load users");
             }
         }
         catch (Exception ex)
@@ -112,11 +125,22 @@ public partial class AddMemberModal : ComponentBase
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        
+
+        // Update AllUsers when OrganizationUsers changes
+        if (OrganizationUsers != null && OrganizationUsers.Any() && AllUsers.Count == 0)
+        {
+            AllUsers = OrganizationUsers;
+        }
+
         if (!IsVisible)
         {
             SearchText = string.Empty;
             SearchResults.Clear();
+        }
+        else if (IsVisible && OrganizationId.HasValue && AllUsers.Count == 0 && (OrganizationUsers == null || !OrganizationUsers.Any()))
+        {
+            // Only reload if we don't have pre-loaded users
+            _ = LoadAllUsers();
         }
     }
 

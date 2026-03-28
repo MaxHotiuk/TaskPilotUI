@@ -1,0 +1,35 @@
+.organization-members-container {
+    padding: 24px;
+    background-color: #f0f2f5;
+    min-height: calc(100vh - 200px);
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s;
+}
+
+.member-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.member-info-section {
+    flex: 1;
+}
+
+.member-actions-section {
+    display: flex;
+    gap: 8px;
+}

@@ -69,6 +69,7 @@ public partial class Chat : ComponentBase, IDisposable
             if (_isInitialized)
             {
                 _ = LoadChatsAsync();
+                _ = LoadAllUsersAsync(); // Reload users when organization changes
             }
         }
     }
@@ -908,10 +909,14 @@ public partial class Chat : ComponentBase, IDisposable
     {
         try
         {
-            if (await AuthService.IsAuthenticatedAsync())
+            if (await AuthService.IsAuthenticatedAsync() && _organizationId.HasValue)
             {
                 _allUsers.Clear();
-                _allUsers.AddRange(await UserService.GetAllUsersAsync());
+                _allUsers.AddRange(await UserService.GetAllUsersAsync(_organizationId.Value));
+            }
+            else if (!_organizationId.HasValue)
+            {
+                Console.WriteLine($"Chat - OrganizationId is not set, cannot load users");
             }
         }
         catch (Exception ex)

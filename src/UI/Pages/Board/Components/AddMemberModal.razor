@@ -2,11 +2,12 @@
 @using UI.Models.Member
 @using UI.Models.User
 
-<Modal Title=@UI.Resources.I18n.AddBoardMembers
+<Modal Title="Invite Board Members"
        Visible=@IsVisible
        OnOk=@OnOk
        OnCancel=@OnCancel
        ConfirmLoading=@IsLoading
+       OkText="@("Send Invitations")"
        Width="600">
     <Form Model=@FormModel Layout=@FormLayout.Vertical>
         <FormItem Label=@UI.Resources.I18n.SearchUsersPlaceholder>

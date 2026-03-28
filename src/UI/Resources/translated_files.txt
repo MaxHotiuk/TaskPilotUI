@@ -65,3 +65,10 @@ src/UI/Pages/Calendar.razor
 src/UI/Pages/Boards/Components/BoardSearchCard.razor.cs
 src/UI/Components/GlobalLoadingComponent.razor
 src/UI/Components/Shared/NotificationToast.razor
+src/UI/Pages/Chat/Chat.razor
+src/UI/Pages/Chat/Components/ChatList.razor
+src/UI/Pages/Chat/Components/ChatMessages.razor
+src/UI/Pages/Chat/Components/ChatMessageAttachments.razor
+src/UI/Pages/Invitations.razor
+src/UI/Components/Shared/OrganizationSelector.razor
+src/UI/Layouts/BasicLayout.razor.cs

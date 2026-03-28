@@ -12,6 +12,7 @@ public partial class BoardColumns : ComponentBase
 {
     [Parameter] public BoardDetailDto? BoardDetail { get; set; }
     [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public List<UserDto>? OrganizationUsers { get; set; } // Pre-loaded users cache
     [Parameter] public EventCallback<TaskItemDto> OnTaskClick { get; set; }
     [Parameter] public EventCallback OnGoBack { get; set; }
 
@@ -24,7 +25,11 @@ public partial class BoardColumns : ComponentBase
     {
         if (BoardDetail?.Members != null)
         {
-            if (_userCache.Count == 0 || !BoardDetail.Members.All(m => _userCache.ContainsKey(m.UserId)))
+            if (OrganizationUsers != null && OrganizationUsers.Any())
+            {
+                _userCache = OrganizationUsers.ToDictionary(u => u.Id.ToString(), u => u);
+            }
+            else if (_userCache.Count == 0 || !BoardDetail.Members.All(m => _userCache.ContainsKey(m.UserId)))
             {
                 _userCache.Clear();
                 await LoadUserData();

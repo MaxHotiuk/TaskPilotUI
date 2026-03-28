@@ -374,4 +374,152 @@ public static class I18n
     public const string ArchiveBoardTitle = "Архівувати дошку";
     public const string ArchiveBoardConfirm = "Ви впевнені, що хочете архівувати цю дошку?";
     public const string QuickActions = "Швидкі дії";
+
+    // Organization Management
+    public const string OrganizationMembers = "Учасники організації";
+    public const string AddGuest = "Додати гостя";
+    public const string RequestManagerRole = "Запросити роль менеджера";
+    public const string AddGuestToOrganization = "Додати гостя до організації";
+    public const string SearchUserByEmail = "Електронна пошта користувача";
+    public const string EnterUserEmail = "Введіть електронну пошту користувача";
+    public const string PleaseSelectUser = "Будь ласка, виберіть користувача";
+    public const string EmailRequired = "Електронна пошта обов'язкова";
+    public const string InvalidEmailFormat = "Невірний формат електронної пошти";
+    public const string PrimaryOrganization = "Основна організація";
+    public const string Add = "Додати";
+    public const string Invited = "Запрошений";
+    public const string JoinedAt = "Приєднався";
+    public const string Actions = "Дії";
+    public const string PromoteToManager = "Підвищити до менеджера";
+    public const string DemoteToMember = "Понизити до учасника";
+    public const string ConfirmDemoteManager = "Ви впевнені, що хочете понизити цього менеджера до учасника?";
+    public const string GuestAddedSuccessfully = "Гість успішно доданий до організації";
+    public const string MemberPromotedSuccessfully = "Учасник успішно підвищений до менеджера";
+    public const string MemberDemotedSuccessfully = "Менеджер успішно понижений до учасника";
+    public const string PublicOrganization = "Публічна організація";
+    public const string PublicOrganizationWarning = "Ця організація використовує публічний email-домен ({0}). Будь ласка, переконайтеся, що це відповідає політиці безпеки вашої компанії.";
+
+    // Manager Requests
+    public const string ManagerRequestInfo = "Ваш запит буде розглянуто адміністраторами системи. Будь ласка, надайте обґрунтування вашого запиту.";
+    public const string RequestMessage = "Повідомлення запиту";
+    public const string ExplainWhyYouWantToBeManager = "Поясніть, чому ви хочете стати менеджером цієї організації...";
+    public const string MessageRequired = "Повідомлення обов'язкове";
+    public const string MessageTooLong = "Повідомлення занадто довге (максимум 1000 символів)";
+    public const string Send = "Надіслати";
+    public const string ManagerRequestSentSuccessfully = "Запит надіслано! Адміністратори розглянуть його найближчим часом.";
+
+    // Admin - Manager Requests
+    public const string ManagerRequests = "Запити на роль менеджера";
+    public const string ReviewPendingRequests = "Розгляд очікуючих запитів";
+    public const string NoPendingRequests = "Немає очікуючих запитів";
+    public const string User = "Користувач";
+    public const string Organization = "Організація";
+    public const string CreatedAt = "Створено";
+    public const string Approve = "Підтвердити";
+    public const string Reject = "Відхилити";
+    public const string ConfirmApproveRequest = "Ви впевнені, що хочете підтвердити цей запит?";
+    public const string RequestApprovedSuccessfully = "Запит успішно підтверджено";
+    public const string RequestRejectedSuccessfully = "Запит успішно відхилено";
+
+    // Reject Request Modal
+    public const string RejectManagerRequest = "Відхилити запит на роль менеджера";
+    public const string RejectingRequestFrom = "Відхилення запиту від";
+    public const string RejectionNotes = "Примітки про відхилення";
+    public const string OptionalRejectionReason = "Необов'язково: вкажіть причину відхилення...";
+    public const string NoRequestSelected = "Запит не вибрано";
+
+    // Navigation menu
+    public const string Organizations = "Організації";
+    public const string Admin = "Адміністрування";
+    public const string ManagerRequestsMenu = "Запити менеджерів";
+
+    // Chat page
+    public const string ChatsTitle = "Чати";
+    public const string OrganizationLabel = "Організація";
+    public const string SelectOrganization = "Виберіть організацію";
+    public const string NewChat = "Новий чат";
+    public const string NoChatsAvailable = "Немає доступних чатів";
+    public const string SelectChatToStart = "Виберіть чат, щоб почати листування";
+    public const string NoMessagesYet = "Ще немає повідомлень";
+    public const string CallStarted = "Дзвінок розпочато";
+    public const string Join = "Приєднатися";
+    public const string SearchUsers = "Пошук користувачів";
+    public const string SelectedUsersLabel = "Вибрані користувачі";
+    public const string RemoveAllAttachments = "Видалити всі";
+    public const string TypingIndicator = "{0} друкує...";
+    public const string MultipleTyping = "{0} та інші друкують...";
+
+    // Create chat modal
+    public const string CreateChatTitle = "Створити чат";
+    public const string ChatTypeLabel = "Тип чату";
+    public const string PrivateChat = "Приватний";
+    public const string GroupChat = "Груповий";
+    public const string ChatNameLabel = "Назва чату";
+    public const string GroupChatNamePlaceholder = "Назва групового чату";
+    public const string MembersLabelChat = "Учасники";
+    public const string SelectedUsersLabelChat = "Вибрані користувачі";
+
+    // Chat info modal
+    public const string ChatInfoTitle = "Інформація про чат";
+    public const string ChatAvatarLabel = "Аватар чату";
+    public const string ChatMembersLabel = "Учасники";
+    public const string RemovedMembersLabel = "Видалені учасники";
+    public const string Undo = "Відмінити";
+    public const string AddMembersLabel = "Додати учасників";
+    public const string SaveChangesButton = "Зберегти зміни";
+    public const string ClearHistory = "Очистити історію";
+    public const string DeleteChatButton = "Видалити чат";
+
+    // Clear/Delete chat modals
+    public const string ClearChatHistoryTitle = "Очистити історію чату";
+    public const string ClearChatWarning = "Це видалить всі повідомлення в цьому чаті.";
+    public const string ClearChatConfirm = "Цю дію не можна скасувати.";
+    public const string DeleteChatTitle = "Видалити чат";
+    public const string DeleteChatWarning = "Видалити цей чат назавжди?";
+    public const string DeleteChatConfirm = "Чат і його повідомлення будуть видалені для всіх.";
+
+    // Chat messages
+    public const string LoadingAttachments = "Завантаження вкладень...";
+    public const string AttachmentPreview = "Попередній перегляд вкладення";
+
+    // Task messages
+    public const string TaskAddedToChat = "Завдання додано";
+    public const string AddedBy = "Додано";
+    public const string AssigneeInChat = "Виконавець:";
+    public const string OpenTask = "Відкрити завдання";
+
+    // Update messages
+    public const string ChatUpdateMessage = "Повідомлення про оновлення";
+
+    // Invitations page
+    public const string InvitationsTitle = "Запрошення";
+    public const string ManageYourPendingInvitations = "Керування вашими очікуючими запрошеннями";
+    public const string NoPendingInvitations = "Немає очікуючих запрошень";
+    public const string NoPendingInvitationsDescription = "У вас немає очікуючих запрошень на даний момент.";
+    public const string BoardInvitations = "Запрошення до дошок";
+    public const string OrganizationInvitations = "Запрошення до організацій";
+    public const string InvitedBy = "Запросив(ла)";
+    public const string Accept = "Прийняти";
+
+    // Notification messages
+    public const string YouHaveBeenAddedToBoard = "Вас додано до дошки '{0}'";
+    public const string YouHaveBeenAssignedToTask = "Вам призначено завдання '{0}'";
+    public const string YouHaveBeenAddedToBoardSimple = "Вас додано до дошки";
+
+    // Organization Selector
+    public const string OrganizationSelectorLabel = "Організація";
+    public const string SelectAnOrganization = "Виберіть організацію";
+    public const string NoOrganizationsAvailable = "Немає доступних організацій";
+    public const string NoOrganizationsDescription = "Ви можете створювати дошки лише в організаціях, де ви є учасником або менеджером. Гості не можуть створювати дошки.";
+
+    // Menu items
+    public const string BoardsMenu = "Дошки";
+    public const string ProfileMenu = "Профіль";
+    public const string AskAIMenu = "Запитати AI";
+    public const string ChatsMenu = "Чати";
+    public const string NotificationsMenu = "Повідомлення";
+    public const string InvitationsMenu = "Запрошення";
+    public const string InvitationsMenuWithCount = "Запрошення ({0})";
+    public const string CalendarMenu = "Календар";
 }
+

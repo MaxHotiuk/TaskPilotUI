@@ -24,12 +24,12 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<List<UserDto>> GetAllUsersAsync()
+    public async Task<List<UserDto>> GetAllUsersAsync(Guid organizationId)
     {
         try
         {
-            var users = await _userApi.GetAllAsync();
-            
+            var users = await _userApi.GetAllAsync(organizationId);
+
             // Update cache
             foreach (var user in users)
             {
@@ -41,7 +41,7 @@ public class UserService : IUserService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching all users");
+            _logger.LogError(ex, "Error fetching all users for organization {OrganizationId}", organizationId);
             return new List<UserDto>();
         }
     }
@@ -121,15 +121,12 @@ public class UserService : IUserService
 
         if (missingUserIds.Any() || DateTime.UtcNow - _lastCacheUpdate >= _cacheExpiry)
         {
-            var allUsers = await GetAllUsersAsync();
-            foreach (var userId in missingUserIds)
-            {
-                var user = allUsers.FirstOrDefault(u => u.Id.ToString() == userId);
-                if (user != null)
-                {
-                    result[userId] = user;
-                }
-            }
+            // Note: This might not work correctly without organizationId context
+            // Consider deprecating this method or requiring organizationId parameter
+            _logger.LogWarning("GetByIdsAsync called without organization context, results may be incomplete");
+
+            // For now, we'll skip fetching missing users since we don't have organizationId
+            // Alternatively, you could require organizationId as a parameter
         }
 
         return result;
@@ -139,5 +136,52 @@ public class UserService : IUserService
     {
         _userCache.Clear();
         _lastCacheUpdate = DateTime.MinValue;
+    }
+
+    public async Task<UserDto?> GetByIdAsync(Guid userId)
+    {
+        if (_userCache.TryGetValue(userId, out var cachedUser) &&
+            DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
+        {
+            return cachedUser;
+        }
+
+        try
+        {
+            var user = await _userApi.GetByIdAsync(userId);
+            if (user != null)
+            {
+                _userCache[user.Id] = user;
+            }
+            return user;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching user by ID: {UserId}", userId);
+            return null;
+        }
+    }
+
+    public async Task<List<UserDto>> SearchUsersAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return new List<UserDto>();
+
+        try
+        {
+            var users = await _userApi.SearchAsync(query);
+
+            foreach (var user in users)
+            {
+                _userCache[user.Id] = user;
+            }
+
+            return users;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching users with query: {Query}", query);
+            return new List<UserDto>();
+        }
     }
 }

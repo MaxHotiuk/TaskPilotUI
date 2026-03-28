@@ -24,64 +24,128 @@ namespace UI.Layouts
         private bool _notificationHandlersRegistered;
         private bool _isConnectingSignalR;
         private readonly HashSet<Guid> _joinedChatIds = new();
+        private int _invitationsCount = 0;
 
         [Inject] private ReuseTabsService TabService { get; set; } = default!;
         [Inject] private IAuthService AuthService { get; set; } = default!;
         [Inject] private IChatSignalRService ChatSignalRService { get; set; } = default!;
         [Inject] private IChatSystemService ChatSystemService { get; set; } = default!;
+        [Inject] private IInvitationService InvitationService { get; set; } = default!;
 
         public LinkItem[] Links => Array.Empty<LinkItem>();
 
         protected override async Task OnInitializedAsync()
         {
-            _menuData = new[] {
+            await BuildMenuDataAsync();
+
+            AuthService.OnAuthStateChanged += HandleAuthStateChanged;
+
+            await EnsureSignalRConnectionsAsync();
+        }
+
+        private async Task BuildMenuDataAsync()
+        {
+            var menuItems = new List<MenuDataItem>
+            {
                 new MenuDataItem
                 {
                     Path = "/",
-                    Name = "Boards",
+                    Name = UI.Resources.I18n.BoardsMenu,
                     Key = "boards",
                     Icon = "appstore",
                 },
                 new MenuDataItem
                 {
                     Path = "/profile",
-                    Name = "Profile",
+                    Name = UI.Resources.I18n.ProfileMenu,
                     Key = "profile",
                     Icon = "user",
                 },
                 new MenuDataItem
                 {
                     Path = "/ai-assistant",
-                    Name = "Ask AI",
+                    Name = UI.Resources.I18n.AskAIMenu,
                     Key = "aiAssistant",
                     Icon = "robot"
                 },
                 new MenuDataItem
                 {
                     Path = "/chats",
-                    Name = "Chats",
+                    Name = UI.Resources.I18n.ChatsMenu,
                     Key = "chats",
                     Icon = "message"
                 },
                 new MenuDataItem
                 {
                     Path = "/notifications",
-                    Name = "Notifications",
+                    Name = UI.Resources.I18n.NotificationsMenu,
                     Key = "notifications",
                     Icon = "bell"
                 },
                 new MenuDataItem
                 {
+                    Path = "/invitations",
+                    Name = _invitationsCount > 0 ? string.Format(UI.Resources.I18n.InvitationsMenuWithCount, _invitationsCount) : UI.Resources.I18n.InvitationsMenu,
+                    Key = "invitations",
+                    Icon = "mail"
+                },
+                new MenuDataItem
+                {
                     Path = "/calendar",
-                    Name = "Calendar",
+                    Name = UI.Resources.I18n.CalendarMenu,
                     Key = "calendar",
                     Icon = "calendar"
                 }
             };
 
-            AuthService.OnAuthStateChanged += HandleAuthStateChanged;
+            // Add organization management
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser != null && currentUser.Organizations?.Any() == true)
+            {
+                var organizationMenuItems = new List<MenuDataItem>();
 
-            await EnsureSignalRConnectionsAsync();
+                foreach (var org in currentUser.Organizations)
+                {
+                    organizationMenuItems.Add(new MenuDataItem
+                    {
+                        Path = $"/organization/{org.Id}",
+                        Name = org.Name,
+                        Key = $"org-{org.Id}",
+                        Icon = "team"
+                    });
+                }
+
+                menuItems.Add(new MenuDataItem
+                {
+                    Name = UI.Resources.I18n.Organizations,
+                    Key = "organizations",
+                    Icon = "apartment",
+                    Children = organizationMenuItems.ToArray()
+                });
+            }
+
+            // Add admin menu for admins
+            if (currentUser?.Role == "Admin")
+            {
+                menuItems.Add(new MenuDataItem
+                {
+                    Name = UI.Resources.I18n.Admin,
+                    Key = "admin",
+                    Icon = "setting",
+                    Children = new[]
+                    {
+                        new MenuDataItem
+                        {
+                            Path = "/admin/manager-requests",
+                            Name = UI.Resources.I18n.ManagerRequestsMenu,
+                            Key = "admin-manager-requests",
+                            Icon = "crown"
+                        }
+                    }
+                });
+            }
+
+            _menuData = menuItems.ToArray();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -137,7 +201,12 @@ namespace UI.Layouts
 
         private void HandleAuthStateChanged()
         {
-            _ = InvokeAsync(EnsureSignalRConnectionsAsync);
+            _ = InvokeAsync(async () =>
+            {
+                await BuildMenuDataAsync();
+                await EnsureSignalRConnectionsAsync();
+                StateHasChanged();
+            });
         }
 
         private async Task EnsureSignalRConnectionsAsync()
@@ -289,6 +358,24 @@ namespace UI.Layouts
         {
             showChatNotification = false;
             StateHasChanged();
+        }
+
+        private async Task LoadInvitationsCountAsync()
+        {
+            try
+            {
+                var currentUser = await AuthService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
+                var invitations = await InvitationService.GetPendingInvitationsAsync();
+                _invitationsCount = invitations.BoardInvitations.Count + invitations.OrganizationInvitations.Count;
+                await BuildMenuDataAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load invitations count: {ex.Message}");
+            }
         }
     }
 }

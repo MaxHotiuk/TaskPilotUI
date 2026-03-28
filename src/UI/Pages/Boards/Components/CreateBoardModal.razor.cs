@@ -8,20 +8,26 @@ public partial class CreateBoardModal : ComponentBase
 {
     [Inject] private IBoardService BoardService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
-    
+
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
     [Parameter] public EventCallback<string> OnBoardCreated { get; set; }
+    [Parameter] public Guid? SelectedOrganizationId { get; set; }
 
     private CreateBoardRequest _formModel = new();
     private bool _isLoading = false;
     private string _error = string.Empty;
+    private Guid? _selectedOrgId;
 
     protected override void OnParametersSet()
     {
         if (Visible)
         {
             ResetForm();
+            if (SelectedOrganizationId.HasValue)
+            {
+                _selectedOrgId = SelectedOrganizationId.Value;
+            }
         }
     }
 
@@ -37,9 +43,19 @@ public partial class CreateBoardModal : ComponentBase
 
     private async Task HandleSubmit()
     {
+        Console.WriteLine($"CreateBoardModal - HandleSubmit called");
+        Console.WriteLine($"CreateBoardModal - _selectedOrgId: {(_selectedOrgId.HasValue ? _selectedOrgId.Value.ToString() : "NULL")}");
+
         if (string.IsNullOrWhiteSpace(_formModel.Name))
         {
             _error = UI.Resources.I18n.BoardNameRequired;
+            return;
+        }
+
+        if (!_selectedOrgId.HasValue || _selectedOrgId.Value == Guid.Empty)
+        {
+            _error = "Please select an organization";
+            Console.WriteLine($"CreateBoardModal - Organization validation failed");
             return;
         }
 
@@ -57,6 +73,10 @@ public partial class CreateBoardModal : ComponentBase
             }
 
             _formModel.OwnerId = currentUser.Id.ToString();
+            _formModel.OrganizationId = _selectedOrgId.Value;
+
+            Console.WriteLine($"CreateBoardModal - Creating board with OrganizationId: {_formModel.OrganizationId}");
+
             var boardId = await BoardService.CreateAsync(_formModel);
 
             await OnBoardCreated.InvokeAsync(boardId);
@@ -64,7 +84,16 @@ public partial class CreateBoardModal : ComponentBase
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            // Check for specific guest user error
+            if (ex.Message.Contains("Guest users cannot create boards"))
+            {
+                _error = "You cannot create boards as a guest. You must be a Member or Manager of an organization to create boards.";
+            }
+            else
+            {
+                _error = ex.Message;
+            }
+            Console.WriteLine($"CreateBoardModal - Error: {ex.Message}");
         }
         finally
         {

@@ -25,11 +25,13 @@
 
 <BoardColumns BoardDetail=@_boardDetail
               IsLoading=@IsLoading
+              OrganizationUsers=@_organizationUsers
               OnTaskClick=@ShowTaskDetails
               OnGoBack=@GoBack />
 
 <MembersModal IsVisible=@_showMembersModal
               BoardDetail=@_boardDetail
+              OrganizationUsers=@_organizationUsers
               CanManageMembers=@(CanManageMembers())
               CurrentUserId=@(_currentUser?.Id.ToString())
               OnCancel=@(() => _showMembersModal = false)
@@ -42,6 +44,8 @@
                 FormModel=@_addMemberForm
                 ExistingMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
                 BoardOwnerId=@(_boardDetail?.OwnerId)
+                OrganizationId=@(_boardDetail?.OrganizationId)
+                OrganizationUsers=@_organizationUsers
                 OnOk=@AddMember
                 OnCancel=@(() => { _showAddMemberModal = false; ResetAddMemberForm(); }) />
 
@@ -61,6 +65,8 @@
               States=@(_boardDetail?.States ?? new List<StateDto>())
               BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
               BoardId=@BoardId
+              OrganizationId=@(_boardDetail?.OrganizationId)
+              OrganizationUsers=@_organizationUsers
               OnOk=@AddTask
               OnCancel=@(() => { _showAddTaskModal = false; ResetAddTaskForm(); })
               Tags=@(_boardDetail?.Tags?.ToList() ?? new List<TagDto>()) />
@@ -70,6 +76,8 @@
                  FormModel=@_addMeetingForm
                  BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
                  BoardId=@BoardId
+                 OrganizationId=@(_boardDetail?.OrganizationId)
+                 OrganizationUsers=@_organizationUsers
                  OnOk=@AddMeeting
                  OnCancel=@(() => { _showAddMeetingModal = false; ResetAddMeetingForm(); }) />
 
@@ -79,6 +87,8 @@
                   States=@(_boardDetail?.States ?? new List<StateDto>())
                   BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
                   CanManageTask=@(HasBoardAccess())
+                  OrganizationId=@(_boardDetail?.OrganizationId)
+                  OrganizationUsers=@_organizationUsers
                   OnTaskUpdated=@HandleTaskUpdated
                   OnTaskDeleted=@HandleTaskDeleted
                   OnCancel=@(() => { _showTaskDetailsModal = false; _selectedTask = null; })
@@ -88,6 +98,8 @@
                      IsLoading=@IsLoading
                      BoardMembers=@(_boardDetail?.Members ?? new List<BoardMemberDto>())
                      BoardId=@BoardId
+                     OrganizationId=@(_boardDetail?.OrganizationId)
+                     OrganizationUsers=@_organizationUsers
                      OnMeetingChanged=@HandleMeetingChanged
                      OnCancel=@(() => _showManageMeetingsModal = false) />
 

@@ -22,6 +22,8 @@ public partial class TaskDetailsModal : ComponentBase
     [Parameter] public List<BoardMemberDto> BoardMembers { get; set; } = new();
     [Parameter] public bool CanManageTask { get; set; }
     [Parameter] public List<TagDto> Tags { get; set; } = new();
+    [Parameter] public Guid? OrganizationId { get; set; }
+    [Parameter] public List<UserDto>? OrganizationUsers { get; set; }
     [Parameter] public EventCallback<TaskItemDto> OnTaskUpdated { get; set; }
     [Parameter] public EventCallback<string> OnTaskDeleted { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -40,7 +42,14 @@ public partial class TaskDetailsModal : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAllUsers();
+        if (OrganizationUsers != null && OrganizationUsers.Any())
+        {
+            AllUsers = OrganizationUsers;
+        }
+        else
+        {
+            await LoadAllUsers();
+        }
         await LoadCurrentUser();
         await LoadTags();
     }
@@ -100,9 +109,13 @@ public partial class TaskDetailsModal : ComponentBase
         try
         {
             var currentUser = await AuthService.GetCurrentUserAsync();
-            if (currentUser != null)
+            if (currentUser != null && OrganizationId.HasValue)
             {
-                AllUsers = await UserService.GetAllUsersAsync();
+                AllUsers = await UserService.GetAllUsersAsync(OrganizationId.Value);
+            }
+            else if (!OrganizationId.HasValue)
+            {
+                Console.WriteLine($"TaskDetailsModal - OrganizationId is not set, cannot load users");
             }
         }
         catch (Exception)

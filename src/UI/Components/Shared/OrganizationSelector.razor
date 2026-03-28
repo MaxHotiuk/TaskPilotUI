@@ -1,0 +1,68 @@
+@using UI.Models.Organization
+@using AntDesign
+@using UI.Services
+
+@if (ShowLabel)
+{
+    <FormItem Label="@UI.Resources.I18n.OrganizationSelectorLabel" Required="@Required">
+        <Select TItem="OrganizationSummaryDto"
+                TItemValue="Guid"
+                DataSource="@_filteredOrganizations"
+                Value="@(_selectedValue)"
+                ValueName="@nameof(OrganizationSummaryDto.Id)"
+                LabelName="@nameof(OrganizationSummaryDto.Name)"
+                Placeholder="@(Placeholder ?? UI.Resources.I18n.SelectAnOrganization)"
+                Loading="@_isLoading"
+                AllowClear="false"
+                Style="width: 100%;"
+                OnSelectedItemChanged="@HandleSelectedItemChanged">
+        </Select>
+        @if (_isSelectedOrgPublic && !string.IsNullOrEmpty(_selectedOrgDomain))
+        {
+            <Alert Type="@AlertType.Warning"
+                   Message="@UI.Resources.I18n.PublicOrganization"
+                   Description="@string.Format(UI.Resources.I18n.PublicOrganizationWarning, _selectedOrgDomain)"
+                   ShowIcon="true"
+                   Style="margin-top: 8px; font-size: 12px;" />
+        }
+        @if (ExcludeGuestOrganizations && _filteredOrganizations.Count == 0 && !_isLoading)
+        {
+            <Alert Type="@AlertType.Warning"
+                   Message="@UI.Resources.I18n.NoOrganizationsAvailable"
+                   Description="@UI.Resources.I18n.NoOrganizationsDescription"
+                   ShowIcon="true"
+                   Style="margin-top: 8px;" />
+        }
+    </FormItem>
+}
+else
+{
+    <Select TItem="OrganizationSummaryDto"
+            TItemValue="Guid"
+            DataSource="@_filteredOrganizations"
+            Value="@(_selectedValue)"
+            ValueName="@nameof(OrganizationSummaryDto.Id)"
+            LabelName="@nameof(OrganizationSummaryDto.Name)"
+            Placeholder="@(Placeholder ?? UI.Resources.I18n.SelectAnOrganization)"
+            Loading="@_isLoading"
+            AllowClear="false"
+            Style="width: 100%;"
+            OnSelectedItemChanged="@HandleSelectedItemChanged">
+    </Select>
+    @if (_isSelectedOrgPublic && !string.IsNullOrEmpty(_selectedOrgDomain))
+    {
+        <Alert Type="@AlertType.Warning"
+               Message="@UI.Resources.I18n.PublicOrganization"
+               Description="@string.Format(UI.Resources.I18n.PublicOrganizationWarning, _selectedOrgDomain)"
+               ShowIcon="true"
+               Style="margin-top: 8px; font-size: 12px;" />
+    }
+    @if (ExcludeGuestOrganizations && _filteredOrganizations.Count == 0 && !_isLoading)
+    {
+        <Alert Type="@AlertType.Warning"
+               Message="@UI.Resources.I18n.NoOrganizationsAvailable"
+               Description="@UI.Resources.I18n.NoOrganizationsDescription"
+               ShowIcon="true"
+               Style="margin-top: 8px;" />
+    }
+}

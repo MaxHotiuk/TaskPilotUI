@@ -4,7 +4,7 @@
 
 @if (IsLoading)
 {
-    <div style="margin-top: 4px; color: #aaa; font-size: 12px;">Loading attachments...</div>
+    <div style="margin-top: 4px; color: #aaa; font-size: 12px;">@UI.Resources.I18n.LoadingAttachments</div>
 }
 else if (Attachments?.Any() == true)
 {
@@ -30,7 +30,7 @@ else if (Attachments?.Any() == true)
     </div>
 }
 
-<Modal Title="Attachment preview" Visible=@IsPreviewVisible OnCancel="ClosePreview" Footer="null" Width="800">
+<Modal Title="@UI.Resources.I18n.AttachmentPreview" Visible=@IsPreviewVisible OnCancel="ClosePreview" Footer="null" Width="800">
     @if (!string.IsNullOrEmpty(PreviewImageUrl))
     {
         <img src=@PreviewImageUrl alt="Attachment preview" style="max-width: 90vw; max-height: 70vh; display: block; margin: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" />

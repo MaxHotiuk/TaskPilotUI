@@ -1,6 +1,7 @@
 @using AntDesign
 @using UI.Models
 @using UI.Interfaces.Services
+@using UI.Components.Shared
 
 <Modal Title="@UI.Resources.I18n.CreateNewBoard"
        Visible=@Visible
@@ -10,25 +11,30 @@
        OkText=@UI.Resources.I18n.CreateBoardOk
        CancelText=@UI.Resources.I18n.Cancel
        Width="500">
-    
+
     <Form Model=@_formModel
           Layout=@FormLayout.Vertical
           OnFinish=@HandleSubmit
           OnFinishFailed=@HandleSubmitFailed>
-        
+
+        <OrganizationSelector SelectedOrganizationId="_selectedOrgId" 
+                             SelectedOrganizationIdChanged="@((Guid orgId) => _selectedOrgId = orgId)" 
+                             Required="true"
+                             ExcludeGuestOrganizations="true" />
+
         <FormItem Label=@UI.Resources.I18n.BoardNameLabel Required>
             <Input @bind-Value=@_formModel.Name
                    Placeholder=@UI.Resources.I18n.EnterBoardName
                    MaxLength="100" />
         </FormItem>
-        
+
         <FormItem Label=@UI.Resources.I18n.DescriptionLabel>
             <TextArea @bind-Value=@_formModel.Description
                       Placeholder=@UI.Resources.I18n.EnterBoardDescription
                       Rows="3"
                       MaxLength="500" />
         </FormItem>
-        
+
         @if (!string.IsNullOrEmpty(_error))
         {
             <Alert Type=@AlertType.Error 

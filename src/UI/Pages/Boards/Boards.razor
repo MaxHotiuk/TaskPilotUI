@@ -5,7 +5,15 @@
 @using UI.Models.Board
 @using UI.Interfaces.Services
 @using UI.Pages.Boards.Components
+@using UI.Components.Shared
 @implements IDisposable
+
+<div style="margin-bottom: 16px;">
+    <OrganizationSelector SelectedOrganizationId="_selectedOrganizationId" 
+                         SelectedOrganizationIdChanged="@OnOrganizationChanged"
+                         ShowLabel="false"
+                         Placeholder="Select organization to view boards" />
+</div>
 
 <BoardsPageHeader IsLoading=@IsLoading
                   ShowHeader=@(!IsLoading || _boards.Any())
@@ -111,6 +119,7 @@
 </div>
 
 <CreateBoardModal @bind-Visible=@_showCreateModal
+                  SelectedOrganizationId="@_selectedOrganizationId"
                   OnBoardCreated=@HandleBoardCreated />
 
 <DeleteBoardModal @bind-Visible=@_showDeleteModal

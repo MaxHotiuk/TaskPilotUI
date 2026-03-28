@@ -16,12 +16,12 @@ public interface IBoardService
     Task<BoardWithStats> GetCachedWithStatsAsync(string boardId);
     Task ClearCacheAsync(string userId);
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForOwnerAsync(
-        Guid ownerId, string searchTerm, int page, int pageSize);
+        Guid ownerId, Guid organizationId, string searchTerm, int page, int pageSize);
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForUserAsync(
-        Guid userId, string searchTerm, int page, int pageSize);
+        Guid userId, Guid organizationId, string searchTerm, int page, int pageSize);
 
     Task<IEnumerable<BoardSearchDto>> SearchBoardsRangeForMemberAsync(
-        Guid userId, string searchTerm, int page, int pageSize);
+        Guid userId, Guid organizationId, string searchTerm, int page, int pageSize);
 
     Task ArchiveBoardAsync(
         string boardId,
