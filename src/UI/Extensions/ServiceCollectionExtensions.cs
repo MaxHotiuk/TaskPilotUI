@@ -129,6 +129,7 @@ namespace UI.Extensions
             services.AddScoped<IChatSystemService, ChatSystemService>();
             services.AddScoped<IColorService, ColorService>();
             services.AddScoped<Interfaces.Services.INotificationService, Services.NotificationService>();
+            services.AddScoped<Services.NotificationCountState>();
             services.AddScoped<IMeetingService, MeetingService>();
             services.AddScoped<IMeetingMemberService, MeetingMemberService>();
             services.AddScoped<IOrganizationService, OrganizationService>();
