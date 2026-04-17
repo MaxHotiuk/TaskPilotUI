@@ -5,6 +5,7 @@ using UI.Models.Meeting;
 using UI.Interfaces.Services;
 using UI.Extensions;
 using System.Globalization;
+using AntDesign;
 
 namespace UI.Pages;
 
@@ -16,6 +17,8 @@ public partial class Calendar : ComponentBase
     [Inject] private IMeetingService MeetingService { get; set; } = default!;
     [Inject] private IAuthService AuthService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IGoogleCalendarService GoogleCalendarService { get; set; } = default!;
+    [Inject] private IMessageService Message { get; set; } = default!;
 
 
     private List<TaskCalendarItemDto> _tasks = new();
@@ -23,6 +26,8 @@ public partial class Calendar : ComponentBase
     private DateTime _selectedDate = DateTime.Today;
     private DateTime _currentMonth = DateTime.Today;
     private bool _isLoading = false;
+    private bool _isSyncing = false;
+    private UserDto? _currentUser;
     private Dictionary<DateTime, List<TaskCalendarItemDto>> _tasksByDate = new();
     private Dictionary<DateTime, List<MeetingCalendarItemDto>> _meetingsByDate = new();
 
@@ -57,6 +62,7 @@ public partial class Calendar : ComponentBase
                     }
                 }
 
+                _currentUser = currentUser;
                 await LoadCalendarTasksAndMeetings();
             }
             catch (Exception)
@@ -166,6 +172,43 @@ public partial class Calendar : ComponentBase
         _selectedDate = today;
         _currentMonth = today;
         InvokeAsync(LoadCalendarTasksAndMeetings);
+    }
+
+    private async Task SyncToGoogleCalendar()
+    {
+        if (_currentUser == null) return;
+
+        _isSyncing = true;
+        StateHasChanged();
+        try
+        {
+            await GoogleCalendarService.SyncCalendarAsync(_currentUser.Id, _currentMonth);
+            Message.Success("Calendar synced to Google Calendar successfully.");
+        }
+        catch (Exception ex)
+        {
+            Message.Error($"Failed to sync calendar: {ex.Message}");
+        }
+        finally
+        {
+            _isSyncing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConnectGoogleCalendar()
+    {
+        if (_currentUser == null) return;
+
+        try
+        {
+            var url = await GoogleCalendarService.GetAuthorizationUrlAsync(_currentUser.Id);
+            Navigation.NavigateTo(url, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Message.Error($"Failed to connect Google Calendar: {ex.Message}");
+        }
     }
     private void HandleMeetingClick(string meetingId)
     {

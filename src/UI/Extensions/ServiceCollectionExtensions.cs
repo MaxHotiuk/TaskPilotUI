@@ -95,6 +95,10 @@ namespace UI.Extensions
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
                 .AddHttpMessageHandler<AuthenticationHandler>();
 
+            services.AddRefitClient<IGoogleCalendarApi>(refitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+                .AddHttpMessageHandler<AuthenticationHandler>();
+
             services.AddRefitClient<IMicrosoftGraphApi>(refitSettings)
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.microsoft.com"));
 
@@ -129,6 +133,7 @@ namespace UI.Extensions
             services.AddScoped<IMeetingMemberService, MeetingMemberService>();
             services.AddScoped<IOrganizationService, OrganizationService>();
             services.AddScoped<IInvitationService, InvitationService>();
+            services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
             services.AddSingleton<IPublicDomainService, PublicDomainService>();
             services.AddScoped<INotificationSignalRService>(sp =>
             {

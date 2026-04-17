@@ -50,5 +50,25 @@
                 </Button>
             </div>
         }
+
+        <Divider />
+
+        <div class="profile-stats">
+            <div class="stat-item">
+                <Text Type=@TextElementType.Secondary Class="stat-label">Integrations</Text>
+            </div>
+            <div class="stat-item">
+                @if (_currentUser?.IsGoogleCalendarConnected == true)
+                {
+                    <Tag Color=@TagColor.Green>Google Calendar: Connected</Tag>
+                }
+                else
+                {
+                    <Button Type=@ButtonType.Default Icon="api" OnClick=@ConnectGoogleCalendar Size=@ButtonSize.Small>
+                        Connect Google Calendar
+                    </Button>
+                }
+            </div>
+        </div>
     </div>
 </Card>
