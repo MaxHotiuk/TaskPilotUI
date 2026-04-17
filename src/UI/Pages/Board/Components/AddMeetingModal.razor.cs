@@ -27,6 +27,7 @@ public partial class AddMeetingModal : ComponentBase
     private List<UserDto> AllUsers { get; set; } = new();
     private DateTime? ScheduledAtValue { get; set; }
     private IEnumerable<string> SelectedMemberIds { get; set; } = new List<string>();
+    protected bool UseExternalLink { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,7 +44,18 @@ public partial class AddMeetingModal : ComponentBase
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        
+
+        // Update AllUsers when OrganizationUsers changes or is provided
+        if (OrganizationUsers != null && OrganizationUsers.Any())
+        {
+            AllUsers = OrganizationUsers;
+        }
+        else if (IsVisible && OrganizationId.HasValue && AllUsers.Count == 0)
+        {
+            // Only reload if we don't have pre-loaded users
+            _ = LoadAllUsers();
+        }
+
         if (!string.IsNullOrEmpty(BoardId) && FormModel.BoardId != Guid.Parse(BoardId))
         {
             FormModel.BoardId = Guid.Parse(BoardId);
@@ -71,7 +83,16 @@ public partial class AddMeetingModal : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading users: {ex.Message}");
+            Console.WriteLine($"AddMeetingModal - Error loading users: {ex.Message}");
+        }
+    }
+
+    protected void HandleExternalLinkToggle(bool value)
+    {
+        UseExternalLink = value;
+        if (!UseExternalLink)
+        {
+            FormModel.ExternalUrl = null;
         }
     }
 
@@ -125,5 +146,7 @@ public partial class AddMeetingModal : ComponentBase
         FormModel.MemberIds = new List<Guid>();
         ScheduledAtValue = null;
         SelectedMemberIds = new List<string>();
+        UseExternalLink = false;
+        FormModel.ExternalUrl = null;
     }
 }

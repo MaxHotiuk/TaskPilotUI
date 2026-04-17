@@ -110,6 +110,8 @@ public static class I18n
     public const string ConfirmDeleteMeeting = "Ви впевнені, що хочете видалити цю зустріч?";
     public const string EditMeeting = "Редагувати зустріч";
     public const string SelectMeetingDateTime = "Оберіть дату та час зустрічі";
+    public const string ExternalMeetingLinkLabel = "Зовнішнє посилання";
+    public const string UseExternalMeetingLink = "Використовувати зовнішнє посилання (Zoom, Google Meet)";
     public const string MinutesLabel = "{0} хвилин";
     public const string PleaseEnterTaskTitle = "Будь ласка, введіть заголовок завдання";
     public const string PleaseSelectState = "Будь ласка, виберіть стан для завдання";
@@ -323,6 +325,8 @@ public static class I18n
     public const string Ask = "Запитати";
     public const string AskPlaceholder = "Запитайте про TaskPilot...";
     public const string AiResponseTitle = "Відповідь AI";
+    public const string AiOrganizationLabel = "Контекст організації";
+    public const string AiOrganizationRequired = "Будь ласка, виберіть організацію перед тим, як запитати AI.";
 
     // Logout component
     public const string SignOut = "Вийти з акаунта";

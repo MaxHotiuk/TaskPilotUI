@@ -113,7 +113,7 @@
     </div>
 </Modal>
 
-<Modal Title=@(IsEditMode ? UI.Resources.I18n.EditTask : UI.Resources.I18n.AddNewTask)
+<Modal Title=@(IsEditMode ? UI.Resources.I18n.EditMeeting : UI.Resources.I18n.ScheduleNewMeeting)
        Visible=@_showMeetingForm
        OnOk=@HandleMeetingFormOk
        OnCancel=@HandleMeetingFormCancel
@@ -125,7 +125,7 @@
           WrapperCol="new ColLayoutParam { Span = 18 }"
           OnFinish=@HandleMeetingFormSubmit>
 
-        <FormItem Label=@UI.Resources.I18n.Meetings Required>
+        <FormItem Label=@UI.Resources.I18n.EnterMeetingTitle Required>
             <Input @bind-Value=@_meetingForm.Title
                    Placeholder=@UI.Resources.I18n.EnterMeetingTitle 
                    MaxLength="200" />
@@ -155,7 +155,7 @@
                         Placeholder=@UI.Resources.I18n.MeetingDurationPlaceholder />
         </FormItem>
 
-        <FormItem Label="Attendees">
+        <FormItem Label=@UI.Resources.I18n.AttendeesLabel>
             <Select @bind-Values=@_selectedMemberIds
                     Mode=@SelectMode.Multiple
                     TItemValue="string"
@@ -173,8 +173,22 @@
                         }
                     }
                 </SelectOptions>
-            </Select>
-        </FormItem>
+                    </Select>
+                    </FormItem>
 
-    </Form>
-</Modal>
+                    <FormItem Label=@UI.Resources.I18n.ExternalMeetingLinkLabel>
+                        <Switch Checked="@_useExternalLink" CheckedChanged="@HandleExternalLinkToggle" />
+                        <span style="margin-left: 8px;">@UI.Resources.I18n.UseExternalMeetingLink</span>
+                    </FormItem>
+
+                    @if (_useExternalLink)
+                    {
+                        <FormItem Label=@UI.Resources.I18n.ExternalMeetingLinkLabel>
+                            <Input @bind-Value=@_meetingForm.ExternalUrl
+                                   Placeholder="https://..."
+                                   MaxLength="500" />
+                        </FormItem>
+                    }
+
+                </Form>
+            </Modal>

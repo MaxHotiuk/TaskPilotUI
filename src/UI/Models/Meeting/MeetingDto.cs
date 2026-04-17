@@ -12,4 +12,5 @@ public class MeetingDto
     public int? Duration { get; set; }
     public string Status { get; set; } = string.Empty;
     public List<Guid>? MemberIds { get; set; } = new();
+    public string? ExternalUrl { get; set; }
 }
