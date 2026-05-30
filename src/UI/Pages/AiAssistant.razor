@@ -3,6 +3,7 @@
 @using UI.Models.Chat
 @using UI.Components.Shared
 @using AntDesign
+@using Markdig
 
 <PageContainer Title=@UI.Resources.I18n.AIAssistantTitle>
     <Card Title="@UI.Resources.I18n.AiResponseTitle" Style="max-width: 600px; margin: 0 auto;">
@@ -30,7 +31,7 @@
         @if (_response != null)
         {
             <Card Title=@UI.Resources.I18n.AiResponseTitle Style="margin-top: 24px;">
-                <Paragraph>@_response.Response</Paragraph>
+                <div class="ai-response-markdown">@((MarkupString)Markdown.ToHtml(_response.Response, new MarkdownPipelineBuilder().UseAdvancedExtensions().Build()))</div>
             </Card>
         }
         @if (_isLoading)
