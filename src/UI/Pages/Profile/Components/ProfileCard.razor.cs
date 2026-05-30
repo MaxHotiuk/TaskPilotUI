@@ -13,6 +13,8 @@ public partial class ProfileCard : ComponentBase
     [Inject] private IGlobalLoadingService LoadingService { get; set; } = default!;
     [Inject] private IAvatarService AvatarService { get; set; } = default!;
     [Inject] private IMessageService Message { get; set; } = default!;
+    [Inject] private IGoogleCalendarService GoogleCalendarService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
 
     private UserDto? _currentUser;
     private string? _avatarUrl;
@@ -105,7 +107,22 @@ public partial class ProfileCard : ComponentBase
     {
         if (date == null)
             return "N/A";
-        
+
         return date.Value.ToString("MMM dd, yyyy");
+    }
+
+    private async Task ConnectGoogleCalendar()
+    {
+        if (_currentUser == null) return;
+
+        try
+        {
+            var url = await GoogleCalendarService.GetAuthorizationUrlAsync(_currentUser.Id);
+            Navigation.NavigateTo(url, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Message.Error($"Failed to connect Google Calendar: {ex.Message}");
+        }
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using UI.Models.User;
 using UI.Interfaces.Services;
 using UI.Extensions;
+using UI.Services;
 using Notification = UI.Models.Notification.Notification;
 using NotificationType = UI.Models.Notification.NotificationType;
 
@@ -125,11 +126,12 @@ public partial class Notifications : ComponentBase
         try
         {
             await NotificationService.MarkAsReadAsync(notificationId);
-            
+
             var notification = notifications.FirstOrDefault(n => n.Id == notificationId);
-            if (notification != null)
+            if (notification != null && !notification.IsRead)
             {
                 notification.IsRead = true;
+                NotificationCountState.Decrement();
                 StateHasChanged();
             }
         }
@@ -144,8 +146,9 @@ public partial class Notifications : ComponentBase
         try
         {
             await NotificationService.MarkAllAsReadAsync(currentUserId);
-            
+
             notifications.ForEach(n => n.IsRead = true);
+            NotificationCountState.Reset();
             StateHasChanged();
 
             MessageService.Success(UI.Resources.I18n.AllNotificationsMarkedRead);

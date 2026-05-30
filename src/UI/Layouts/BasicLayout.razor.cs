@@ -1,6 +1,7 @@
 ﻿using AntDesign.Extensions.Localization;
 using AntDesign.ProLayout;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using System.Globalization;
 using System.Net.Http.Json;
 using UI.Interfaces.Services;
@@ -25,12 +26,17 @@ namespace UI.Layouts
         private bool _isConnectingSignalR;
         private readonly HashSet<Guid> _joinedChatIds = new();
         private int _invitationsCount = 0;
+        private int _unreadNotificationsCount = 0;
+        private int _unreadChatsCount = 0;
 
         [Inject] private ReuseTabsService TabService { get; set; } = default!;
         [Inject] private IAuthService AuthService { get; set; } = default!;
         [Inject] private IChatSignalRService ChatSignalRService { get; set; } = default!;
         [Inject] private IChatSystemService ChatSystemService { get; set; } = default!;
         [Inject] private IInvitationService InvitationService { get; set; } = default!;
+        [Inject] private UI.Interfaces.Services.INotificationService NotificationService { get; set; } = default!;
+        [Inject] private UI.Services.NotificationCountState NotificationCountState { get; set; } = default!;
+        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 
         public LinkItem[] Links => Array.Empty<LinkItem>();
 
@@ -39,6 +45,7 @@ namespace UI.Layouts
             await BuildMenuDataAsync();
 
             AuthService.OnAuthStateChanged += HandleAuthStateChanged;
+            NotificationCountState.OnChange += HandleNotificationCountChanged;
 
             await EnsureSignalRConnectionsAsync();
         }
@@ -71,14 +78,14 @@ namespace UI.Layouts
                 new MenuDataItem
                 {
                     Path = "/chats",
-                    Name = UI.Resources.I18n.ChatsMenu,
+                    Name = _unreadChatsCount > 0 ? $"{UI.Resources.I18n.ChatsMenu} ({_unreadChatsCount})" : UI.Resources.I18n.ChatsMenu,
                     Key = "chats",
                     Icon = "message"
                 },
                 new MenuDataItem
                 {
                     Path = "/notifications",
-                    Name = UI.Resources.I18n.NotificationsMenu,
+                    Name = _unreadNotificationsCount > 0 ? $"{UI.Resources.I18n.NotificationsMenu} ({_unreadNotificationsCount})" : UI.Resources.I18n.NotificationsMenu,
                     Key = "notifications",
                     Icon = "bell"
                 },
@@ -157,7 +164,7 @@ namespace UI.Layouts
                     try
                     {
                         await EnsureSignalRConnectionsAsync();
-                        
+
                         StateHasChanged();
                     }
                     catch (Exception ex)
@@ -166,6 +173,8 @@ namespace UI.Layouts
                     }
                 }
             }
+
+            await UpdateNotificationBadgeAsync();
         }
 
         void Toggle()
@@ -183,6 +192,7 @@ namespace UI.Layouts
             try
             {
                 AuthService.OnAuthStateChanged -= HandleAuthStateChanged;
+                NotificationCountState.OnChange -= HandleNotificationCountChanged;
 
                 if (_currentUserId != Guid.Empty)
                 {
@@ -205,6 +215,16 @@ namespace UI.Layouts
             {
                 await BuildMenuDataAsync();
                 await EnsureSignalRConnectionsAsync();
+                StateHasChanged();
+            });
+        }
+
+        private void HandleNotificationCountChanged()
+        {
+            _unreadNotificationsCount = NotificationCountState.UnreadCount;
+            _ = InvokeAsync(async () =>
+            {
+                await BuildMenuDataAsync();
                 StateHasChanged();
             });
         }
@@ -235,6 +255,28 @@ namespace UI.Layouts
                     NotificationSignalRService.OnNotificationReceived(HandleNotification);
                     _notificationHandlersRegistered = true;
                 }
+
+                try
+                {
+                    _unreadNotificationsCount = await NotificationService.GetUnreadCountAsync(_currentUserId);
+                    NotificationCountState.SetCount(_unreadNotificationsCount);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to load unread notifications count: {ex.Message}");
+                }
+
+                try
+                {
+                    _unreadChatsCount = await ComputeUnreadChatsCountAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to load unread chats count: {ex.Message}");
+                }
+
+                await BuildMenuDataAsync();
+                await InvokeAsync(StateHasChanged);
 
                 if (!NotificationSignalRService.IsConnected)
                 {
@@ -315,8 +357,11 @@ namespace UI.Layouts
             if (Navigation.Uri.Contains("/chats", StringComparison.OrdinalIgnoreCase))
                 return;
 
-            _ = InvokeAsync(() =>
+            _unreadChatsCount++;
+
+            _ = InvokeAsync(async () =>
             {
+                await BuildMenuDataAsync();
                 var preview = message.Content.Length > 80 ? message.Content.Substring(0, 80) + "..." : message.Content;
                 chatNotificationMessage = $"{message.SenderName}: {preview}";
                 showChatNotification = true;
@@ -337,14 +382,32 @@ namespace UI.Layouts
                 notificationMessage = notification.Text;
                 notificationType = notification.Type;
                 showNotification = true;
-                
-                InvokeAsync(StateHasChanged);
-                
+                _unreadNotificationsCount++;
+                NotificationCountState.SetCount(_unreadNotificationsCount);
+
+                _ = InvokeAsync(async () =>
+                {
+                    await BuildMenuDataAsync();
+                    StateHasChanged();
+                });
+
                 _ = Task.Delay(5000).ContinueWith(async t =>
                 {
                     showNotification = false;
                     await InvokeAsync(StateHasChanged);
                 });
+            }
+        }
+
+        private async Task UpdateNotificationBadgeAsync()
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("notificationHelpers.updateBadge", _unreadNotificationsCount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to update notification badge: {ex.Message}");
             }
         }
 
@@ -376,6 +439,32 @@ namespace UI.Layouts
             {
                 Console.WriteLine($"Failed to load invitations count: {ex.Message}");
             }
+        }
+
+        private async Task<int> ComputeUnreadChatsCountAsync()
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser == null || _currentUserId == Guid.Empty)
+                return 0;
+
+            var organizations = currentUser.Organizations ?? new List<UI.Models.Organization.OrganizationSummaryDto>();
+            int count = 0;
+
+            foreach (var organization in organizations)
+            {
+                var chats = await ChatSystemService.GetChatsAsync(_currentUserId, organization.Id);
+                foreach (var chat in chats)
+                {
+                    if (chat.LastMessage == null || chat.LastMessage.SenderId == _currentUserId)
+                        continue;
+
+                    var member = chat.Members.FirstOrDefault(m => m.UserId == _currentUserId);
+                    if (member == null || member.LastReadAt == null || chat.LastMessage.CreatedAt > member.LastReadAt)
+                        count++;
+                }
+            }
+
+            return count;
         }
     }
 }

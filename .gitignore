@@ -548,3 +548,4 @@ chat-test.html
 .DS_Store
 appsettings.Development.json
 appsettings.json
+/src/UI/Dockerfile

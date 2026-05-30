@@ -77,6 +77,17 @@ public partial class TaskDetailsModal : ComponentBase
     {
         base.OnParametersSet();
 
+        // Update AllUsers when OrganizationUsers changes or is provided
+        if (OrganizationUsers != null && OrganizationUsers.Any())
+        {
+            AllUsers = OrganizationUsers;
+        }
+        else if (IsVisible && OrganizationId.HasValue && AllUsers.Count == 0)
+        {
+            // Only reload if we don't have pre-loaded users
+            _ = LoadAllUsers();
+        }
+
         if (CurrentTask != null && IsVisible)
         {
             InitializeForm();
