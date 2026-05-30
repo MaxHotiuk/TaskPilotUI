@@ -10,6 +10,7 @@ public partial class AiAssistant : ComponentBase
     private ChatResponse? _response;
     private bool _isLoading = false;
     private string? _error;
+    private Guid? _selectedOrganizationId;
 
     [Inject]
     private IChatService? ChatService { get; set; }
@@ -21,7 +22,12 @@ public partial class AiAssistant : ComponentBase
         _response = null;
         try
         {
-            var request = new ChatRequest { Message = _question, SessionId = Guid.NewGuid().ToString() };
+            var request = new ChatRequest
+            {
+                Message = _question,
+                SessionId = Guid.NewGuid().ToString(),
+                OrganizationId = _selectedOrganizationId
+            };
             _response = await ChatService!.AskAsync(request);
         }
         catch (Exception ex)

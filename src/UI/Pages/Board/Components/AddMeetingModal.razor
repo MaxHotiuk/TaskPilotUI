@@ -3,7 +3,7 @@
 @using UI.Models.Member
 @using UI.Models.User
 
-<Modal Title="@UI.Resources.I18n.Meetings"
+<Modal Title="@UI.Resources.I18n.ScheduleNewMeeting"
        Visible=@IsVisible
        OnOk=@(async () => await HandleOk())
        OnCancel=@(async () => await HandleCancel())
@@ -15,7 +15,7 @@
       OnFinish=@HandleSubmit
       OnFinishFailed=@HandleSubmitFailed>
 
-        <FormItem Label=@UI.Resources.I18n.Meetings Required>
+        <FormItem Label=@UI.Resources.I18n.EnterMeetingTitle Required>
             <Input @bind-Value=@FormModel.Title
                    Placeholder=@UI.Resources.I18n.EnterMeetingTitle 
                    MaxLength="200" />
@@ -50,7 +50,7 @@
                     Mode=@SelectMode.Multiple
                     TItemValue="string"
                     TItem="string"
-            Style="width: 100%;"
+                    Style="width: 100%;"
                     Placeholder=@UI.Resources.I18n.SelectMeetingAttendees
                     MaxTagCount="3">
                 <SelectOptions>
@@ -66,5 +66,19 @@
             </Select>
         </FormItem>
 
-    </Form>
-</Modal>
+                    <FormItem Label=@UI.Resources.I18n.ExternalMeetingLinkLabel>
+                        <Switch Checked="@UseExternalLink" CheckedChanged="@HandleExternalLinkToggle" />
+                        <span style="margin-left: 8px;">@UI.Resources.I18n.UseExternalMeetingLink</span>
+                    </FormItem>
+
+                    @if (UseExternalLink)
+                    {
+                        <FormItem Label=@UI.Resources.I18n.ExternalMeetingLinkLabel>
+                            <Input @bind-Value=@FormModel.ExternalUrl
+                                   Placeholder="https://..."
+                                   MaxLength="500" />
+                        </FormItem>
+                    }
+
+                </Form>
+            </Modal>

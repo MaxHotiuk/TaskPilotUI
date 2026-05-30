@@ -8,6 +8,27 @@
 <PageHeader Title=@UI.Resources.I18n.CalendarTitle>
     <PageHeaderExtra>
         <Space Size=@SpaceSize.Middle>
+            @if (_currentUser?.IsGoogleCalendarConnected == true)
+            {
+                <SpaceItem>
+                    <Button Type=@ButtonType.Default
+                            Icon="sync"
+                            Loading=@_isSyncing
+                            OnClick=@SyncToGoogleCalendar>
+                        Sync to Google Calendar
+                    </Button>
+                </SpaceItem>
+            }
+            else if (_currentUser != null)
+            {
+                <SpaceItem>
+                    <Button Type=@ButtonType.Default
+                            Icon="api"
+                            OnClick=@ConnectGoogleCalendar>
+                        Connect Google Calendar
+                    </Button>
+                </SpaceItem>
+            }
             <SpaceItem>
                 <Button Type=@ButtonType.Default
                         Icon="reload"

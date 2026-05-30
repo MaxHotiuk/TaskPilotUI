@@ -39,6 +39,7 @@ public partial class ManageMeetingsModal : ComponentBase
     private CreateMeetingRequestDto _meetingForm = new();
     private DateTime? _scheduledAtValue;
     private IEnumerable<string> _selectedMemberIds = new List<string>();
+    private bool _useExternalLink = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,11 +55,22 @@ public partial class ManageMeetingsModal : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
+        // Update AllUsers when OrganizationUsers changes or is provided
+        if (OrganizationUsers != null && OrganizationUsers.Any())
+        {
+            AllUsers = OrganizationUsers;
+        }
+        else if (IsVisible && OrganizationId.HasValue && AllUsers.Count == 0)
+        {
+            // Only reload if we don't have pre-loaded users
+            await LoadAllUsers();
+        }
+
         if (IsVisible && !string.IsNullOrEmpty(BoardId))
         {
             await LoadMeetings();
         }
-        
+
         if (!IsVisible)
         {
             _showMeetingForm = false;
@@ -130,6 +142,8 @@ public partial class ManageMeetingsModal : ComponentBase
         };
         _scheduledAtValue = null;
         _selectedMemberIds = new List<string>();
+        _useExternalLink = false;
+        _meetingForm.ExternalUrl = null;
     }
 
     private void PopulateMeetingForm(MeetingDto meeting)
@@ -144,8 +158,19 @@ public partial class ManageMeetingsModal : ComponentBase
             Domain = Configuration["App:BaseUrl"]!,
         };
         
+        _meetingForm.ExternalUrl = meeting.ExternalUrl;
+        _useExternalLink = !string.IsNullOrEmpty(meeting.ExternalUrl);
         _scheduledAtValue = meeting.ScheduledAt;
         _selectedMemberIds = meeting.MemberIds?.Select(id => id.ToString()) ?? new List<string>();
+    }
+
+    private void HandleExternalLinkToggle(bool value)
+    {
+        _useExternalLink = value;
+        if (!_useExternalLink)
+        {
+            _meetingForm.ExternalUrl = null;
+        }
     }
 
     private async Task HandleMeetingFormOk()

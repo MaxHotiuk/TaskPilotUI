@@ -12,4 +12,5 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public List<OrganizationSummaryDto> Organizations { get; set; } = new();
+    public bool IsGoogleCalendarConnected { get; set; }
 }

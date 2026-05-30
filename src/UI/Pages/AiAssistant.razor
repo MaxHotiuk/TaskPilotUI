@@ -1,17 +1,26 @@
 @page "/ai-assistant"
 @using UI.Interfaces.Services
 @using UI.Models.Chat
+@using UI.Components.Shared
 @using AntDesign
+@using Markdig
 
 <PageContainer Title=@UI.Resources.I18n.AIAssistantTitle>
     <Card Title="@UI.Resources.I18n.AiResponseTitle" Style="max-width: 600px; margin: 0 auto;">
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">@UI.Resources.I18n.AiOrganizationLabel</label>
+            <OrganizationSelector SelectedOrganizationId="_selectedOrganizationId"
+                                  SelectedOrganizationIdChanged="@((Guid orgId) => { _selectedOrganizationId = orgId; StateHasChanged(); })"
+                                  ShowLabel="false"
+                                  Placeholder="@UI.Resources.I18n.SelectAnOrganization" />
+        </div>
         <div style="margin-bottom: 16px;">
             <TextArea @bind-Value="_question" 
                 @oninput="@((ChangeEventArgs e) => { _question = e.Value?.ToString() ?? string.Empty; StateHasChanged(); })"
             Rows="4" Placeholder=@UI.Resources.I18n.AskPlaceholder AllowClear="true" />
         </div>
         <div style="text-align: right;">
-            <Button Type=@ButtonType.Primary OnClick="AskAiAsync" Loading="_isLoading" Disabled="string.IsNullOrWhiteSpace(_question)">
+            <Button Type=@ButtonType.Primary OnClick="AskAiAsync" Loading="_isLoading" Disabled="string.IsNullOrWhiteSpace(_question) || !_selectedOrganizationId.HasValue">
                 @UI.Resources.I18n.Ask
             </Button>
         </div>
@@ -22,7 +31,7 @@
         @if (_response != null)
         {
             <Card Title=@UI.Resources.I18n.AiResponseTitle Style="margin-top: 24px;">
-                <Paragraph>@_response.Response</Paragraph>
+                <div class="ai-response-markdown">@((MarkupString)Markdown.ToHtml(_response.Response, new MarkdownPipelineBuilder().UseAdvancedExtensions().Build()))</div>
             </Card>
         }
         @if (_isLoading)

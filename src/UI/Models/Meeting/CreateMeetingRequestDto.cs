@@ -10,4 +10,5 @@ public class CreateMeetingRequestDto
     public DateTime? ScheduledAt { get; set; }
     public int? Duration { get; set; }
     public List<Guid> MemberIds { get; set; } = new List<Guid>();
+    public string? ExternalUrl { get; set; }
 }
